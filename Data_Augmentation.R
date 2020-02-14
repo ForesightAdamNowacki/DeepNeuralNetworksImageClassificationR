@@ -1,10 +1,18 @@
-# Image augmentation:
+# ------------------------------------------------------------------------------
+# IMAGE AUGMENTATION:
 # The script used to test data augmentation settings.
-
+# ------------------------------------------------------------------------------
+# Data:
+# https://www.kaggle.com/c/dogs-vs-cats
+utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# ------------------------------------------------------------------------------
+# Environment:
+base::library(reticulate)
+reticulate::use_condaenv(condaenv = "GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
-
+# ------------------------------------------------------------------------------
 # Augmentation function:
 image_augmentation <- function(image_path,
                                image_size = c(224, 224),
@@ -14,12 +22,12 @@ image_augmentation <- function(image_path,
                                samplewise_std_normalization_parameter = FALSE,
                                zca_epsilon_parameter = 1e-06,
                                zca_whitening_parameter = FALSE,
-                               rotation_range_parameter = 15,
-                               width_shift_range_parameter = 0.2,
-                               height_shift_range_parameter = 0.2,
+                               rotation_range_parameter = 25,
+                               width_shift_range_parameter = 0.1,
+                               height_shift_range_parameter = 0.1,
                                brightness_range_parameter = c(0.5, 1.5),
-                               shear_range_parameter = 0.2,
-                               zoom_range_parameter = 0.2,
+                               shear_range_parameter = 0.1,
+                               zoom_range_parameter = 0.1,
                                channel_shift_range_parameter = 0.0,
                                fill_mode_parameter = "nearest",
                                cval_parameter = 0.0,
@@ -34,14 +42,14 @@ image_augmentation <- function(image_path,
                                height_parameter = 1000){
   
   # Packages:
-  if (!require(tensorflow)){install.packages('tensorflow'); require('tensorflow')}
-  if (!require(keras)){install.packages('keras'); require('keras')}
-  if (!require(tidyverse)){install.packages('tidyverse'); require('tidyverse')}
+  if (!base::require(tensorflow)){install.packages('tensorflow'); base::require('tensorflow')}
+  if (!base::require(keras)){install.packages('keras'); base::require('keras')}
+  if (!base::require(tidyverse)){install.packages('tidyverse'); base::require('tidyverse')}
   
   # Load image:
-  image <- keras::image_load(image_path, target_size = c(image_size[1], image_size[2]))
-  image_array <- keras::image_to_array(image)
-  image_array <- keras::array_reshape(image_array, c(1, image_size[1], image_size[2], 3))
+  image <- keras::image_load(path = image_path, target_size = c(image_size[1], image_size[2]))
+  image_array <- keras::image_to_array(img = image)
+  image_array <- keras::array_reshape(x = image_array, dim = c(1, image_size[1], image_size[2], 3))
   
   # Create datagenerator:
   datagen <- keras::image_data_generator(
@@ -68,26 +76,33 @@ image_augmentation <- function(image_path,
   
   # Plot parameters:
   if(plot_save == TRUE){
-    file_name = stringr::str_sub(basename(image_path), 1, stringr::str_locate(basename(image_path), "\\.")[1, 1] - 1)
-    plot_name = base::paste0(stringr::str_replace_all(base::Sys.time(), ":", "-"), "_image_augmentation_", file_name, ".jpg")
-    grDevices::jpeg(plot_name, quality = quality_parameter, width = width_parameter, height = height_parameter)
-    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(n)), base::ceiling(base::sqrt(n))), mar = base::rep(margin, 4))
+    file_name = stringr::str_sub(string = base::basename(path = image_path),
+                                 start = 1,
+                                 end = stringr::str_locate(string = base::basename(path = image_path), pattern = "\\.")[1, 1] - 1)
+    plot_name = base::paste0(stringr::str_replace_all(string = base::Sys.time(), pattern = ":", replacement = "-"),
+                             "_image_augmentation_", file_name, ".jpg")
+    grDevices::jpeg(filename = plot_name,
+                    quality = quality_parameter,
+                    width = width_parameter,
+                    height = height_parameter)
+    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(n)), base::ceiling(base::sqrt(n))),
+                  mar = base::rep(margin, 4))
     for (i in 1:n){
       batch <- keras::generator_next(generator = augmentation_generator)
-      graphics::plot(grDevices::as.raster(batch[1,,,]))}
+      graphics::plot(grDevices::as.raster(x = batch[1,,,]))}
     grDevices::dev.off()
-    base::print(paste("Plot saved:", plot_name))
+    base::print(paste0("Plot saved: ", plot_name))
     } else {
-    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(n)), base::ceiling(base::sqrt(n))), mar = base::rep(margin, 4))
+    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(n)), base::ceiling(base::sqrt(n))),
+                  mar = base::rep(margin, 4))
     for (i in 1:n){
       batch <- keras::generator_next(generator = augmentation_generator)
-      graphics::plot(grDevices::as.raster(batch[1,,,]))
+      graphics::plot(grDevices::as.raster(x = batch[1,,,]))
     }
   }
 }    
-  
-setwd("C:\\Users\\adam.nowacki\\Desktop\\My_Files")
-image_augmentation(image_path = "C:\\Users\\adam.nowacki\\Desktop\\ITMAGINATIONS\\Irena_Eris\\Data\\Adam.jpg", n = 30, plot_save = FALSE)
-image_augmentation(image_path = "C:\\Users\\adam.nowacki\\Desktop\\ITMAGINATIONS\\Irena_Eris\\Data\\68590.jpg", n = 64, plot_save = TRUE)
-
-
+# ------------------------------------------------------------------------------
+# Test image augmentation function:
+base::setwd(dir = "C:/Users/admin/Desktop/GitHub/DeepNeuralNetworks/Images")
+image_augmentation(image_path = "Dog_1.png", n = 36, plot_save = TRUE)
+# ------------------------------------------------------------------------------
