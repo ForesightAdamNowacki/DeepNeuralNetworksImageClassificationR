@@ -1,7 +1,16 @@
 # ------------------------------------------------------------------------------
 # BINARY MODEL EVALUATION
+# Function to verify the predictive and classification capabilities of the binary model.
 # ------------------------------------------------------------------------------
-# Function to verify the predictive and classification capabilities of the binary model:
+# Environment:
+base::library(reticulate)
+reticulate::use_condaenv(condaenv = "GPU_ML_2", required = TRUE)
+base::library(Metrics)
+base::library(tidyverse)
+base::library(tibble)
+base::library(knitr)
+base::library(gridExtra)
+# ------------------------------------------------------------------------------
 Binary_Classifier_Verification <- function(actual,
                                            predicted,
                                            cutoff = 0.5,
@@ -79,10 +88,10 @@ Binary_Classifier_Verification <- function(actual,
   FOR_label <- "= FN/(FN + TN) = 1 - NPV"
   # Threat Score (TS), Critical Success Index (CSI):
   TS <- TP/(TP + FN + FP)
-  TS_label = "= TP/(TP + FN + FP)"
+  TS_label <- "= TP/(TP + FN + FP)"
   # F1:
   F1 <- (2 * PPV * TPR)/(PPV + TPR)
-  F1_label = "= (2 * PPV * TPR)/(PPV + TPR) = 2 * TP/(2 * TP + FP + FN)"
+  F1_label <- "= (2 * PPV * TPR)/(PPV + TPR) = 2 * TP/(2 * TP + FP + FN)"
   # Informedness, Bookmaker Informedness (BM):
   BM <- TPR + TNR - 1
   BM_label <- "= TPR + TNR - 1"
@@ -94,7 +103,7 @@ Binary_Classifier_Verification <- function(actual,
   GINI_label <- "= 2 * AUC - 1"
   # Cost:
   COST <- FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost
-  COST_label = "= FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost"
+  COST_label <- "= FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost"
   
   result_3 <- tibble::tibble(Metric = base::c("Number of Observations", "True Negative (TN)", "False Positive (FP)", "False Negative (FN)", "True Positive (TP)",
                                        "Condition Positive (P)", "Condition Negative (N)", "Accuracy (ACC)", "Area Under ROC Curve (AUC)",
@@ -114,12 +123,14 @@ Binary_Classifier_Verification <- function(actual,
                                                      PPV_label, NPV_label, FNR_label, FPR_label,
                                                      FDR_label, FOR_label, TS_label, F1_label,
                                                      BM_label, MK_label, GINI_label, COST_label),
-                            Metric_Name = base::c("-", "-", "Type I Error", "Type II Error", "-",
+                            Metric_AKA = base::c("-", "-", "Type I Error", "Type II Error", "-",
                                               "-", "-", "-", "-",
                                               "-", "-", "Sensitivity, Recall, Hit Rate", "Specifity, Selectivity",
                                               "Precision", "-", "Miss Rate", "Fall-Out",
                                               "-", "-", "Critical Success Index (CSI)", "-",
-                                              "-", "-", "-", "-")) 
+                                              "-", "-", "-", "-"),
+                            ID = 1:base::length(Metric)) %>%
+    dplyr::select(ID, Metric, Score, Metric_Calculation, Metric_AKA)
   
   result_3_label <- result_3 %>% knitr::kable(.)
   
@@ -150,15 +161,14 @@ data %>%
                 V2 = NULL,
                 Class = base::factor(base::ifelse(Class == "good", 1, 0))) -> data; data
 
-model <- randomForest::randomForest(Class ~ ., data = data, ntree = 300)
+model <- randomForest::randomForest(Class ~ ., data = data, ntree = 100)
 predicted <- stats::predict(model, data, "prob")[,2]
 actual <- base::as.numeric(data$Class) - 1
 
 Binary_Classifier_Verification(actual = actual, predicted = predicted, cutoff = 0.25)
 # ------------------------------------------------------------------------------
-# CUTOFF OPTIMIZATION:
-# ------------------------------------------------------------------------------
-# Function to optimize the cut-off level in relation to many evaluation metrics
+# CUT-OFF OPTIMIZATION
+# Function to optimize the cut-off level in relation to many evaluation metrics.
 Binary_Classifier_Cutoff_Optimization <- function(actual,
                                                   predicted, 
                                                   cuts = 25,
@@ -177,8 +187,8 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   cuts_values <- stats::runif(n = cuts, min = 0, max = 1)
   cuts_values <- base::sort(x = cuts_values, decreasing = FALSE)
   
-  df <- tibble::tibble(id = 1:cuts,
-                        CutOff = cuts_values,
+  df <- tibble::tibble(ID = 1:cuts,
+                        CUTOFF = cuts_values,
                         TN = base::numeric(cuts),
                         FP = base::numeric(cuts),
                         FN = base::numeric(cuts),
@@ -199,7 +209,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   actual = base::factor(actual, levels = base::c(0, 1))
   
   for (i in 1:cuts){
-    predicted_classified = base::factor(base::ifelse(predicted < df$CutOff[i], 0, 1), levels = c(0, 1))
+    predicted_classified = base::factor(base::ifelse(predicted < df$CUTOFF[i], 0, 1), levels = c(0, 1))
     confusion_matrix = base::table(actual, predicted_classified)
     
     TN = confusion_matrix[1, 1]
@@ -244,67 +254,67 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                           plot.caption = element_text(size = text_size, color = "black", face = "bold", hjust = 1),
                           legend.position = "none")
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = TN)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = TN)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point(size = 2) + theme +
     ggplot2::labs(title = "TRUE NEGATIVE OPTIMIZATION", x = "CUTOFF", y = "TRUE NEGATIVE COUNT") -> plot1
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FP)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FP)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE POSITIVE OPTIMIZATION", x = "CUTOFF", y = "FALSE POSITIVE COUNT") -> plot2
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FN)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FN)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE NEGATIVE OPTIMIZATION", x = "CUTOFF", y = "FALSE NEGATIVE COUNT") -> plot3
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = TP)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = TP)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
-    ggplot2::labs(title = "TRUE POSITIVE OPTIMIZATION", x = "CutOff", y = "TRUE POSITIVE Count") -> plot4
+    ggplot2::labs(title = "TRUE POSITIVE OPTIMIZATION", x = "CUTOFF", y = "TRUE POSITIVE Count") -> plot4
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = ACC)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = ACC)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "ACCURACY OPTIMIZATION", x = "CUTOFF", y = "ACCURACY SCORE") -> plot5
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = COST)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = COST)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "COST OPTIMIZATION", x = "CUTOFF", y = "COST SCORE") -> plot6
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = TPR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = TPR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "TOTAL POSITIVE RATE OPTIMIZATION", x = "CUTOFF", y = "TOTAL POSITIVE RATE SCORE") -> plot7
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = TNR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = TNR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "TOTAL NEGATIVE RATE OPTIMIZATION", x = "CUTOFF", y = "TOTAL NEGATIVE RATE SCORE") -> plot8
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = PPV)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = PPV)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "POSITIVE PREDICTION VALUE OPTIMIZATION", x = "CUTOFF", y = "POSITIVE PREDICTION VALUE SCORE") -> plot9
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = NPV)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = NPV)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "NEGATIVE PREDICTION VALUE OPTIMIZATION", x = "CUTOFF", y = "NEGATIVE PREDICTION VALUE SCORE") -> plot10
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FNR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FNR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE NEGATIVE RATE OPTIMIZATION", x = "CUTOFF", y = "FALSE NEGATIVE RATE SCORE") -> plot11
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FPR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FPR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE POSITIVE RATE OPTIMIZATION", x = "CUTOFF", y = "FALSE POSITIVE RATE SCORE") -> plot12
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FDR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FDR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE DISCOVERY RATE OPTIMIZATION", x = "CUTOFF", y = "FALSE DISCOVERY RATE SCORE") -> plot13
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = FOR)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = FOR)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "FALSE OMISSION RATE OPTIMIZATION", x = "CUTOFF", y = "FALSE OMISSION RATE SCORE") -> plot14
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = TS)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = TS)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "THREAT OPTIMIZATION", x = "CUTOFF", y = "THREAT SCORE") -> plot15
   
-  ggplot2::ggplot(data = df, mapping = aes(x = CutOff, y = F1)) +
+  ggplot2::ggplot(data = df, mapping = aes(x = CUTOFF, y = F1)) +
     ggplot2::geom_line(lwd = 0.5, lty = 2) + ggplot2::geom_point() + theme +
     ggplot2::labs(title = "F1 OPTIMIZATION", x = "CUTOFF", y = "F1 SCORE") -> plot16
   
@@ -334,7 +344,7 @@ data %>%
                 V2 = NULL,
                 Class = base::factor(base::ifelse(Class == "good", 1, 0))) -> data; data
 
-model <- randomForest::randomForest(Class ~ ., data = data, ntree = 300)
+model <- randomForest::randomForest(Class ~ ., data = data, ntree = 100)
 predicted <- stats::predict(model, data, type = "prob")[,2]
 actual <- base::as.numeric(data$Class) - 1
 
