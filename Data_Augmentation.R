@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# IMAGE AUGMENTATION:
+# IMAGE AUGMENTATION
 # The script used to test data augmentation settings.
 # ------------------------------------------------------------------------------
 # Data:
