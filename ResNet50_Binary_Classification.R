@@ -68,12 +68,20 @@ brightness_range <- base::c(0.5, 1.5)
 horizontal_flip <- TRUE
 vertical_flip <- FALSE
 fill_mode <- "nearest"
+featurewise_center <- FALSE
+samplewise_center <- FALSE
+featurewise_std_normalization <- FALSE
+samplewise_std_normalization <- FALSE
+zca_whitening <- FALSE
+zca_epsilon <- 1e-06
+channel_shift_range <- 0
+cval <- 0
 
 # Training:
 batch_size <- 32
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 50
+epochs <- 5
 patience <- 10
 monitor <- "val_acc"
 save_best_only <- TRUE
@@ -130,7 +138,15 @@ train_datagen <- keras::image_data_generator(rescale = rescale,
                                              brightness_range = brightness_range,
                                              horizontal_flip = horizontal_flip,
                                              vertical_flip = vertical_flip,
-                                             fill_mode = fill_mode)
+                                             fill_mode = fill_mode,
+                                             featurewise_center = featurewise_center,
+                                             samplewise_center = samplewise_center,
+                                             featurewise_std_normalization = featurewise_std_normalization,
+                                             samplewise_std_normalization = samplewise_std_normalization,
+                                             zca_whitening = zca_whitening,
+                                             zca_epsilon = zca_epsilon,
+                                             channel_shift_range = channel_shift_range,
+                                             cval = cval)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
                                                      target_size = base::c(image_size, image_size),
@@ -149,6 +165,18 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
                                                           shuffle = shuffle)
 
 # ------------------------------------------------------------------------------
+# Tensorboard:
+base::dir.create(path = callback_tensorboard_path)
+keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
+# If 'ERROR: invalid version specification':
+# 1. Anaconda Prompt
+# 2. conda activate GPU_ML_2
+# 3. cd C:\Users\admin\Desktop\GitHub\Models_Store\ResNet50-Models
+# 4. tensorboard --logdir=logs --host=127.0.0.1
+# 5. http://127.0.0.1:6006/
+# 6. Start model optimization
+# 7. F5 http://127.0.0.1:6006/ to examine the latest results
+
 # Model optimization:
 history <- model %>% keras::fit_generator(generator = train_generator,
                                           steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
@@ -173,6 +201,11 @@ history <- model %>% keras::fit_generator(generator = train_generator,
                                                               keras::callback_csv_logger(filename = callback_csv_logger_path,
                                                                                          separator = ";",
                                                                                          append = TRUE)))
+history$metrics %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(epoch = dplyr::row_number()) %>%
+  base::as.data.frame() %>%
+  knitr::kable(.)
 
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
