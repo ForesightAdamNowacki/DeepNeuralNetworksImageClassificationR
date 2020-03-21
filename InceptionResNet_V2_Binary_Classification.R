@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# Inception ResNet V2 MODEL IMPLEMENTATION
+# Inception ResNet V2 MODEL IMPLEMENTATION 
 # ------------------------------------------------------------------------------
 # Data
 # https://www.kaggle.com/c/dogs-vs-cats
