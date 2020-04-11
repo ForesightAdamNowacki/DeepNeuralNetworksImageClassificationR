@@ -34,12 +34,13 @@ Binary_Classifier_Verification <- function(actual,
   if (!base::require(tibble)){utils::install.packages('tibble'); base::require('tibble')}  
   if (!base::require(knitr)){utils::install.packages('knitr'); base::require('knitr')}  
   if (!base::require(gt)){utils::install.packages('gt'); base::require('gt')}  
+  if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
+  if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
   
   # Confusion matrix explanation:
   result_1 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
                              "Predicted Negative (0)" = base::c("True Negative (TN)", "False Negative (FN)"),
                              "Predicted Positive (1)" = base::c("False Positive (FP)", "True Positive (TP)"))
-  result_1_label <- result_1 %>% knitr::kable(.)
   
   probability <- predicted
   if(base::length(base::unique(predicted)) > 2){predicted <- base::ifelse(predicted < cutoff, 0, 1)}
@@ -49,7 +50,6 @@ Binary_Classifier_Verification <- function(actual,
   result_2 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
                              "Predicted Negative (0)" = base::c(confusion_matrix[1, 1], confusion_matrix[2, 1]),
                              "Predicted Positive (1)" = base::c(confusion_matrix[1, 2], confusion_matrix[2, 2])) 
-  result_2_label <- result_2 %>% knitr::kable(.)
   
   # Assessment of classifier effectiveness:
   OBS <- base::sum(confusion_matrix); OBS_label <- "= TN + FP + FN + TP"
@@ -154,10 +154,6 @@ Binary_Classifier_Verification <- function(actual,
     dplyr::select(ID, Metric, `Metric Abb`, `Metric Name`, Score, Calculation)
   
   result_3_label <- result_3 %>% knitr::kable(.)
-  
-  base::print(base::list("Confusion_Matrix_Explanation" = result_1_label,
-                         "Confusion_Matrix_Result" = result_2_label,
-                         "Assessment_of_Classifier_Effectiveness" = result_3_label))
   
   result_3 %>%
     dplyr::mutate(Group = base::ifelse(Metric %in% base::c("Number of Observations", "True Negative",
@@ -332,7 +328,9 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
 
   df %>%
     utils::head(., top) %>%
-    dplyr::mutate(ID = dplyr::row_number()) %>%
+    dplyr::mutate(ID = dplyr::row_number()) -> df
+  
+  df %>%
     gt::gt(rowname_col = "ID") %>%
     gt::tab_header(title = gt::md(base::paste("Cut-off value optimization", sys_time)),
                    subtitle = gt::md("Binary classification model")) %>%

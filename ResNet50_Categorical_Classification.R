@@ -60,6 +60,7 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Augmentation:
+Augmentation <- TRUE
 rescale <- 1/255
 rotation_range <- 25
 width_shift_range <- 0.1
@@ -128,31 +129,44 @@ model %>% keras::compile(loss = loss,
 
 # ------------------------------------------------------------------------------
 # Generators:
-train_datagen <- keras::image_data_generator(rescale = rescale,
-                                             rotation_range = rotation_range, 
-                                             width_shift_range = width_shift_range,
-                                             height_shift_range = height_shift_range,
-                                             shear_range = shear_range,
-                                             zoom_range = zoom_range,
-                                             brightness_range = brightness_range,
-                                             horizontal_flip = horizontal_flip,
-                                             vertical_flip = vertical_flip,
-                                             fill_mode = fill_mode,
-                                             featurewise_center = featurewise_center,
-                                             samplewise_center = samplewise_center,
-                                             featurewise_std_normalization = featurewise_std_normalization,
-                                             samplewise_std_normalization = samplewise_std_normalization,
-                                             zca_whitening = zca_whitening,
-                                             zca_epsilon = zca_epsilon,
-                                             channel_shift_range = channel_shift_range,
-                                             cval = cval)
-train_generator <- keras::flow_images_from_directory(directory = train_dir,
-                                                     generator = train_datagen, 
-                                                     target_size = base::c(image_size, image_size),
-                                                     batch_size = batch_size,
-                                                     class_mode = class_mode,
-                                                     classes = base::levels(validation_files$category),
-                                                     shuffle = shuffle)
+if (Augmentation == TRUE){
+  train_datagen <- keras::image_data_generator(rescale = rescale,
+                                               rotation_range = rotation_range, 
+                                               width_shift_range = width_shift_range,
+                                               height_shift_range = height_shift_range,
+                                               shear_range = shear_range,
+                                               zoom_range = zoom_range,
+                                               brightness_range = brightness_range,
+                                               horizontal_flip = horizontal_flip,
+                                               vertical_flip = vertical_flip,
+                                               fill_mode = fill_mode,
+                                               featurewise_center = featurewise_center,
+                                               samplewise_center = samplewise_center,
+                                               featurewise_std_normalization = featurewise_std_normalization,
+                                               samplewise_std_normalization = samplewise_std_normalization,
+                                               zca_whitening = zca_whitening,
+                                               zca_epsilon = zca_epsilon,
+                                               channel_shift_range = channel_shift_range,
+                                               cval = cval)
+  train_generator <- keras::flow_images_from_directory(directory = train_dir,
+                                                       generator = train_datagen, 
+                                                       target_size = base::c(image_size, image_size),
+                                                       batch_size = batch_size,
+                                                       class_mode = class_mode,
+                                                       classes = base::levels(validation_files$category),
+                                                       shuffle = shuffle)
+}
+
+if (Augmentation == FALSE){
+  train_datagen <- keras::image_data_generator(rescale = rescale)
+  train_generator <- keras::flow_images_from_directory(directory = train_dir,
+                                                       generator = train_datagen, 
+                                                       target_size = base::c(image_size, image_size),
+                                                       batch_size = batch_size,
+                                                       class_mode = class_mode,
+                                                       classes = base::levels(validation_files$category),
+                                                       shuffle = shuffle)
+}
 
 validation_datagen <- keras::image_data_generator(rescale = rescale) 
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
