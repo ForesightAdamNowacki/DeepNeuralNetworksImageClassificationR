@@ -8,7 +8,6 @@ utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-keras::keras
 base::library(tensorflow)
 base::library(keras)
 # install_keras(tensorflow = "gpu")
@@ -263,14 +262,13 @@ train_evaluation <- keras::evaluate_generator(model, train_generator, steps = ba
 validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size)); validation_evaluation
 test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size)); test_evaluation
 
-train_probabilities <- keras::predict_generator(best_model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
-validation_probabilities <- keras::predict_generator(best_model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
-test_probabilities <- keras::predict_generator(best_model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
+train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
+validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
+test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
 # ------------------------------------------------------------------------------
 # Model verification:
-
-labels <- base::sort(base::as.character(train_files$category))
+labels <- base::sort(base::as.character(train_files$category)); labels
 actual_train <- base::rep(x = 1:base::length(train_files$category), times = train_files$category_obs); actual_train
 actual_validation <- base::rep(x = 1:base::length(validation_files$category), times = validation_files$category_obs); actual_validation
 actual_test <- base::rep(x = 1:base::length(test_files$category), times = test_files$category_obs); actual_test
@@ -279,25 +277,21 @@ Categorical_train_results <- Categorical_model_evaluation(actual = actual_train,
                                                           probabilities = train_probabilities,
                                                           labels = labels,
                                                           type_info = "Train ResNet50",
-                                                          save = TRUE,
+                                                          save = FALSE,
                                                           open = FALSE)
 
 Categorical_validation_results <- Categorical_model_evaluation(actual = actual_validation,
                                                                probabilities = validation_probabilities,
                                                                labels = labels,
                                                                type_info = "Validation ResNet50",
-                                                               save = TRUE,
+                                                               save = FALSE,
                                                                open = FALSE)
 
 Categorical_test_results <- Categorical_model_evaluation(actual = actual_test,
                                                          probabilities = test_probabilities,
                                                          labels = labels,
                                                          type_info = "Test ResNet50",
-                                                         save = TRUE,
+                                                         save = FALSE,
                                                          open = FALSE)
-
-
-
-
-
-
+# ------------------------------------------------------------------------------
+# https://github.com/ForesightAdamNowacki

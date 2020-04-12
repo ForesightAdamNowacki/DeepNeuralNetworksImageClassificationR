@@ -336,21 +336,21 @@ validation_cutoff_optimization %>%
 
 train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
-                                                       cutoff = train_optimal_cutoff,
+                                                       cutoff = validation_optimal_cutoff,
                                                        type_info = "Train ResNet50 optimized cutoff",
                                                        save = TRUE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
-                                                            cutoff = train_optimal_cutoff,
+                                                            cutoff = validation_optimal_cutoff,
                                                             type_info = "Validation ResNet50 optimized cutoff",
                                                             save = TRUE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
-                                                      cutoff = train_optimal_cutoff,
+                                                      cutoff = validation_optimal_cutoff,
                                                       type_info = "Test ResNet50 optimized cutoff",
                                                       save = TRUE,
                                                       open = FALSE)
