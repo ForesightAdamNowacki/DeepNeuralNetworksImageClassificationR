@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# ResNet50 MODEL IMPLEMENTATION
+# Inception ResNet V2 MODEL IMPLEMENTATION 
 # ------------------------------------------------------------------------------
 # Data
 # https://www.kaggle.com/c/dogs-vs-cats
@@ -17,10 +17,10 @@ base::source("D:\\GitHub\\DeepNeuralNetworksRepoR\\Binary_Categorical_Model_Eval
 train_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\train"
 validation_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\validation"
 test_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\test"
-callback_model_checkpoint_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\ResNet50\\Binary\\keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5"
-callback_tensorboard_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\ResNet50\\Binary\\logs"
-callback_csv_logger_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\ResNet50\\Binary\\Optimization_logger.csv"
-models_store <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\ResNet50\\Binary"
+callback_model_checkpoint_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_ResNet_V2\\Binary\\keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5"
+callback_tensorboard_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_ResNet_V2\\Binary\\logs"
+callback_csv_logger_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_ResNet_V2\\Binary\\Optimization_logger.csv"
+models_store <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_ResNet_V2\\Binary"
 
 count_files = function(path){
   dirs <- base::list.dirs(path = path)
@@ -44,7 +44,7 @@ keras::k_clear_session()
 # ------------------------------------------------------------------------------
 # Setting pipeline parameters values: 
 # Image:
-image_size <- 224
+image_size <- 299
 channels <- 3
 
 # Model structure:
@@ -79,7 +79,7 @@ channel_shift_range <- 0
 cval <- 0
 
 # Training:
-batch_size <- 16
+batch_size <- 8
 class_mode <- "categorical"
 shuffle <- TRUE
 epochs <- 5
@@ -96,10 +96,10 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# ResNet50 model architecture:
-model <- keras::application_resnet50(include_top = include_top,
-                                     weights = weights,
-                                     input_shape = base::c(image_size, image_size, channels))
+# Inception ResNet V2 model architecture:
+model <- keras::application_inception_resnet_v2(include_top = include_top,
+                                                weights = weights,
+                                                input_shape = base::c(image_size, image_size, channels))
 
 input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
@@ -274,7 +274,7 @@ train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = 0.5,
                                                        type_info = "Train ResNet50 default cutoff",
-                                                       save = TRUE,
+                                                       save = FALSE,
                                                        open = FALSE)
 
 validation_actual <- base::rep(base::c(0, 1), times = validation_files$category_obs)
@@ -283,7 +283,7 @@ validation_verification_1 <- Binary_Classifier_Verification(actual = validation_
                                                             predicted = validation_predicted,
                                                             cutoff = 0.5,
                                                             type_info = "Validation ResNet50 default cutoff",
-                                                            save = TRUE,
+                                                            save = FALSE,
                                                             open = FALSE)
 
 test_actual <- base::c(base::rep(0, test_files$category_obs[1]/2), base::rep(1, test_files$category_obs[1]/2))
@@ -292,7 +292,7 @@ test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = 0.5,
                                                       type_info = "Test ResNet50 default cutoff",
-                                                      save = TRUE,
+                                                      save = FALSE,
                                                       open = FALSE)
 
 final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
@@ -312,7 +312,7 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
                                                                    cuts = 100,
                                                                    key_metric = ACC,
                                                                    ascending = FALSE,
-                                                                   save = TRUE,
+                                                                   save = FALSE,
                                                                    open = FALSE)
 train_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
@@ -327,7 +327,7 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
                                                                         cuts = 100,
                                                                         key_metric = ACC,
                                                                         ascending = FALSE,
-                                                                        save = TRUE,
+                                                                        save = FALSE,
                                                                         open = FALSE)
 validation_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
@@ -338,21 +338,21 @@ train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = validation_optimal_cutoff,
                                                        type_info = "Train ResNet50 optimized cutoff",
-                                                       save = TRUE,
+                                                       save = FALSE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = validation_optimal_cutoff,
                                                             type_info = "Validation ResNet50 optimized cutoff",
-                                                            save = TRUE,
+                                                            save = FALSE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = validation_optimal_cutoff,
                                                       type_info = "Test ResNet50 optimized cutoff",
-                                                      save = TRUE,
+                                                      save = FALSE,
                                                       open = FALSE)
 
 final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%

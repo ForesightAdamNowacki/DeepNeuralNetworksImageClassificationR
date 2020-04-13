@@ -2,7 +2,7 @@
 ----------
 # DeepNeuralNetworksRepoR
 
-Deep Neural Networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class object classification issues in images data.
+Deep Neural Networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class object classification for images data.
 
 ----------
 # Scripts description
