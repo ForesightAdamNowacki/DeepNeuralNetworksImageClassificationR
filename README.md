@@ -1,7 +1,10 @@
+
+![alt text](D:\GitHub\Datasets\GitHub images\Keras.png)
+
 ----------
 # DeepNeuralNetworksRepoR
 
-Deep Neural Networks using Keras and Tensorflow-GPU in R. The repository is devoted to binary and multi-class object classification issues in images data.
+Deep Neural Networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class object classification issues in images data.
 
 ----------
 # Scripts description
@@ -37,7 +40,7 @@ Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score
 	* Complete pipeline for binary classification problem in images using Xception pretrained model on ImageNet dataset.
 
 ----------
-# Setup anaconda environment
+# Setup Anaconda environment
 1. **Install Anaconda Python 3.7 version:**
 * Download from https://www.anaconda.com/distribution/
 * Open Anaconda Prompt
