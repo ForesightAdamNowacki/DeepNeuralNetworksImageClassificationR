@@ -14,21 +14,27 @@ Value, Negative Predictive Value, False Negative Rate, False Positive Rate, Fals
 Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate,
 False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
 	* **Categorical_Model_Evaluation** - function calculates Accuracy, Precision, Recall and F1 Score per classes and overall metrics calculated without division into classes for all provided observations. Additionaly
-function converts multi-class classification into binary classification problem for each available class separately.
+function converts multi-class classification into binary classification problem for each available class separately and computes metrics such as: True Negative, False Positive, False Negative, True Positive, Condition Positive,
+Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False 
+Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
 
 * **Data_Augmentation.R:**
 	* **Image_Augmentation** - function gives the opportunity to inspect possible ways of image data augmentation techniques and adapt random image modification settings for a specific classification problem.
 
 * **Inception_V3_Binary_Classification.R:**
+	* Complete pipeline for binary classification problem in images using GoogLeNet Inception V3 pretrained model on ImageNet dataset.
 
 * **Inception_V3_Categorical_Classification.R:**
+	* Complete pipeline for multi-classification problem in images using GoogLeNet Inception V3 pretrained model on ImageNet dataset.
 
 * **ResNet50_Binary_Classification.R:**
+	* Complete pipeline for binary classification problem in images using ResNet50 pretrained model on ImageNet dataset.
 
 * **ResNet50_Categorical_Classification.R:**
+	* Complete pipeline for multi-classification problem in images using ResNet50 pretrained model on ImageNet dataset.
 
 * **Xception_Binary_Classification.R:**
-
+	* Complete pipeline for binary classification problem in images using Xception pretrained model on ImageNet dataset.
 
 ----------
 # Setup anaconda environment
