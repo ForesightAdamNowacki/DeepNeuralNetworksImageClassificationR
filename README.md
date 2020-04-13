@@ -1,5 +1,5 @@
 
-![Alt text](D:/GitHub/Datasets/GitHub_Images/Keras.png)
+![alt text](https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR/tree/master/Images/Keras.png)
 
 ----------
 # DeepNeuralNetworksRepoR
