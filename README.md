@@ -1,5 +1,5 @@
 
-![Alt text](D:/GitHub/Datasets/GitHub_Images/Keras.png?raw=true "Title")
+![Alt text](D:/GitHub/Datasets/GitHub_Images/Keras.png)
 
 ----------
 # DeepNeuralNetworksRepoR
