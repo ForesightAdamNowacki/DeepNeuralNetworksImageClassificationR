@@ -4,6 +4,16 @@
 Deep Neural Networks using Keras and Tensorflow-GPU in R. A repository devoted to binary and multi-class classification issues in recognizing objects in images.
 
 ----------
+# Scripts description
+* **Binary_Categorical_Model_Evaluation.R:**
+	* Binary_Classifier_Verification - function calculates all most important metrics in binary classification problems for provided actual classes and predicted probabilities. Available key metrics: True Negative, 
+False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive 
+Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
+	* Binary_Classifier_Cutoff_Optimization - function optimizes cutoff level for chosen key metric: True Negative, False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy,
+Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate,
+False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost. 
+
+----------
 # Setup anaconda environment
 1. **Install Anaconda Python 3.7 version:**
 * Download from https://www.anaconda.com/distribution/

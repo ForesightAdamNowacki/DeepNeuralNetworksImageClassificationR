@@ -11,8 +11,6 @@ base::library(tibble)
 base::library(knitr)
 base::library(gridExtra)
 base::library(gt)
-base::library(mlbench)
-base::library(randomForest)
 
 # ------------------------------------------------------------------------------
 Binary_Classifier_Verification <- function(actual,
