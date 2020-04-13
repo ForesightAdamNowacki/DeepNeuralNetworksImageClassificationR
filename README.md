@@ -34,6 +34,18 @@ Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score
 * **ResNet50_Categorical_Classification.R:**
 	* Complete pipeline for multi-classification problem in images using ResNet50 pretrained model on ImageNet dataset.
 
+* **VGG16_Binary_Classification.R:**
+	* Complete pipeline for binary classification problem in images using VGG16 pretrained model on ImageNet dataset.
+
+* **VGG16_Categorical_Classification.R:**
+	* Complete pipeline for multi-classification problem in images using VGG16 pretrained model on ImageNet dataset.
+
+* **VGG19_Binary_Classification.R:**
+	* Complete pipeline for binary classification problem in images using VGG19 pretrained model on ImageNet dataset.
+
+* **VGG19_Categorical_Classification.R:**
+	* Complete pipeline for multi-classification problem in images using VGG19 pretrained model on ImageNet dataset.
+
 * **Xception_Binary_Classification.R:**
 	* Complete pipeline for binary classification problem in images using Xception pretrained model on ImageNet dataset.
 
