@@ -39,6 +39,9 @@ Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score
 * **Xception_Binary_Classification.R:**
 	* Complete pipeline for binary classification problem in images using Xception pretrained model on ImageNet dataset.
 
+* **Xception_Categorical_Classification.R:**
+	* Complete pipeline for multi-classification problem in images using Xception pretrained model on ImageNet dataset.
+
 ----------
 # Setup Anaconda environment
 1. **Install Anaconda Python 3.7 version:**
