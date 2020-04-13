@@ -46,8 +46,10 @@ Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score
 * Download from https://www.anaconda.com/distribution/
 * Open Anaconda Prompt
 2. **Create and activate new anaconda environment (e.g. GPU_ML_2) in Anaconda Prompt:**
-* conda create -n GPU_ML_2 python=3.6
-* conda activate GPU_ML_2
+```
+conda create -n GPU_ML_2 python=3.6
+```
+```conda activate GPU_ML_2```
 3. **Install Python kernell in Anaconda Prompt:**
 * pip install ipykernel
 * python -m ipykernel install --user --name GPU_ML_2 --display-name "GPU_ML_2"
