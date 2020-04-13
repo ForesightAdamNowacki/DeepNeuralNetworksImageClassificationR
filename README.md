@@ -62,7 +62,7 @@ conda install tensorflow-gpu==2.0.0
 5. **Install jupyter:**
 ```
 conda install jupyter
-pip install keras==2.3.1 (use 'pip install' instead of 'conda install' what can downgrade Tensorflow-GPU package and may cause any problems) 
+pip install keras==2.3.1
 ```
 6. **Install R:**
 * Download R from https://cran.r-project.org/
