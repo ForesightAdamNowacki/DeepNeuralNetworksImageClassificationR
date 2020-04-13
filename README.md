@@ -5,7 +5,7 @@ Deep Neural Networks using Keras and Tensorflow-GPU in R. A repository devoted t
 
 ----------
 # Setup anaconda environment
-1. Install Anaconda Python 3.7 version:
+1. **Install Anaconda Python 3.7 version:**
 * Download from https://www.anaconda.com/distribution/
 * Open Anaconda Prompt
 2. Create and activate new anaconda environment (e.g. GPU_ML_2) in Anaconda Prompt:
@@ -24,8 +24,8 @@ Deep Neural Networks using Keras and Tensorflow-GPU in R. A repository devoted t
 7. Install RStudio IDE:
 * Download RStudio from https://rstudio.com/
 8. Open RStudio and install Keras and Tensorflow with GPU support:
-	utils::install.packages("reticulate")
-	base::library(reticulate)
+* utils::install.packages("reticulate")
+* base::library(reticulate)
 * reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 * utils::install.packages("tensorflow")
 * utils::install.packages("keras")
