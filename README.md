@@ -1,6 +1,4 @@
-
 ![alt text](Images//MD_Head.png?raw=true)
-
 ----------
 # DeepNeuralNetworksRepoR
 
