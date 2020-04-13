@@ -5,13 +5,30 @@ Deep Neural Networks using Keras and Tensorflow-GPU in R. The repository is devo
 
 ----------
 # Scripts description
+
 * **Binary_Categorical_Model_Evaluation.R:**
-	* Binary_Classifier_Verification - function calculates all most important metrics in binary classification problems for provided actual classes and predicted probabilities. Available key metrics: True Negative, 
+	* **Binary_Classifier_Verification** - function calculates all most important metrics in binary classification problems for provided actual classes and predicted probabilities. Available key metrics: True Negative, 
 False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive 
 Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
-	* Binary_Classifier_Cutoff_Optimization - function optimizes cutoff level for chosen key metric: True Negative, False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy,
+	* **Binary_Classifier_Cutoff_Optimization** - function optimizes cutoff level for chosen key metric: True Negative, False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy,
 Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate,
-False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost. 
+False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
+	* **Categorical_Model_Evaluation** - function calculates Accuracy, Precision, Recall and F1 Score per classes and overall metrics calculated without division into classes for all provided observations. Additionaly
+function converts multi-class classification into binary classification problem for each available class separately.
+
+* **Data_Augmentation.R:**
+	* **Image_Augmentation** - function gives the opportunity to inspect possible ways of image data augmentation techniques and adapt random image modification settings for a specific classification problem.
+
+* **Inception_V3_Binary_Classification.R:**
+
+* **Inception_V3_Categorical_Classification.R:**
+
+* **ResNet50_Binary_Classification.R:**
+
+* **ResNet50_Categorical_Classification.R:**
+
+* **Xception_Binary_Classification.R:**
+
 
 ----------
 # Setup anaconda environment

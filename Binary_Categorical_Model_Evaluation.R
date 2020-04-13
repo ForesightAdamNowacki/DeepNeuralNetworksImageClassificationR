@@ -404,7 +404,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
 
 # ------------------------------------------------------------------------------
 # Categorical model evaluation:
-Categorical_model_evaluation <- function(actual,
+Categorical_Model_Evaluation <- function(actual,
                                          probabilities,
                                          labels,
                                          type_info = "",

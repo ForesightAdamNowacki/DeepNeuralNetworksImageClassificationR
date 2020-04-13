@@ -273,21 +273,21 @@ actual_train <- base::rep(x = 1:base::length(train_files$category), times = trai
 actual_validation <- base::rep(x = 1:base::length(validation_files$category), times = validation_files$category_obs); actual_validation
 actual_test <- base::rep(x = 1:base::length(test_files$category), times = test_files$category_obs); actual_test
 
-Categorical_train_results <- Categorical_model_evaluation(actual = actual_train,
+Categorical_train_results <- Categorical_Model_Evaluation(actual = actual_train,
                                                           probabilities = train_probabilities,
                                                           labels = labels,
                                                           type_info = "Train ResNet50",
                                                           save = FALSE,
                                                           open = FALSE)
 
-Categorical_validation_results <- Categorical_model_evaluation(actual = actual_validation,
+Categorical_validation_results <- Categorical_Model_Evaluation(actual = actual_validation,
                                                                probabilities = validation_probabilities,
                                                                labels = labels,
                                                                type_info = "Validation ResNet50",
                                                                save = FALSE,
                                                                open = FALSE)
 
-Categorical_test_results <- Categorical_model_evaluation(actual = actual_test,
+Categorical_test_results <- Categorical_Model_Evaluation(actual = actual_test,
                                                          probabilities = test_probabilities,
                                                          labels = labels,
                                                          type_info = "Test ResNet50",

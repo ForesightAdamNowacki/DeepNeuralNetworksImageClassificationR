@@ -14,7 +14,7 @@ base::library(keras)
 base::library(tidyverse)
 # ------------------------------------------------------------------------------
 # Augmentation function:
-image_augmentation <- function(image_path,
+Image_Augmentation <- function(image_path,
                                image_size = c(224, 224),
                                featurewise_center_parameter = FALSE,
                                samplewise_center_parameter = FALSE,
@@ -104,5 +104,5 @@ image_augmentation <- function(image_path,
 # ------------------------------------------------------------------------------
 # Test image augmentation function:
 base::setwd(dir = "C:/Users/admin/Desktop/GitHub/DeepNeuralNetworks/Images")
-image_augmentation(image_path = "Dog_1.png", n = 36, plot_save = TRUE)
+Image_Augmentation(image_path = "Dog_1.png", n = 36, plot_save = FALSE)
 # ------------------------------------------------------------------------------
