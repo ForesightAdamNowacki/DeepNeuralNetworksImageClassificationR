@@ -1,26 +1,27 @@
 # ------------------------------------------------------------------------------
-# VGG19 MODEL IMPLEMENTATION
+# VGG16 MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
 # Data
-# https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# https://www.kaggle.com/c/cifar-10/overview
+utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
+# keras::install_keras(tensorflow = "gpu")
 base::library(tidyverse)
 base::library(deepviz)
 base::source("D:\\GitHub\\DeepNeuralNetworksRepoR\\Binary_Categorical_Model_Evaluation.R")
 
-train_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\train"
-validation_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\validation"
-test_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\test"
-callback_model_checkpoint_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG19\\Binary\\keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5"
-callback_tensorboard_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG19\\Binary\\logs"
-callback_csv_logger_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG19\\Binary\\Optimization_logger.csv"
-models_store <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG19\\Binary"
+train_dir <- "D:\\GitHub\\Datasets\\Cifar10\\train"
+validation_dir <- "D:\\GitHub\\Datasets\\Cifar10\\validation"
+test_dir <- "D:\\GitHub\\Datasets\\Cifar10\\test"
+callback_model_checkpoint_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG16\\Categorical\\keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5"
+callback_tensorboard_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG16\\Categorical\\logs"
+callback_csv_logger_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG16\\Categorical\\Optimization_logger.csv"
+models_store <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\VGG16\\Categorical"
 
 count_files = function(path){
   dirs <- base::list.dirs(path = path)
@@ -84,7 +85,7 @@ cval <- 0
 batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 5
+epochs <- 25
 patience <- 10
 monitor <- "val_acc"
 save_best_only <- TRUE
@@ -98,8 +99,8 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# VGG19 model architecture:
-model <- keras::application_vgg19(include_top = include_top,
+# VGG16 model architecture:
+model <- keras::application_vgg16(include_top = include_top,
                                   weights = weights,
                                   input_shape = base::c(image_size, image_size, channels))
 
@@ -194,7 +195,6 @@ keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # 6. Start model optimization
 # 7. F5 http://127.0.0.1:6006/ to examine the latest results
 
-# ------------------------------------------------------------------------------
 # Model optimization:
 history <- model %>% keras::fit_generator(generator = train_generator,
                                           steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
@@ -219,7 +219,6 @@ history <- model %>% keras::fit_generator(generator = train_generator,
                                                               keras::callback_csv_logger(filename = callback_csv_logger_path,
                                                                                          separator = ";",
                                                                                          append = TRUE)))
-
 history$metrics %>%
   tibble::as_tibble() %>%
   dplyr::mutate(epoch = dplyr::row_number()) %>%
@@ -238,7 +237,7 @@ model %>% deepviz::plot_model()
 model %>% base::summary()
 
 # ------------------------------------------------------------------------------
-# Model predictions using generators:
+# Model evaluation and predictions using generators:
 train_datagen <- keras::image_data_generator(rescale = rescale)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
@@ -267,135 +266,38 @@ test_generator <- keras::flow_images_from_directory(directory = test_dir,
 
 train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size)); train_evaluation
 validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size)); validation_evaluation
+test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size)); test_evaluation
 
 train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
 validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
 # ------------------------------------------------------------------------------
-# Model verification - default cutoff:
-train_actual <- base::rep(base::c(0, 1), times = train_files$category_obs)
-train_predicted <- train_probabilities[,2]
-train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
-                                                       predicted = train_predicted,
-                                                       cutoff = 0.5,
-                                                       type_info = "Train ResNet50 default cutoff",
-                                                       save = TRUE,
-                                                       open = FALSE)
+# Model verification:
+labels <- base::sort(base::as.character(train_files$category)); labels
+actual_train <- base::rep(x = 1:base::length(train_files$category), times = train_files$category_obs); actual_train
+actual_validation <- base::rep(x = 1:base::length(validation_files$category), times = validation_files$category_obs); actual_validation
+actual_test <- base::rep(x = 1:base::length(test_files$category), times = test_files$category_obs); actual_test
 
-validation_actual <- base::rep(base::c(0, 1), times = validation_files$category_obs)
-validation_predicted <- validation_probabilities[,2]
-validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
-                                                            predicted = validation_predicted,
-                                                            cutoff = 0.5,
-                                                            type_info = "Validation ResNet50 default cutoff",
-                                                            save = TRUE,
-                                                            open = FALSE)
+Categorical_train_results <- Categorical_Model_Evaluation(actual = actual_train,
+                                                          probabilities = train_probabilities,
+                                                          labels = labels,
+                                                          type_info = "Train ResNet50",
+                                                          save = FALSE,
+                                                          open = FALSE)
 
-test_actual <- base::c(base::rep(0, test_files$category_obs[1]/2), base::rep(1, test_files$category_obs[1]/2))
-test_predicted <- test_probabilities[,2]
-test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
-                                                      predicted = test_predicted,
-                                                      cutoff = 0.5,
-                                                      type_info = "Test ResNet50 default cutoff",
-                                                      save = TRUE,
-                                                      open = FALSE)
+Categorical_validation_results <- Categorical_Model_Evaluation(actual = actual_validation,
+                                                               probabilities = validation_probabilities,
+                                                               labels = labels,
+                                                               type_info = "Validation ResNet50",
+                                                               save = FALSE,
+                                                               open = FALSE)
 
-final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
-  dplyr::select(Metric, Score) %>%
-  dplyr::rename(Score_train = Score) %>%
-  dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score) %>%
-  knitr::kable(.); final_score_1
-
-# ------------------------------------------------------------------------------
-# Model verification - cutoff optimization on validation set:
-train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_actual,
-                                                                   predicted = train_predicted,
-                                                                   type_info = "Train ResNet50",
-                                                                   seed_value = 42,
-                                                                   top = 10,
-                                                                   cuts = 100,
-                                                                   key_metric = ACC,
-                                                                   ascending = FALSE,
-                                                                   save = TRUE,
-                                                                   open = FALSE)
-train_cutoff_optimization %>%
-  dplyr::select(CUTOFF) %>%
-  dplyr::pull() %>%
-  base::mean() -> train_optimal_cutoff; train_optimal_cutoff
-
-validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_actual,
-                                                                        predicted = validation_predicted,
-                                                                        type_info = "Validation ResNet50",
-                                                                        seed_value = 42,
-                                                                        top = 10,
-                                                                        cuts = 100,
-                                                                        key_metric = ACC,
-                                                                        ascending = FALSE,
-                                                                        save = TRUE,
-                                                                        open = FALSE)
-validation_cutoff_optimization %>%
-  dplyr::select(CUTOFF) %>%
-  dplyr::pull() %>%
-  base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
-
-train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
-                                                       predicted = train_predicted,
-                                                       cutoff = validation_optimal_cutoff,
-                                                       type_info = "Train ResNet50 optimized cutoff",
-                                                       save = TRUE,
-                                                       open = FALSE)
-
-validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
-                                                            predicted = validation_predicted,
-                                                            cutoff = validation_optimal_cutoff,
-                                                            type_info = "Validation ResNet50 optimized cutoff",
-                                                            save = TRUE,
-                                                            open = FALSE)
-
-test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
-                                                      predicted = test_predicted,
-                                                      cutoff = validation_optimal_cutoff,
-                                                      type_info = "Test ResNet50 optimized cutoff",
-                                                      save = TRUE,
-                                                      open = FALSE)
-
-final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
-  dplyr::select(Metric, Score) %>%
-  dplyr::rename(Score_train = Score) %>%
-  dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score) %>%
-  knitr::kable(.); final_score_2
-
-# ------------------------------------------------------------------------------
-# Final summary:
-final_score_1_summary <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
-  dplyr::select(Metric, Score) %>%
-  dplyr::rename(Score_train = Score) %>%
-  dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score); final_score_1_summary
-
-final_score_2_summary <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
-  dplyr::select(Metric, Score) %>%
-  dplyr::rename(Score_train = Score) %>%
-  dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score); final_score_2_summary
-
-`%!in%` = base::Negate(`%in%`)
-
-final_score_1_summary %>%
-  dplyr::left_join(final_score_2_summary, by = "Metric") %>%
-  dplyr::rename(Train_default = Score_train.x,
-                Validation_default = Score_validation.x,
-                Test_default = Score_test.x,
-                Train_optimized = Score_train.y,
-                Validation_optimized = Score_validation.y,
-                Test_optimized = Score_test.y) %>%
-  dplyr::mutate(Train_diff = Train_optimized - Train_default,
-                Validation_diff = Validation_optimized - Validation_default,
-                Test_diff = Test_optimized - Test_default) %>%
-  dplyr::filter(Metric %!in% base::c('Number of Observations', 'Area Under ROC Curve', 'Condition Negative', 'Condition Positive', 'Gini Index')) %>%
-  knitr::kable(.)
+Categorical_test_results <- Categorical_Model_Evaluation(actual = actual_test,
+                                                         probabilities = test_probabilities,
+                                                         labels = labels,
+                                                         type_info = "Test ResNet50",
+                                                         save = FALSE,
+                                                         open = FALSE)
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

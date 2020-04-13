@@ -50,7 +50,9 @@ channels <- 3
 # Model structure:
 weights <- "imagenet"
 include_top <- FALSE
-activation <- "softmax"
+activation_1 <- "relu"
+activation_2 <- "softmax"
+units <- 4096
 
 # Model compilation:
 loss <- "categorical_crossentropy"
@@ -82,7 +84,7 @@ cval <- 0
 batch_size <- 8
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 20
+epochs <- 25
 patience <- 10
 monitor <- "val_acc"
 save_best_only <- TRUE
@@ -97,68 +99,19 @@ min_delta <- 0
 
 # ------------------------------------------------------------------------------
 # VGG16 model architecture:
-input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
+model <- keras::application_vgg16(include_top = include_top,
+                                  weights = weights,
+                                  input_shape = base::c(image_size, image_size, channels))
 
+input_tensor <- keras::layer_input(shape = c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
-  keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
-  
-  keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
-  
-  keras::layer_conv_2d(filters = 256, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 256, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 256, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
-  
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
-  
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_conv_2d(filters = 512, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
-  
+  model %>%
   keras::layer_flatten() %>%
-  keras::layer_dense(units = 4096, activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_dropout(rate = 0.5) %>%
-  keras::layer_dense(units = 4096, activation = "linear") %>%
-  keras::layer_batch_normalization() %>%
-  keras::layer_activation("relu") %>%
-  keras::layer_dropout(rate = 0.5) %>%
-  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation)  
+  keras::layer_dense(units = units) %>%
+  keras::layer_activation(activation = activation_1) %>%
+  keras::layer_dense(units = units) %>%
+  keras::layer_activation(activation = activation_1) %>%
+  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation_2) 
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
