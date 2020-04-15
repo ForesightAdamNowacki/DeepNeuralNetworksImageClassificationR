@@ -47,9 +47,9 @@ Image_Augmentation <- function(image_path,
   if (!base::require(tidyverse)){install.packages('tidyverse'); base::require('tidyverse')}
   
   # Load image:
-  image <- keras::image_load(path = image_path, target_size = c(image_size[1], image_size[2]))
+  image <- keras::image_load(path = image_path, target_size = base::c(image_size[1], image_size[2]))
   image_array <- keras::image_to_array(img = image)
-  image_array <- keras::array_reshape(x = image_array, dim = c(1, image_size[1], image_size[2], 3))
+  image_array <- keras::array_reshape(x = image_array, dim = base::c(1, image_size[1], image_size[2], 3))
   
   # Create datagenerator:
   datagen <- keras::image_data_generator(
