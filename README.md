@@ -19,8 +19,14 @@ function converts multi-class classification into binary classification problem 
 Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False 
 Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
 
+* **CNN_Binary_Model_Implementation.R:**
+	* will be updated soon
+
 * **Data_Augmentation.R:**
 	* **Image_Augmentation** - function gives the opportunity to inspect possible ways of image data augmentation techniques and adapt random image modification settings for a specific classification problem.
+
+* **Inseption_ResNet_V2_Binary_Classification.R:**
+	* will be updated soon
 
 * **Inception_V3_Binary_Classification.R:**
 	* Complete pipeline for binary classification problem in images using GoogLeNet Inception V3 pretrained model on ImageNet dataset.
@@ -33,6 +39,9 @@ Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score
 
 * **ResNet50_Categorical_Classification.R:**
 	* Complete pipeline for multi-classification problem in images using ResNet50 pretrained model on ImageNet dataset.
+
+* **Useful_Functions.R:**
+	* will be updated soon
 
 * **VGG16_Binary_Classification.R:**
 	* Complete pipeline for binary classification problem in images using VGG16 pretrained model on ImageNet dataset.
