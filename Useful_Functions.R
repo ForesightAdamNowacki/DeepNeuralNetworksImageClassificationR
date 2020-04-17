@@ -104,12 +104,11 @@ count_files = function(path){
 Split_Data_Train_Validation_Test <- function(data_dir,
                                              target_dir = base::getwd(),
                                              proportions = base::c(3, 1, 1),
-                                             train_folder_label = "data_train",
-                                             validation_folder_label = "data_validation",
-                                             test_folder_label = "data_label",
-                                             info_folder_label = "data_info",
+                                             train_folder_label = "train_dataset",
+                                             validation_folder_label = "validation_dataset",
+                                             test_folder_label = "test_dataset",
+                                             info_folder_label = "info_dataset",
                                              seed = 42){
-  
   base::setwd(target_dir)
   sys_time <- stringr::str_replace_all(base::Sys.time(), ":", "-")
   class_dirs <- base::list.dirs(data_dir)[2:base::length(base::list.dirs(data_dir))]
@@ -119,10 +118,8 @@ Split_Data_Train_Validation_Test <- function(data_dir,
     files[[i]] <- base::list.files(class_dirs[i])}
   names(files) <- base::basename(class_dirs)
   
-  base::set.seed(seed = seed)
-  files <- base::do.call(cbind, files) %>%
-    tibble::as_tibble() %>%
-    tidyr::pivot_longer(cols = base::basename(class_dirs), names_to = "class", values_to = "file") %>%
+  files <- tibble::tibble(file = base::do.call(c, files),
+                          class = base::rep(names(base::sapply(files, length)), times = base::sapply(files, length))) %>%
     dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
                   fold = caret::createFolds(class, k = base::sum(proportions), list = FALSE))
   
@@ -216,22 +213,46 @@ Split_Data_Train_Validation_Test <- function(data_dir,
   base::print(base::paste("Info data generated successfully -", base::getwd()))
   base::setwd("..")
   
-  base::list(Train = count_files(path = base::paste(base::getwd(), train_folder_label, sep = "/")),
-             Validation = count_files(path = base::paste(base::getwd(), validation_folder_label, sep = "/")),
-             Test = count_files(path = base::paste(base::getwd(), test_folder_label, sep = "/"))) %>%
+  base::list(Counts = base::list(train = train_files %>%
+                                   dplyr::mutate(dataset = train_folder_label),
+                                 validation = validation_files %>%
+                                   dplyr::mutate(dataset = validation_folder_label),
+                                 test = test_files %>%
+                                   dplyr::mutate(dataset = test_folder_label)) %>%
+               dplyr::bind_rows(.) %>%
+               dplyr::group_by(dataset, class) %>%
+               dplyr::summarise(count = dplyr::n()) %>%
+               tidyr::pivot_wider(id_col = "class",
+                                  names_from = "dataset",
+                                  values_from = "count") %>%
+               dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label),
+             Proportions = base::list(train = train_files %>%
+                                        dplyr::mutate(dataset = train_folder_label),
+                                      validation = validation_files %>%
+                                        dplyr::mutate(dataset = validation_folder_label),
+                                      test = test_files %>%
+                                        dplyr::mutate(dataset = test_folder_label)) %>%
+               dplyr::bind_rows(.) %>%
+               dplyr::group_by(dataset, class) %>%
+               dplyr::summarise(count = dplyr::n()) %>%
+               dplyr::group_by(dataset) %>%
+               dplyr::mutate(proportion = count/base::sum(count)) %>%
+               tidyr::pivot_wider(id_cols = "class",
+                                  names_from = "dataset",
+                                  values_from = "proportion") %>%
+               dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label)) %>%
     base::return(.)}
 
 # ------------------------------------------------------------------------------
-# Automaticaly split data folder with classes into train and validation 
+# Automaticaly split data folder with classes into train and validation
 # datasets with similar target variable distribution
 Split_Data_Train_Validation <- function(data_dir,
                                         target_dir = base::getwd(),
                                         proportions = base::c(3, 1),
-                                        train_folder_label = "data_train",
-                                        validation_folder_label = "data_validation",
-                                        info_folder_label = "data_info",
+                                        train_folder_label = "train_dataset",
+                                        validation_folder_label = "validation_dataset",
+                                        info_folder_label = "info_dataset",
                                         seed = 42){
-  
   base::setwd(target_dir)
   sys_time <- stringr::str_replace_all(base::Sys.time(), ":", "-")
   class_dirs <- base::list.dirs(data_dir)[2:base::length(base::list.dirs(data_dir))]
@@ -241,10 +262,8 @@ Split_Data_Train_Validation <- function(data_dir,
     files[[i]] <- base::list.files(class_dirs[i])}
   names(files) <- base::basename(class_dirs)
   
-  base::set.seed(seed = seed)
-  files <- base::do.call(cbind, files) %>%
-    tibble::as_tibble() %>%
-    tidyr::pivot_longer(cols = base::basename(class_dirs), names_to = "class", values_to = "file") %>%
+  files <- tibble::tibble(file = base::do.call(c, files),
+                          class = base::rep(names(base::sapply(files, length)), times = base::sapply(files, length))) %>%
     dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
                   fold = caret::createFolds(class, k = base::sum(proportions), list = FALSE))
   
@@ -311,7 +330,52 @@ Split_Data_Train_Validation <- function(data_dir,
   base::print(base::paste("Info data generated successfully -", base::getwd()))
   base::setwd("..")
   
-  base::list(Train = count_files(path = base::paste(base::getwd(), train_folder_label, sep = "/")),
-             Validation = count_files(path = base::paste(base::getwd(), validation_folder_label, sep = "/"))) %>%
-    base::return(.)
-}
+  base::list(Counts = base::list(train = train_files %>%
+                                   dplyr::mutate(dataset = train_folder_label),
+                                 validation = validation_files %>%
+                                   dplyr::mutate(dataset = validation_folder_label)) %>%
+               dplyr::bind_rows(.) %>%
+               dplyr::group_by(dataset, class) %>%
+               dplyr::summarise(count = dplyr::n()) %>%
+               tidyr::pivot_wider(id_col = "class",
+                                  names_from = "dataset",
+                                  values_from = "count") %>%
+               dplyr::select(class, train_folder_label, validation_folder_label),
+             Proportions = base::list(train = train_files %>%
+                                        dplyr::mutate(dataset = train_folder_label),
+                                      validation = validation_files %>%
+                                        dplyr::mutate(dataset = validation_folder_label)) %>%
+               dplyr::bind_rows(.) %>%
+               dplyr::group_by(dataset, class) %>%
+               dplyr::summarise(count = dplyr::n()) %>%
+               dplyr::group_by(dataset) %>%
+               dplyr::mutate(proportion = count/base::sum(count)) %>%
+               tidyr::pivot_wider(id_cols = "class",
+                                  names_from = "dataset",
+                                  values_from = "proportion") %>%
+               dplyr::select(class, train_folder_label, validation_folder_label)) %>%
+    base::return(.)}
+
+# ------------------------------------------------------------------------------
+n <- 100
+cuts <- 10
+pred_1 <- runif(n, min = 0, max = 1)
+pred_2 <- runif(n, min = 0, max = 1)
+pred_3 <- runif(n, min = 0, max = 1)
+actual <- base::sample(0:1, n, replace = TRUE)
+predictions <- base::cbind(pred_1, pred_2, pred_3)
+weights <- stats::runif(base::ncol(predictions), min = 0, max = 1)
+weights_scaled <- weights/base::sum(weights)
+
+predictions_2 <- mapply("*", base::as.data.frame(predictions), weights_scaled) %>%
+  base::as.data.frame() %>%
+  dplyr::mutate(prediction = base::rowSums(.),
+                actual_class = actual)
+
+
+predictions <- base::cbind(pred_1, pred_2, pred_3)
+head(predictions)
+head(predictions %*% base::c(1, 2, 3))
+
+predictions_2 <- mapply("*", as.data.frame(predictions), c(1, 2, 3))
+predictions_2/predictions
