@@ -225,6 +225,7 @@ history$metrics %>%
 keras::k_clear_session()
 last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]; last_model
 model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "\\"), compile = TRUE)
+# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/ResNet50_Binary_Cats_and_Dogs.hdf5")
 
 # ------------------------------------------------------------------------------
 # Visualize model:
@@ -265,6 +266,11 @@ validation_evaluation <- keras::evaluate_generator(model, validation_generator, 
 train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
 validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
+
+base::setwd("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store")
+readr::write_csv(tibble::as_tibble(train_probabilities), "ResNet50_train_binary_probabilities.csv")
+readr::write_csv(tibble::as_tibble(validation_probabilities), "ResNet50_validation_binary_probabilities.csv")
+readr::write_csv(tibble::as_tibble(test_probabilities), "ResNet50_test_binary_probabilities.csv")
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
