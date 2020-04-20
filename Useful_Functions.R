@@ -397,236 +397,148 @@ actual_class <- base::rep(base::c(0, 1), times = files$category_obs)
 actual_class <- base::factor(actual_class, levels = base::c(0, 1), labels = base::c(0, 1))
 
 # Optimization
-cuts_ <- stats::runif(n = cuts, min = 0, max = 1)
-cuts_ <- base::sort(x = cuts_, decreasing = FALSE)
 
-weights_ <- base::matrix(data = stats::runif(base::ncol(predictions) * weights, min = 0, max = 1),
-                         nrow = weights,
-                         ncol = base::ncol(predictions))
+abc <- Optimize_Ensemble_Cutoff_Model(actual_class = actual_class,
+                               predictions = predictions,
+                               cuts = 25,
+                               weights = 25,
+                               key_metric = ACC,
+                               )
 
-TN_cost <- 0
-FP_cost <- 1
-FN_cost <- 1
-TP_cost <- 0
+abc %>%
+  utils::head(1) %>%
+  dplyr::select(CUTOFF, dplyr::starts_with("model_")) %>%
+  dplyr::summarise_all(mean)
 
-results <- base::list()
-pb = txtProgressBar(min = 0, max = cuts, initial = 0, style = 3, title = "tytul", label = "abc") 
+abc
 
-for (i in 1:cuts){
-  cut_value <- cuts_[i]
+
+
+Optimize_Ensemble_Cutoff_Model <- function(actual_class,
+                                           predictions,
+                                           cuts,
+                                           weights,
+                                           key_metric = ACC,
+                                           ascending = FALSE,
+                                           seed = 42,
+                                           top = 10,
+                                           TN_cost = 0,
+                                           FP_cost = 1,
+                                           FN_cost = 1,
+                                           TP_cost = 0){
   
-  df <- tibble::tibble(CUTOFF = base::numeric(weights),
-                       WEIGHTS = base::character(weights),
-                       TN = base::numeric(weights),
-                       FP = base::numeric(weights),
-                       FN = base::numeric(weights),
-                       TP = base::numeric(weights),
-                       P = base::numeric(weights),
-                       N = base::numeric(weights),
-                       ACC = base::numeric(weights),
-                       BACC = base::numeric(weights),
-                       BIAS = base::numeric(weights),
-                       CE = base::numeric(weights),
-                       TPR = base::numeric(weights),
-                       TNR = base::numeric(weights),
-                       PPV = base::numeric(weights),
-                       NPV = base::numeric(weights),
-                       FNR = base::numeric(weights),
-                       FPR = base::numeric(weights),
-                       FDR = base::numeric(weights),
-                       FOR = base::numeric(weights),
-                       TS = base::numeric(weights),
-                       F1 = base::numeric(weights),
-                       BM = base::numeric(weights),
-                       MK = base::numeric(weights),
-                       COST = base::numeric(weights))
+  # Libraries:
+  if (!require(tidyverse)){utils::install.packages('tidyverse'); require('tidyverse')}  
   
-  for (j in 1:base::nrow(weights_)){
-    weight_value <- weights_[j,]/base::sum(weights_[j,])
-    predictions_table <- mapply("*", base::as.data.frame(predictions), weight_value) %>%
-      tibble::as_tibble() %>%
-      dplyr::mutate(prediction = base::rowSums(.),
-                    cutoff = cut_value,
-                    predicted_class = base::ifelse(prediction < cutoff, 0, 1))
-    predicted_class <- base::factor(predictions_table$predicted_class, levels = base::c(0, 1), labels = base::c(0, 1))
-    confusion_matrix <- base::table(actual_class, predicted_class)
+  # Key metric:
+  key_metric <- dplyr::enquo(key_metric) 
+  key_metric_name <- dplyr::quo_name(key_metric)
+  
+  # Generate cuts:
+  base::set.seed(seed = seed)
+  cuts_ <- stats::runif(n = cuts, min = 0, max = 1)
+  cuts_ <- base::sort(x = cuts_, decreasing = FALSE)
+  
+  # Generate waights:
+  base::set.seed(seed = seed)
+  weights_ <- base::matrix(data = stats::runif(base::ncol(predictions) * weights, min = 0, max = 1),
+                           nrow = weights,
+                           ncol = base::ncol(predictions))
+  
+  # Cutoff and weights optimization:
+  results <- base::list()
+  pb = txtProgressBar(min = 0, max = cuts, initial = 0, style = 3) 
+  
+  for (i in 1:cuts){
+    cut_value <- cuts_[i]
+    df <- tibble::tibble(CUTOFF = base::numeric(weights),
+                         WEIGHTS = base::character(weights),
+                         TN = base::numeric(weights),
+                         FP = base::numeric(weights),
+                         FN = base::numeric(weights),
+                         TP = base::numeric(weights),
+                         P = base::numeric(weights),
+                         N = base::numeric(weights),
+                         ACC = base::numeric(weights),
+                         BACC = base::numeric(weights),
+                         BIAS = base::numeric(weights),
+                         CE = base::numeric(weights),
+                         TPR = base::numeric(weights),
+                         TNR = base::numeric(weights),
+                         PPV = base::numeric(weights),
+                         NPV = base::numeric(weights),
+                         FNR = base::numeric(weights),
+                         FPR = base::numeric(weights),
+                         FDR = base::numeric(weights),
+                         FOR = base::numeric(weights),
+                         TS = base::numeric(weights),
+                         F1 = base::numeric(weights),
+                         BM = base::numeric(weights),
+                         MK = base::numeric(weights),
+                         COST = base::numeric(weights))
     
-    df$CUTOFF[j] <- cut_value
-    df$WEIGHTS[j] <- base::paste(weight_value, collapse = ", ")
-    df$TN[j] <- confusion_matrix[1, 1]
-    df$FP[j] <- confusion_matrix[1, 2]
-    df$FN[j] <- confusion_matrix[2, 1]
-    df$TP[j] <- confusion_matrix[2, 2]
-    df$N <- df$TN[j] + df$FP[j]
-    df$P <- df$FN[j] + df$TP[j]
-    df$ACC[j] <- (df$TN[j] + df$TP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
-    df$BACC[j] <- (df$TN[j]/(df$TN[j] + df$FP[j]) + df$TP[j]/(df$FN[j] + df$TP[j]))/2
-    df$BIAS[j] <- base::mean(base::as.numeric(actual_class)) - base::mean(base::as.numeric(predicted_class))
-    df$CE[j] <- (df$FN[j] + df$FP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
-    df$TPR[j] <- df$TP[j]/(df$TP[j] + df$FN[j])
-    df$TNR[j] <- df$TN[j]/(df$TN[j] + df$FP[j])
-    df$PPV[j] <- df$TP[j]/(df$TP[j] + df$FP[j])
-    df$NPV[j] <- df$TN[j]/(df$TN[j] + df$FN[j])
-    df$FNR[j] <- df$FN[j]/(df$FN[j] + df$TP[j])
-    df$FPR[j] <- df$FP[j]/(df$FP[j] + df$TN[j])
-    df$FDR[j] <- df$FP[j]/(df$FP[j] + df$TP[j])
-    df$FOR[j] <- df$FN[j]/(df$FN[j] + df$TN[j])
-    df$TS[j] <- df$TP[j]/(df$TP[j] + df$FN[j] + df$FP[j])
-    df$F1[j] <- (2 * df$PPV[j] * df$TPR[j])/(df$PPV[j] + df$TPR[j])
-    df$BM[j] <- df$TPR[j] + df$TNR[j] - 1
-    df$MK[j] <- df$PPV[j] + df$NPV[j] - 1
-    df$COST[j] <- TN_cost * df$TN[j] + FP_cost * df$FP[j] + FN_cost * df$FN[j] + TP_cost * df$TP[j]
-    
-    
+    for (j in 1:base::nrow(weights_)){
+      weight_value <- weights_[j,]/base::sum(weights_[j,])
+      predictions_table <- mapply("*", base::as.data.frame(predictions), weight_value) %>%
+        tibble::as_tibble() %>%
+        dplyr::mutate(prediction = base::rowSums(.),
+                      cutoff = cut_value,
+                      predicted_class = base::ifelse(prediction < cutoff, 0, 1))
+      predicted_class <- base::factor(predictions_table$predicted_class, levels = base::c(0, 1), labels = base::c(0, 1))
+      confusion_matrix <- base::table(actual_class, predicted_class)
+      
+      df$CUTOFF[j] <- cut_value
+      df$WEIGHTS[j] <- base::paste(weight_value, collapse = ", ")
+      df$TN[j] <- confusion_matrix[1, 1]
+      df$FP[j] <- confusion_matrix[1, 2]
+      df$FN[j] <- confusion_matrix[2, 1]
+      df$TP[j] <- confusion_matrix[2, 2]
+      df$N <- df$TN[j] + df$FP[j]
+      df$P <- df$FN[j] + df$TP[j]
+      df$ACC[j] <- (df$TN[j] + df$TP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
+      df$BACC[j] <- (df$TN[j]/(df$TN[j] + df$FP[j]) + df$TP[j]/(df$FN[j] + df$TP[j]))/2
+      df$BIAS[j] <- base::mean(base::as.numeric(actual_class)) - base::mean(base::as.numeric(predicted_class))
+      df$CE[j] <- (df$FN[j] + df$FP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
+      df$TPR[j] <- df$TP[j]/(df$TP[j] + df$FN[j])
+      df$TNR[j] <- df$TN[j]/(df$TN[j] + df$FP[j])
+      df$PPV[j] <- df$TP[j]/(df$TP[j] + df$FP[j])
+      df$NPV[j] <- df$TN[j]/(df$TN[j] + df$FN[j])
+      df$FNR[j] <- df$FN[j]/(df$FN[j] + df$TP[j])
+      df$FPR[j] <- df$FP[j]/(df$FP[j] + df$TN[j])
+      df$FDR[j] <- df$FP[j]/(df$FP[j] + df$TP[j])
+      df$FOR[j] <- df$FN[j]/(df$FN[j] + df$TN[j])
+      df$TS[j] <- df$TP[j]/(df$TP[j] + df$FN[j] + df$FP[j])
+      df$F1[j] <- (2 * df$PPV[j] * df$TPR[j])/(df$PPV[j] + df$TPR[j])
+      df$BM[j] <- df$TPR[j] + df$TNR[j] - 1
+      df$MK[j] <- df$PPV[j] + df$NPV[j] - 1
+      df$COST[j] <- TN_cost * df$TN[j] + FP_cost * df$FP[j] + FN_cost * df$FN[j] + TP_cost * df$TP[j]}
+    results[[i]] <- df
+    utils::setTxtProgressBar(pb,i, title = "tytul", label = "abc")}
+  
+  # Convert list results do tibble data frame:
+  final_results <- base::do.call(bind_rows, results) %>%
+    tidyr::separate(col = WEIGHTS, sep = ", ", into = base::paste("model", 1:base::ncol(predictions), sep = "_"), convert = TRUE)
+  
+  # Arrange according to selected metric:
+  if(ascending == TRUE){
+    final_results %>%
+      dplyr::arrange(!!key_metric) -> final_results
+  } else {
+    final_results %>%
+      dplyr::arrange(dplyr::desc(!!key_metric)) -> final_results
   }
-  results[[i]] <- df
-  utils::setTxtProgressBar(pb,i, title = "tytul", label = "abc")
+  
+  # Return results:
+  base::return(base::list(all_results = final_results,
+                          top_results = final_results %>% utils::head(top),
+                          optimized_cutoff = final_results %>%
+                            utils::head(top) %>%
+                            dplyr::select(CUTOFF) %>%
+                            dplyr::summarise_all(mean),
+                          optimized_weights = final_results %>%
+                            utils::head(top) %>%
+                            dplyr::select(dplyr::starts_with("model_")) %>%
+                            dplyr::summarise_all(mean)))
 }
-
-final_results <- base::do.call(bind_rows, results) %>%
-  tidyr::separate(col = WEIGHTS, sep = ", ", into = base::paste("model", 1:base::ncol(predictions), sep = "_"), convert = TRUE)
-final_results %>%
-  dplyr::arrange(dplyr::desc(ACC)) 
-
-
-require(svMisc)
-install.packages("svMisc")
-
-
-svMisc::
-
-pred_1_class <- ifelse(pred_1 < 0.5, 0, 1)
-pred_1_class <- table(actual_class, pred_1_class) 
-sum(diag(pred_1_class))/sum(pred_1_class)
-sum(pred_1_class) - sum(diag(pred_1_class))
-
-
-
-
-
-
-
-
-# -------------------------
-library(tidyverse)
-n <- 100 # observations
-cuts <- 50 # i
-weights <- 50 # j
-pred_1 <- runif(n, min = 0, max = 1)
-pred_2 <- runif(n, min = 0, max = 1)
-pred_3 <- runif(n, min = 0, max = 1)
-actual_class <- base::sample(0:1, n, replace = TRUE)
-actual_class <- base::factor(actual_class, levels = base::c(0, 1), labels = base::c(0, 1))
-predictions <- base::round(base::cbind(pred_1, pred_2, pred_3), 4)
-
-cuts_ <- stats::runif(n = cuts, min = 0, max = 1)
-cuts_ <- base::sort(x = cuts_, decreasing = FALSE)
-
-weights_ <- base::matrix(data = stats::runif(base::ncol(predictions) * weights, min = 0, max = 1),
-                         nrow = weights,
-                         ncol = base::ncol(predictions))
-
-TN_cost <- 0
-FP_cost <- 1
-FN_cost <- 1
-TP_cost <- 0
-
-i <- 1
-j <- 1
-
-results <- base::list()
-for (i in 1:base::length(cuts_)){
-  cut_value <- cuts_[i]
-
-  df <- tibble::tibble(CUTOFF = base::numeric(weights),
-                       WEIGHTS = base::character(weights),
-                       TN = base::numeric(weights),
-                       FP = base::numeric(weights),
-                       FN = base::numeric(weights),
-                       TP = base::numeric(weights),
-                       P = base::numeric(weights),
-                       N = base::numeric(weights),
-                       ACC = base::numeric(weights),
-                       BACC = base::numeric(weights),
-                       BIAS = base::numeric(weights),
-                       CE = base::numeric(weights),
-                       TPR = base::numeric(weights),
-                       TNR = base::numeric(weights),
-                       PPV = base::numeric(weights),
-                       NPV = base::numeric(weights),
-                       FNR = base::numeric(weights),
-                       FPR = base::numeric(weights),
-                       FDR = base::numeric(weights),
-                       FOR = base::numeric(weights),
-                       TS = base::numeric(weights),
-                       F1 = base::numeric(weights),
-                       BM = base::numeric(weights),
-                       MK = base::numeric(weights),
-                       COST = base::numeric(weights))
-                       
-  for (j in 1:base::nrow(weights_)){
-    weight_value <- weights_[j,]/base::sum(weights_[j,])
-    predictions_table <- mapply("*", base::as.data.frame(predictions), weight_value) %>%
-      tibble::as_tibble() %>%
-      dplyr::mutate(prediction = base::rowSums(.),
-                    cutoff = cut_value,
-                    predicted_class = base::ifelse(prediction < cutoff, 0, 1))
-    predicted_class <- base::factor(predictions_table$predicted_class, levels = base::c(0, 1), labels = base::c(0, 1))
-    confusion_matrix <- base::table(actual_class, predicted_class)
-    
-    df$CUTOFF[j] <- cut_value
-    df$WEIGHTS[j] <- base::paste(weight_value, collapse = ", ")
-    df$TN[j] <- confusion_matrix[1, 1]
-    df$FP[j] <- confusion_matrix[1, 2]
-    df$FN[j] <- confusion_matrix[2, 1]
-    df$TP[j] <- confusion_matrix[2, 2]
-    df$N <- df$TN[j] + df$FP[j]
-    df$P <- df$FN[j] + df$TP[j]
-    df$ACC[j] <- (df$TN[j] + df$TP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
-    df$BACC[j] <- (df$TN[j]/(df$TN[j] + df$FP[j]) + df$TP[j]/(df$FN[j] + df$TP[j]))/2
-    df$BIAS[j] <- base::mean(base::as.numeric(actual_class)) - base::mean(base::as.numeric(predicted_class))
-    df$CE[j] <- (df$FN[j] + df$FP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
-    df$TPR[j] <- df$TP[j]/(df$TP[j] + df$FN[j])
-    df$TNR[j] <- df$TN[j]/(df$TN[j] + df$FP[j])
-    df$PPV[j] <- df$TP[j]/(df$TP[j] + df$FP[j])
-    df$NPV[j] <- df$TN[j]/(df$TN[j] + df$FN[j])
-    df$FNR[j] <- df$FN[j]/(df$FN[j] + df$TP[j])
-    df$FPR[j] <- df$FP[j]/(df$FP[j] + df$TN[j])
-    df$FDR[j] <- df$FP[j]/(df$FP[j] + df$TP[j])
-    df$FOR[j] <- df$FN[j]/(df$FN[j] + df$TN[j])
-    df$TS[j] <- df$TP[j]/(df$TP[j] + df$FN[j] + df$FP[j])
-    df$F1[j] <- (2 * df$PPV[j] * df$TPR[j])/(df$PPV[j] + df$TPR[j])
-    df$BM[j] <- df$TPR[j] + df$TNR[j] - 1
-    df$MK[j] <- df$PPV[j] + df$NPV[j] - 1
-    df$COST[j] <- TN_cost * df$TN[j] + FP_cost * df$FP[j] + FN_cost * df$FN[j] + TP_cost * df$TP[j]
-    
-    
-  }
-  results[[i]] <- df
-  base::print(i/cuts)
-  
-}
-
-final_results <- base::do.call(bind_rows, results) %>%
-  tidyr::separate(col = WEIGHTS, sep = ", ", into = base::paste("model", 1:base::ncol(predictions), sep = "_"), convert = TRUE)
-final_results %>%
-  dplyr::select(CUTOFF, dplyr::starts_with("model_"), ACC) %>%
-  tidyr::pivot_longer(cols = dplyr::starts_with("model_"), names_to = "MODEL", values_to = "WEIGHT") %>%
-  ggplot2::ggplot(data = ., mapping = aes(x = CUTOFF, y = WEIGHT, color = ACC)) +
-  ggplot2::facet_wrap(.~MODEL) +
-  ggplot2::geom_point() +
-  ggplot2::scale_color_gradient(low = "white", high = "black")
-  ggplot2::scale_color_continuous()
-
-  
-testit <- function(x = sort(runif(20)), ...)
-  {
-    pb <- txtProgressBar(...)
-    for(i in c(0, x, 1)) {Sys.sleep(0.5); setTxtProgressBar(pb, i)}
-    Sys.sleep(1)
-    close(pb)
-  }
-testit()
-testit(runif(10))
 
 
