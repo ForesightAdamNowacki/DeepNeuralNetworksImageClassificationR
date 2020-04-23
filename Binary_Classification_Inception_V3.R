@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # INCEPTION V3 BINARY MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
-# Data
+# Data:
 # https://www.kaggle.com/c/dogs-vs-cats
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
@@ -29,7 +29,7 @@ validation_files <- Count_Files(path = validation_dir); validation_files
 test_files <- Count_Files(path = test_dir); test_files
 
 # ------------------------------------------------------------------------------
-# Clear session
+# Clear session:
 keras::k_clear_session()
 
 # ------------------------------------------------------------------------------
@@ -433,7 +433,7 @@ Validation_Correct_Incorrect_Classifications <- Organize_Correct_Incorrect_Class
                                                                                            save_incorrect_images = TRUE)
 
 # ------------------------------------------------------------------------------
-# Visualize predictions distribution
+# Visualize predictions distribution:
 Visualize_Predictions_Distribution(actual = train_actual,
                                    predicted = train_predicted,
                                    bins = 10)

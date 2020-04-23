@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# XCEPTION BINARY MODEL IMPLEMENTATION
+# VGG19 BINARY MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
@@ -19,7 +19,7 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/Xception/Binary"
+models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/VGG19/Binary"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
 callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
@@ -35,7 +35,7 @@ keras::k_clear_session()
 # ------------------------------------------------------------------------------
 # Setting pipeline parameters values: 
 # Image:
-image_size <- 299
+image_size <- 224
 channels <- 3
 
 # Model structure:
@@ -49,7 +49,7 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
-batch_size <- 16
+batch_size <- 8
 class_mode <- "binary"
 shuffle <- TRUE
 epochs <- 1
@@ -66,10 +66,10 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# XCEPTION model architecture:
-model <- keras::application_xception(include_top = include_top,
-                                     weights = weights,
-                                     input_shape = base::c(image_size, image_size, channels))
+# VGG19 model architecture:
+model <- keras::application_vgg19(include_top = include_top,
+                                  weights = weights,
+                                  input_shape = base::c(image_size, image_size, channels))
 
 input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
@@ -142,7 +142,7 @@ keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2
-# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/Xception/Binary
+# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/VGG19/Binary
 # 4. tensorboard --logdir=logs --host=127.0.0.1
 # 5. http://127.0.0.1:6006/
 # 6. Start model optimization
@@ -232,9 +232,9 @@ test_probabilities <- keras::predict_generator(model, test_generator, steps = ba
 
 base::setwd(models_store_dir)
 datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-readr::write_csv2(tibble::as_tibble(train_probabilities), base::paste(datetime, "Xception_train_binary_probabilities.csv"))
-readr::write_csv2(tibble::as_tibble(validation_probabilities), base::paste(datetime, "Xception_validation_binary_probabilities.csv"))
-readr::write_csv2(tibble::as_tibble(test_probabilities), base::paste(datetime, "Xception_test_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(train_probabilities), base::paste(datetime, "VGG19_train_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(validation_probabilities), base::paste(datetime, "VGG19_validation_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(test_probabilities), base::paste(datetime, "VGG19_test_binary_probabilities.csv"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
@@ -245,7 +245,7 @@ train_predicted <- train_probabilities[,1]
 train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = default_cutoff,
-                                                       type_info = "Train Xception default cutoff",
+                                                       type_info = "Train VGG19 default cutoff",
                                                        save = FALSE,
                                                        open = FALSE)
 
@@ -254,7 +254,7 @@ validation_predicted <- validation_probabilities[,1]
 validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = default_cutoff,
-                                                            type_info = "Validation Xception default cutoff",
+                                                            type_info = "Validation VGG19 default cutoff",
                                                             save = FALSE,
                                                             open = FALSE)
 
@@ -263,7 +263,7 @@ test_predicted <- test_probabilities[,1]
 test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = default_cutoff,
-                                                      type_info = "Test Xception default cutoff",
+                                                      type_info = "Test VGG19 default cutoff",
                                                       save = FALSE,
                                                       open = FALSE)
 
@@ -281,13 +281,13 @@ train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Default_Cutoff_Xception.csv", sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Default_Cutoff_VGG19.csv", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization on validation set:
 train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_actual,
                                                                    predicted = train_predicted,
-                                                                   type_info = "Train Xception",
+                                                                   type_info = "Train VGG19",
                                                                    seed_value = 42,
                                                                    top = 10,
                                                                    cuts = 100,
@@ -302,7 +302,7 @@ train_cutoff_optimization %>%
 
 validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_actual,
                                                                         predicted = validation_predicted,
-                                                                        type_info = "Validation Xception",
+                                                                        type_info = "Validation VGG19",
                                                                         seed_value = 42,
                                                                         top = 10,
                                                                         cuts = 100,
@@ -320,21 +320,21 @@ selected_cutoff <- validation_optimal_cutoff
 train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = selected_cutoff,
-                                                       type_info = "Train Xception optimized cutoff",
+                                                       type_info = "Train VGG19 optimized cutoff",
                                                        save = FALSE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = selected_cutoff,
-                                                            type_info = "Validation Xception optimized cutoff",
+                                                            type_info = "Validation VGG19 optimized cutoff",
                                                             save = FALSE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = selected_cutoff,
-                                                      type_info = "Test Xception optimized cutoff",
+                                                      type_info = "Test VGG19 optimized cutoff",
                                                       save = FALSE,
                                                       open = FALSE)
 
@@ -352,7 +352,7 @@ train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Optimized_Cutoff_Xception.csv", sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Optimized_Cutoff_VGG19.csv", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Final summary:
