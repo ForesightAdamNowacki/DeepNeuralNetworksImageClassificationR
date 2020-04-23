@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# GOOGLENET INCEPTION V3 MODEL IMPLEMENTATION
+# INCEPTION V3 BINARY MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
 # Data
 # https://www.kaggle.com/c/dogs-vs-cats
@@ -7,35 +7,26 @@ utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Environment:
+base::remove(list = base::ls())
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
-base::source("D:\\GitHub\\DeepNeuralNetworksRepoR\\Binary_Categorical_Model_Evaluation.R")
+base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 
-train_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\train"
-validation_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\validation"
-test_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs\\test"
-callback_model_checkpoint_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_V3\\Binary\\keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5"
-callback_tensorboard_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_V3\\Binary\\logs"
-callback_csv_logger_path <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_V3\\Binary\\Optimization_logger.csv"
-models_store <- "D:\\GitHub\\DeepNeuralNetworksRepoR\\Inception_V3\\Binary"
+# Directories:
+train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
+validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
+test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
+models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/Inception_V3/Binary"
+callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5", sep = "/")
+callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
+callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
 
-count_files = function(path){
-  dirs <- base::list.dirs(path = path)
-  dirs <- dirs[2:base::length(dirs)]
-  files <- base::integer(base::length(dirs))
-  folder <- base::character(base::length(dirs))
-  for (i in base::seq_along(dirs)){
-    files[i] <- base::length(base::list.files(path = dirs[i]))
-    folder[i] <- base::basename(path = dirs[i])}
-  result = base::data.frame(category = folder, category_obs = files)
-  return(result)}
-
-train_files <- count_files(path = train_dir); train_files
-validation_files <- count_files(path = validation_dir); validation_files
-test_files <- count_files(path = test_dir); test_files
+train_files <- Count_Files(path = train_dir); train_files
+validation_files <- Count_Files(path = validation_dir); validation_files
+test_files <- Count_Files(path = test_dir); test_files
 
 # ------------------------------------------------------------------------------
 # Clear session
@@ -50,41 +41,20 @@ channels <- 3
 # Model structure:
 weights <- "imagenet"
 include_top <- FALSE
-activation <- "softmax"
+activation <- "sigmoid"
 
 # Model compilation:
-loss <- "categorical_crossentropy"
+loss <- "binary_crossentropy"
 optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
-# Augmentation:
-Augmentation <- TRUE
-rescale <- 1/255
-rotation_range <- 25
-width_shift_range <- 0.1
-height_shift_range <- 0.1
-shear_range <- 0.1
-zoom_range <- 0.1
-brightness_range <- base::c(0.5, 1.5)
-horizontal_flip <- TRUE
-vertical_flip <- FALSE
-fill_mode <- "nearest"
-featurewise_center <- FALSE
-samplewise_center <- FALSE
-featurewise_std_normalization <- FALSE
-samplewise_std_normalization <- FALSE
-zca_whitening <- FALSE
-zca_epsilon <- 1e-06
-channel_shift_range <- 0
-cval <- 0
-
 # Training:
-batch_size <- 32
-class_mode <- "categorical"
+batch_size <- 16
+class_mode <- "binary"
 shuffle <- TRUE
-epochs <- 25
+epochs <- 1
 patience <- 10
-monitor <- "val_acc"
+monitor <- "val_loss"
 save_best_only <- TRUE
 mode <- "max"
 verbose <- 1
@@ -96,7 +66,7 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# GoogLeNet Inception V3 model architecture:
+# Inception V3 model architecture:
 model <- keras::application_inception_v3(include_top = include_top,
                                          weights = weights,
                                          input_shape = base::c(image_size, image_size, channels))
@@ -105,14 +75,14 @@ input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, chann
 output_tensor <- input_tensor %>%
   model %>%
   keras::layer_global_average_pooling_2d() %>%
-  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation) 
+  keras::layer_dense(units = 1, activation = activation) 
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
 # ------------------------------------------------------------------------------
 # Upload pre-trained model for training:
 # last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]
-# model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "\\"), compile = FALSE)
+# model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "/"), compile = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
@@ -127,46 +97,36 @@ model %>% keras::compile(loss = loss,
 
 # ------------------------------------------------------------------------------
 # Generators:
-if (Augmentation == TRUE){
-  train_datagen <- keras::image_data_generator(rescale = rescale,
-                                               rotation_range = rotation_range, 
-                                               width_shift_range = width_shift_range,
-                                               height_shift_range = height_shift_range,
-                                               shear_range = shear_range,
-                                               zoom_range = zoom_range,
-                                               brightness_range = brightness_range,
-                                               horizontal_flip = horizontal_flip,
-                                               vertical_flip = vertical_flip,
-                                               fill_mode = fill_mode,
-                                               featurewise_center = featurewise_center,
-                                               samplewise_center = samplewise_center,
-                                               featurewise_std_normalization = featurewise_std_normalization,
-                                               samplewise_std_normalization = samplewise_std_normalization,
-                                               zca_whitening = zca_whitening,
-                                               zca_epsilon = zca_epsilon,
-                                               channel_shift_range = channel_shift_range,
-                                               cval = cval)
-  train_generator <- keras::flow_images_from_directory(directory = train_dir,
-                                                       generator = train_datagen, 
-                                                       target_size = base::c(image_size, image_size),
-                                                       batch_size = batch_size,
-                                                       class_mode = class_mode,
-                                                       classes = base::levels(validation_files$category),
-                                                       shuffle = shuffle)
-}
+train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
+                                             samplewise_center = FALSE,
+                                             featurewise_std_normalization = FALSE,
+                                             samplewise_std_normalization = FALSE,
+                                             zca_whitening = FALSE,
+                                             zca_epsilon = 1e-06,
+                                             rotation_range = 0,
+                                             width_shift_range = 0,
+                                             height_shift_range = 0,
+                                             brightness_range = base::c(1, 1),
+                                             shear_range = 0,
+                                             zoom_range = 0,
+                                             channel_shift_range = 0,
+                                             fill_mode = "nearest",
+                                             cval = 0,
+                                             horizontal_flip = FALSE,
+                                             vertical_flip = FALSE,
+                                             rescale = 1/255,
+                                             preprocessing_function = NULL,
+                                             data_format = NULL,
+                                             validation_split = 0)
+train_generator <- keras::flow_images_from_directory(directory = train_dir,
+                                                     generator = train_datagen, 
+                                                     target_size = base::c(image_size, image_size),
+                                                     batch_size = batch_size,
+                                                     class_mode = class_mode,
+                                                     classes = base::levels(validation_files$category),
+                                                     shuffle = TRUE)
 
-if (Augmentation == FALSE){
-  train_datagen <- keras::image_data_generator(rescale = rescale)
-  train_generator <- keras::flow_images_from_directory(directory = train_dir,
-                                                       generator = train_datagen, 
-                                                       target_size = base::c(image_size, image_size),
-                                                       batch_size = batch_size,
-                                                       class_mode = class_mode,
-                                                       classes = base::levels(validation_files$category),
-                                                       shuffle = shuffle)
-}
-
-validation_datagen <- keras::image_data_generator(rescale = rescale) 
+validation_datagen <- keras::image_data_generator(rescale = 1/255) 
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
                                                           target_size = base::c(image_size, image_size),
@@ -182,7 +142,7 @@ keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2
-# 3. cd C:\Users\admin\Desktop\GitHub\Models_Store\ResNet50-Models
+# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/Inception_V3/Binary
 # 4. tensorboard --logdir=logs --host=127.0.0.1
 # 5. http://127.0.0.1:6006/
 # 6. Start model optimization
@@ -223,9 +183,12 @@ history$metrics %>%
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]; last_model
-model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "\\"), compile = TRUE)
-model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Inception_V3_Binary_Cats_and_Dogs.hdf5")
+last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
+model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
+# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Inception_V3_Binary_Cats_and_Dogs.hdf5")
+model %>% keras::compile(loss = loss,
+                         optimizer = optimizer, 
+                         metrics = metrics)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
@@ -234,7 +197,7 @@ model %>% base::summary()
 
 # ------------------------------------------------------------------------------
 # Model predictions using generators:
-train_datagen <- keras::image_data_generator(rescale = rescale)
+train_datagen <- keras::image_data_generator(rescale = 1/255)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
                                                      target_size = base::c(image_size, image_size),
@@ -243,7 +206,7 @@ train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      classes = base::levels(validation_files$category),
                                                      shuffle = FALSE)
 
-validation_datagen <- keras::image_data_generator(rescale = rescale)
+validation_datagen <- keras::image_data_generator(rescale = 1/255)
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
                                                           target_size = base::c(image_size, image_size),
@@ -252,7 +215,7 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
                                                           classes = base::levels(validation_files$category),
                                                           shuffle = FALSE)
 
-test_datagen <- keras::image_data_generator(rescale = rescale)
+test_datagen <- keras::image_data_generator(rescale = 1/255)
 test_generator <- keras::flow_images_from_directory(directory = test_dir,
                                                     generator = test_datagen,
                                                     target_size = base::c(image_size, image_size),
@@ -267,37 +230,40 @@ train_probabilities <- keras::predict_generator(model, train_generator, steps = 
 validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
-base::setwd("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store")
-readr::write_csv(tibble::as_tibble(train_probabilities), "Inception_V3_train_binary_probabilities.csv")
-readr::write_csv(tibble::as_tibble(validation_probabilities), "Inception_V3_validation_binary_probabilities.csv")
-readr::write_csv(tibble::as_tibble(test_probabilities), "Inception_V3_test_binary_probabilities.csv")
+base::setwd(models_store_dir)
+datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+readr::write_csv2(tibble::as_tibble(train_probabilities), base::paste(datetime, "Inception_V3_train_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(validation_probabilities), base::paste(datetime, "Inception_V3_validation_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(test_probabilities), base::paste(datetime, "Inception_V3_test_binary_probabilities.csv"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
+default_cutoff <- 0.5
+
 train_actual <- base::rep(base::c(0, 1), times = train_files$category_obs)
-train_predicted <- train_probabilities[,2]
+train_predicted <- train_probabilities[,1]
 train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
-                                                       cutoff = 0.5,
-                                                       type_info = "Train ResNet50 default cutoff",
+                                                       cutoff = default_cutoff,
+                                                       type_info = "Train Inception V3 default cutoff",
                                                        save = FALSE,
                                                        open = FALSE)
 
 validation_actual <- base::rep(base::c(0, 1), times = validation_files$category_obs)
-validation_predicted <- validation_probabilities[,2]
+validation_predicted <- validation_probabilities[,1]
 validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
-                                                            cutoff = 0.5,
-                                                            type_info = "Validation ResNet50 default cutoff",
+                                                            cutoff = default_cutoff,
+                                                            type_info = "Validation Inception V3 default cutoff",
                                                             save = FALSE,
                                                             open = FALSE)
 
 test_actual <- base::c(base::rep(0, test_files$category_obs[1]/2), base::rep(1, test_files$category_obs[1]/2))
-test_predicted <- test_probabilities[,2]
+test_predicted <- test_probabilities[,1]
 test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
-                                                      cutoff = 0.5,
-                                                      type_info = "Test ResNet50 default cutoff",
+                                                      cutoff = default_cutoff,
+                                                      type_info = "Test Inception V3 default cutoff",
                                                       save = FALSE,
                                                       open = FALSE)
 
@@ -305,14 +271,23 @@ final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score) %>%
+                Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
+                Cutoff = default_cutoff) %>%
   knitr::kable(.); final_score_1
+
+train_verification_1$Assessment_of_Classifier_Effectiveness %>%
+  dplyr::select(Metric, Score) %>%
+  dplyr::rename(Score_train = Score) %>%
+  dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
+                Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
+                Cutoff = default_cutoff) %>%
+  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Default_Cutoff_Inception_V3.csv", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization on validation set:
 train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_actual,
                                                                    predicted = train_predicted,
-                                                                   type_info = "Train ResNet50",
+                                                                   type_info = "Train Inception V3",
                                                                    seed_value = 42,
                                                                    top = 10,
                                                                    cuts = 100,
@@ -327,7 +302,7 @@ train_cutoff_optimization %>%
 
 validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_actual,
                                                                         predicted = validation_predicted,
-                                                                        type_info = "Validation ResNet50",
+                                                                        type_info = "Validation Inception V3",
                                                                         seed_value = 42,
                                                                         top = 10,
                                                                         cuts = 100,
@@ -340,24 +315,26 @@ validation_cutoff_optimization %>%
   dplyr::pull() %>%
   base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
 
+selected_cutoff <- validation_optimal_cutoff
+
 train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
-                                                       cutoff = validation_optimal_cutoff,
-                                                       type_info = "Train ResNet50 optimized cutoff",
+                                                       cutoff = selected_cutoff,
+                                                       type_info = "Train Inception V3 optimized cutoff",
                                                        save = FALSE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
-                                                            cutoff = validation_optimal_cutoff,
-                                                            type_info = "Validation ResNet50 optimized cutoff",
+                                                            cutoff = selected_cutoff,
+                                                            type_info = "Validation Inception V3 optimized cutoff",
                                                             save = FALSE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
-                                                      cutoff = validation_optimal_cutoff,
-                                                      type_info = "Test ResNet50 optimized cutoff",
+                                                      cutoff = selected_cutoff,
+                                                      type_info = "Test Inception V3 optimized cutoff",
                                                       save = FALSE,
                                                       open = FALSE)
 
@@ -365,8 +342,17 @@ final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score) %>%
+                Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
+                Cutoff = selected_cutoff) %>%
   knitr::kable(.); final_score_2
+
+train_verification_2$Assessment_of_Classifier_Effectiveness %>%
+  dplyr::select(Metric, Score) %>%
+  dplyr::rename(Score_train = Score) %>%
+  dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
+                Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
+                Cutoff = selected_cutoff) %>%
+  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Optimized_Cutoff_Inception_V3.csv", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Final summary:
@@ -394,8 +380,67 @@ final_score_1_summary %>%
                 Test_optimized = Score_test.y) %>%
   dplyr::mutate(Train_diff = Train_optimized - Train_default,
                 Validation_diff = Validation_optimized - Validation_default,
-                Test_diff = Test_optimized - Test_default) %>%
-  dplyr::filter(Metric %!in% base::c('Number of Observations', 'Area Under ROC Curve', 'Condition Negative', 'Condition Positive', 'Gini Index')) %>%
+                Test_diff = Test_optimized - Test_default,
+                Cutoff = selected_cutoff) %>%
   knitr::kable(.)
+
+# ------------------------------------------------------------------------------
+# Predict indicated image:
+# Train:
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/train/cats/cat1.jpg",
+              model = model,
+              plot_image = TRUE)
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/train/dogs/dog1.jpg",
+              model = model,
+              plot_image = TRUE)
+
+# Validation:
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/validation/cats/cat4501.jpg",
+              model = model,
+              plot_image = TRUE)
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/validation/dogs/dog4501.jpg",
+              model = model,
+              plot_image = TRUE)
+
+# Test:
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/test/test/cat2001.jpg",
+              model = model,
+              plot_image = TRUE)
+Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/test/test/dog2001.jpg",
+              model = model,
+              plot_image = TRUE)
+
+# ------------------------------------------------------------------------------
+# Save true and false predictions:
+# Train:
+Train_Correct_Incorrect_Classifications <- Organize_Correct_Incorrect_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
+                                                                                      actual_classes = train_actual,
+                                                                                      prediction = train_predicted,
+                                                                                      cwd = models_store_dir,
+                                                                                      cutoff = 0.5,
+                                                                                      save_summary_files = TRUE,
+                                                                                      save_correct_images = TRUE,
+                                                                                      save_incorrect_images = TRUE)
+
+# Validation:
+Validation_Correct_Incorrect_Classifications <- Organize_Correct_Incorrect_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
+                                                                                           actual_classes = validation_actual,
+                                                                                           prediction = validation_predicted,
+                                                                                           cwd = models_store_dir,
+                                                                                           cutoff = 0.5,
+                                                                                           save_summary_files = TRUE,
+                                                                                           save_correct_images = TRUE,
+                                                                                           save_incorrect_images = TRUE)
+
+# ------------------------------------------------------------------------------
+# Visualize predictions distribution
+Visualize_Predictions_Distribution(actual = train_actual,
+                                   predicted = train_predicted,
+                                   bins = 10)
+
+Visualize_Predictions_Distribution(actual = validation_actual,
+                                   predicted = validation_predicted,
+                                   bins = 10)
+
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

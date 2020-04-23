@@ -143,7 +143,7 @@ Binary_Classifier_Verification <- function(actual,
                                                          FDR, FOR, TS, F1,
                                                          BM, MK, GINI, COST), digits = 6),
                              Calculation = base::c(OBS_label, TN_label, FP_label, FN_label, TP_label,
-                                                  N_label, P_label, ACC_label, BACC_label, AUC_label,
+                                                   N_label, P_label, ACC_label, BACC_label, AUC_label,
                                                    BIAS_label, CE_label, TPR_label, TNR_label,
                                                    PPV_label, NPV_label, FNR_label, FPR_label,
                                                    FDR_label, FOR_label, TS_label, F1_label,
@@ -203,10 +203,10 @@ Binary_Classifier_Verification <- function(actual,
                vheight = 1600,
                expand = 5)
     if (open == TRUE){
-    rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model evaluation metrics ", type_info, ".png"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model evaluation metrics ", type_info, ".png"), ":", "-"))
     }
   }
-
+  
   gt_table %>% base::print(.)
   
   base::invisible(base::list("Confusion_Matrix_Explanation" = result_1,
@@ -244,7 +244,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   if (!require(gt)){utils::install.packages('gt'); require('gt')}  
   if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
   if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
-    
+  
   key_metric <- dplyr::enquo(key_metric) 
   key_metric_name <- dplyr::quo_name(key_metric)
   
@@ -317,13 +317,13 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   }
   
   if(ascending == TRUE){
-      df %>%
-        dplyr::arrange(!!key_metric) -> df
-    } else {
-      df %>%
-        dplyr::arrange(dplyr::desc(!!key_metric)) -> df
+    df %>%
+      dplyr::arrange(!!key_metric) -> df
+  } else {
+    df %>%
+      dplyr::arrange(dplyr::desc(!!key_metric)) -> df
   }
-
+  
   df %>%
     utils::head(., top) %>%
     dplyr::mutate(ID = dplyr::row_number()) -> df
@@ -394,7 +394,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                vheight = 900,
                expand = 5)
     if (open == TRUE){
-    rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model cut-off value optimization ", type_info, ".png"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model cut-off value optimization ", type_info, ".png"), ":", "-"))
     }
   }
   
