@@ -6,6 +6,15 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
+# Intro:
+# 1. Set currect working directory:
+base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
+# 2. Create 'Xception' folder in cwd
+base::dir.create(path = base::paste(base::getwd(), "Xception", sep = "/"))
+# 3. Create 'Binary' subfolder in 'Xception' main folder
+base::dir.create(path = base::paste(base::getwd(), "Xception", "Binary", sep = "/"))
+
+# ------------------------------------------------------------------------------
 # Environment:
 base::remove(list = base::ls())
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
@@ -41,19 +50,20 @@ channels <- 3
 # Model structure:
 weights <- "imagenet"
 include_top <- FALSE
-activation <- "sigmoid"
+activation <- "softmax"
 
 # Model compilation:
-loss <- "binary_crossentropy"
+loss <- "categorical_crossentropy"
 optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
 batch_size <- 16
-class_mode <- "binary"
+class_mode <- "categorical"
 shuffle <- TRUE
 epochs <- 1
-patience <- 10
+early_stopping_patience <- 10
+reduce_lr_on_plateu_patience <- 5
 monitor <- "val_loss"
 save_best_only <- TRUE
 mode <- "max"
@@ -66,7 +76,7 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# XCEPTION model architecture:
+# Xception model architecture:
 model <- keras::application_xception(include_top = include_top,
                                      weights = weights,
                                      input_shape = base::c(image_size, image_size, channels))
@@ -75,7 +85,7 @@ input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, chann
 output_tensor <- input_tensor %>%
   model %>%
   keras::layer_global_average_pooling_2d() %>%
-  keras::layer_dense(units = 1, activation = activation) 
+  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation) 
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
@@ -155,25 +165,27 @@ history <- model %>% keras::fit_generator(generator = train_generator,
                                           epochs = epochs,
                                           validation_data = validation_generator,
                                           validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
-                                          callbacks = base::c(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
-                                                                                               monitor = monitor,
-                                                                                               verbose = verbose,
-                                                                                               save_best_only = save_best_only,
-                                                                                               mode = mode),
-                                                              keras::callback_early_stopping(monitor = monitor,
-                                                                                             min_delta = min_delta,
-                                                                                             verbose = verbose,
-                                                                                             patience = patience,
-                                                                                             restore_best_weights = restore_best_weights),
-                                                              keras::callback_tensorboard(log_dir = callback_tensorboard_path,
-                                                                                          histogram_freq = histogram_freq,
-                                                                                          write_graph = write_graph,
-                                                                                          write_grads = write_grads,
-                                                                                          write_images = write_images),
-                                                              keras::callback_csv_logger(filename = callback_csv_logger_path,
-                                                                                         separator = ";",
-                                                                                         append = TRUE)))
-
+                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                                                                                  monitor = monitor,
+                                                                                                  verbose = verbose,
+                                                                                                  save_best_only = save_best_only,
+                                                                                                  mode = mode),
+                                                                 keras::callback_early_stopping(monitor = monitor,
+                                                                                                min_delta = min_delta,
+                                                                                                verbose = verbose,
+                                                                                                patience = early_stopping_patience,
+                                                                                                restore_best_weights = restore_best_weights),
+                                                                 keras::callback_reduce_lr_on_plateau(monitor = monitor,
+                                                                                                      factor = 0.1,
+                                                                                                      patience = reduce_lr_on_plateu_patience),
+                                                                 keras::callback_tensorboard(log_dir = callback_tensorboard_path,
+                                                                                             histogram_freq = histogram_freq,
+                                                                                             write_graph = write_graph,
+                                                                                             write_grads = write_grads,
+                                                                                             write_images = write_images),
+                                                                 keras::callback_csv_logger(filename = callback_csv_logger_path,
+                                                                                            separator = ";",
+                                                                                            append = TRUE)))
 history$metrics %>%
   tibble::as_tibble() %>%
   dplyr::mutate(epoch = dplyr::row_number()) %>%
@@ -185,7 +197,7 @@ history$metrics %>%
 keras::k_clear_session()
 last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
 model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
-# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Xception_Binary_Cats_and_Dogs.hdf5")
+# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_Xception_Model.hdf5", compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
                          metrics = metrics)
@@ -232,39 +244,42 @@ test_probabilities <- keras::predict_generator(model, test_generator, steps = ba
 
 base::setwd(models_store_dir)
 datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-readr::write_csv2(tibble::as_tibble(train_probabilities), base::paste(datetime, "Xception_train_binary_probabilities.csv"))
-readr::write_csv2(tibble::as_tibble(validation_probabilities), base::paste(datetime, "Xception_validation_binary_probabilities.csv"))
-readr::write_csv2(tibble::as_tibble(test_probabilities), base::paste(datetime, "Xception_test_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
+                    dplyr::mutate(filepath = train_generator$filepaths), base::paste(datetime, "Xception_train_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
+                    dplyr::mutate(filepath = validation_generator$filepaths), base::paste(datetime, "Xception_validation_binary_probabilities.csv"))
+readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
+                    dplyr::mutate(filepath = test_generator$filepaths), base::paste(datetime, "Xception_test_binary_probabilities.csv"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
 default_cutoff <- 0.5
 
 train_actual <- base::rep(base::c(0, 1), times = train_files$category_obs)
-train_predicted <- train_probabilities[,1]
+train_predicted <- train_probabilities[,2]
 train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = default_cutoff,
                                                        type_info = "Train Xception default cutoff",
-                                                       save = FALSE,
+                                                       save = TRUE,
                                                        open = FALSE)
 
 validation_actual <- base::rep(base::c(0, 1), times = validation_files$category_obs)
-validation_predicted <- validation_probabilities[,1]
+validation_predicted <- validation_probabilities[,2]
 validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = default_cutoff,
                                                             type_info = "Validation Xception default cutoff",
-                                                            save = FALSE,
+                                                            save = TRUE,
                                                             open = FALSE)
 
 test_actual <- base::c(base::rep(0, test_files$category_obs[1]/2), base::rep(1, test_files$category_obs[1]/2))
-test_predicted <- test_probabilities[,1]
+test_predicted <- test_probabilities[,2]
 test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = default_cutoff,
                                                       type_info = "Test Xception default cutoff",
-                                                      save = FALSE,
+                                                      save = TRUE,
                                                       open = FALSE)
 
 final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
@@ -275,13 +290,14 @@ final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
                 Cutoff = default_cutoff) %>%
   knitr::kable(.); final_score_1
 
+datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
 train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Default_Cutoff_Xception.csv", sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Default_Cutoff_Xception.csv"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization on validation set:
@@ -293,7 +309,7 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
                                                                    cuts = 100,
                                                                    key_metric = ACC,
                                                                    ascending = FALSE,
-                                                                   save = FALSE,
+                                                                   save = TRUE,
                                                                    open = FALSE)
 train_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
@@ -308,7 +324,7 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
                                                                         cuts = 100,
                                                                         key_metric = ACC,
                                                                         ascending = FALSE,
-                                                                        save = FALSE,
+                                                                        save = TRUE,
                                                                         open = FALSE)
 validation_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
@@ -321,21 +337,21 @@ train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = selected_cutoff,
                                                        type_info = "Train Xception optimized cutoff",
-                                                       save = FALSE,
+                                                       save = TRUE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = selected_cutoff,
                                                             type_info = "Validation Xception optimized cutoff",
-                                                            save = FALSE,
+                                                            save = TRUE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = selected_cutoff,
                                                       type_info = "Test Xception optimized cutoff",
-                                                      save = FALSE,
+                                                      save = TRUE,
                                                       open = FALSE)
 
 final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
@@ -346,13 +362,14 @@ final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
                 Cutoff = selected_cutoff) %>%
   knitr::kable(.); final_score_2
 
+datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
 train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, "Summary_Optimized_Cutoff_Xception.csv", sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Optimized_Cutoff_Xception.csv"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Final summary:
@@ -384,63 +401,89 @@ final_score_1_summary %>%
                 Cutoff = selected_cutoff) %>%
   knitr::kable(.)
 
+datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+final_score_1_summary %>%
+  dplyr::left_join(final_score_2_summary, by = "Metric") %>%
+  dplyr::rename(Train_default = Score_train.x,
+                Validation_default = Score_validation.x,
+                Test_default = Score_test.x,
+                Train_optimized = Score_train.y,
+                Validation_optimized = Score_validation.y,
+                Test_optimized = Score_test.y) %>%
+  dplyr::mutate(Train_diff = Train_optimized - Train_default,
+                Validation_diff = Validation_optimized - Validation_default,
+                Test_diff = Test_optimized - Test_default,
+                Cutoff = selected_cutoff) %>%
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Comparison_Default_Optimized_Cutoff_Xception.csv"), sep = "/"))
+
 # ------------------------------------------------------------------------------
 # Predict indicated image:
-# Train:
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/train/cats/cat1.jpg",
-              model = model,
-              plot_image = TRUE)
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/train/dogs/dog1.jpg",
-              model = model,
-              plot_image = TRUE)
+labels <- base::sort(base::as.character(train_files$category)); labels
+set <- "train"
+category <- "dogs"  
+id <- 4
 
-# Validation:
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/validation/cats/cat4501.jpg",
+Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, base::list.files(base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, sep = "/")), sep = "/")[id],
               model = model,
-              plot_image = TRUE)
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/validation/dogs/dog4501.jpg",
-              model = model,
-              plot_image = TRUE)
-
-# Test:
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/test/test/cat2001.jpg",
-              model = model,
-              plot_image = TRUE)
-Predict_Image(image_path = "D:/GitHub/Datasets/Cats_And_Dogs/test/test/dog2001.jpg",
-              model = model,
+              classes = labels,
               plot_image = TRUE)
 
 # ------------------------------------------------------------------------------
 # Save true and false predictions:
 # Train:
-Train_Correct_Incorrect_Classifications <- Organize_Correct_Incorrect_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
-                                                                                      actual_classes = train_actual,
-                                                                                      prediction = train_predicted,
-                                                                                      cwd = models_store_dir,
-                                                                                      cutoff = 0.5,
-                                                                                      save_summary_files = TRUE,
-                                                                                      save_correct_images = TRUE,
-                                                                                      save_incorrect_images = TRUE)
+Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
+                                                                                                    actual_classes = train_actual,
+                                                                                                    prediction = train_predicted,
+                                                                                                    cwd = models_store_dir,
+                                                                                                    cutoff = 0.5,
+                                                                                                    save_summary_files = TRUE,
+                                                                                                    save_correct_images = FALSE,
+                                                                                                    save_incorrect_images = FALSE)
 
 # Validation:
-Validation_Correct_Incorrect_Classifications <- Organize_Correct_Incorrect_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
-                                                                                           actual_classes = validation_actual,
-                                                                                           prediction = validation_predicted,
-                                                                                           cwd = models_store_dir,
-                                                                                           cutoff = 0.5,
-                                                                                           save_summary_files = TRUE,
-                                                                                           save_correct_images = TRUE,
-                                                                                           save_incorrect_images = TRUE)
+Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
+                                                                                                         actual_classes = validation_actual,
+                                                                                                         prediction = validation_predicted,
+                                                                                                         cwd = models_store_dir,
+                                                                                                         cutoff = 0.5,
+                                                                                                         save_summary_files = TRUE,
+                                                                                                         save_correct_images = FALSE,
+                                                                                                         save_incorrect_images = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
-Visualize_Predictions_Distribution(actual = train_actual,
-                                   predicted = train_predicted,
-                                   bins = 10)
+labels <- base::sort(base::as.character(train_files$category)); labels
+train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_actual + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = train_actual,
+                                              predicted = train_predicted_2,
+                                              labels = labels,
+                                              bins = 10)
 
-Visualize_Predictions_Distribution(actual = validation_actual,
-                                   predicted = validation_predicted,
-                                   bins = 10)
+validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_actual + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = validation_actual,
+                                              predicted = validation_predicted_2,
+                                              labels = labels,
+                                              bins = 10)
+
+# ------------------------------------------------------------------------------
+# Plot predictions distribution in division to all classes:
+train_actual_2 <- train_actual + 1
+Display_All_Classes_Predictions_Distribution(actual = train_actual_2,
+                                             predicted = train_probabilities,
+                                             labels = labels,
+                                             bins = 10)
+
+validation_actual_2 <- validation_actual + 1
+Display_All_Classes_Predictions_Distribution(actual = validation_actual_2,
+                                             predicted = validation_probabilities,
+                                             labels = labels,
+                                             bins = 10)
+
+test_actual_2 <- test_actual + 1
+Display_All_Classes_Predictions_Distribution(actual = test_actual_2,
+                                             predicted = test_probabilities,
+                                             labels = labels,
+                                             bins = 10)
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

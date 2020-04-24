@@ -2,7 +2,7 @@
 # USEFUL FUNCTIONS
 # ------------------------------------------------------------------------------
 # Show and predict image class:
-Predict_Image <- function(image_path, model, plot_image = TRUE){
+Predict_Image <- function(image_path, model, classes, plot_image = TRUE){
   
   image_size <- base::dim(model$input)[[2]]
   
@@ -13,6 +13,7 @@ Predict_Image <- function(image_path, model, plot_image = TRUE){
   datagen <- keras::image_data_generator(rescale = 1/255)
   generator <- keras::flow_images_from_data(x = image_array, generator = datagen, batch_size = 1)
   prediction <- model %>% keras::predict_generator(generator = generator, steps = 1)
+  colnames(prediction) <- labels
   
   if (plot_image == TRUE){
     batch <- keras::generator_next(generator = generator)
@@ -20,19 +21,20 @@ Predict_Image <- function(image_path, model, plot_image = TRUE){
   }
   
   base::return(base::list(image_path = base::normalizePath(image_path),
-                          prediction = prediction))
+                          predictions = prediction,
+                          predicted_class = labels[base::which.max(prediction)]))
 }
 
 # ------------------------------------------------------------------------------
-# Automaticaly organize correct and incorrect classification:
-Organize_Correct_Incorrect_Classifications <- function(dataset_dir,
-                                                       actual_classes,
-                                                       prediction,
-                                                       cwd = models_store,
-                                                       cutoff = 0.5,
-                                                       save_summary_files = TRUE,
-                                                       save_correct_images = TRUE,
-                                                       save_incorrect_images = TRUE){
+# Automaticaly organize correct and incorrect binary classifications:
+Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
+                                                              actual_classes,
+                                                              prediction,
+                                                              cwd = models_store_dir,
+                                                              cutoff = 0.5,
+                                                              save_summary_files = TRUE,
+                                                              save_correct_images = TRUE,
+                                                              save_incorrect_images = TRUE){
   
   base::print(base::paste("Current working directory:", cwd))
   base::setwd(cwd)
@@ -49,6 +51,73 @@ Organize_Correct_Incorrect_Classifications <- function(dataset_dir,
                                  prediction = prediction,
                                  cutoff = cutoff) %>%
     dplyr::mutate(predicted_class = base::ifelse(prediction < cutoff, 0, 1))
+  
+  summary_data_correct <- summary_data %>%
+    dplyr::filter(actual_class == predicted_class) 
+  
+  summary_data_incorrect <- summary_data %>%
+    dplyr::filter(actual_class != predicted_class) 
+  
+  if (base::isTRUE(save_summary_files)){
+    readr::write_csv2(summary_data, base::paste(datetime, dataset_label, "all_classification.csv", sep = "_"))
+    readr::write_csv2(summary_data_correct, base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_"))
+    readr::write_csv2(summary_data_incorrect, base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_"))
+    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "all_classification.csv", sep = "_")))
+    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_")))
+    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_")))}
+  
+  # correct:
+  if (base::isTRUE(save_correct_images)){
+    correct_classification_folder <- base::paste(datetime, dataset_label, "correct_classification", sep = "_")
+    base::unlink(correct_classification_folder, recursive = TRUE)
+    base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    base::print(base::paste("Folder created:", correct_classification_folder))
+    
+    correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
+    base::file.copy(from = summary_data_correct$files,
+                    to = base::paste(correct_classification_dir, base::basename(summary_data_correct$files), sep = "/"))}
+  
+  # incorrect:
+  if (base::isTRUE(save_incorrect_images)){
+    incorrect_classification_folder <- base::paste(datetime, dataset_label, "incorrect_classification", sep = "_")
+    base::unlink(incorrect_classification_folder, recursive = TRUE)
+    base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    base::print(base::paste("Folder created:", incorrect_classification_folder))
+    
+    incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
+    base::file.copy(from = summary_data_incorrect$files,
+                    to = base::paste(incorrect_classification_dir, base::basename(summary_data_incorrect$files), sep = "/"))}
+  
+  if (base::isTRUE(save_summary_files)){
+    base::invisible(base::list(all_files = summary_data,
+                               correct_classification = summary_data_correct,
+                               incorrect_classification = summary_data_incorrect))}
+}
+
+# ------------------------------------------------------------------------------
+# Automaticaly organize correct and incorrect catogorical classifications:
+Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
+                                                                   actual_classes,
+                                                                   prediction,
+                                                                   cwd = models_store,
+                                                                   save_summary_files = TRUE,
+                                                                   save_correct_images = TRUE,
+                                                                   save_incorrect_images = TRUE){
+  
+  base::print(base::paste("Current working directory:", cwd))
+  base::setwd(cwd)
+  
+  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  categories <- base::list.files(path = dataset_dir)
+  dataset_label <- base::basename(dataset_dir)
+  
+  lista <- base::list()
+  for (i in 1:base::length(categories)){
+    lista[[i]] <- tibble::tibble(files = base::paste(base::paste(dataset_dir, categories[i], sep = "/"), base::list.files(base::paste(dataset_dir, categories[i], sep = "/")), sep = "/"))
+  }
+  summary_data <- base::do.call("bind_rows", lista) %>%
+    dplyr::mutate(actual_class = actual_classes,
+                  predicted_class = base::max.col(prediction))
   
   summary_data_correct <- summary_data %>%
     dplyr::filter(actual_class == predicted_class) 
@@ -365,58 +434,7 @@ Split_Data_Train_Validation <- function(data_dir,
     base::return(.)}
 
 # ------------------------------------------------------------------------------
-# Final version
-# library(tidyverse)
-# cuts <- 50 # i
-# weights <- 50 # j
-# 
-# # Train:
-# pred_1 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Inception_V3_train_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# pred_2 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/ResNet50_train_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# pred_3 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Xception_train_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# predictions <- base::cbind(pred_1, pred_2, pred_3); predictions
-# 
-# files <- count_files(path = "D:\\GitHub\\Datasets\\Cats_And_Dogs\\train")
-# actual_class <- base::rep(base::c(0, 1), times = files$category_obs)
-# actual_class <- base::factor(actual_class, levels = base::c(0, 1), labels = base::c(0, 1))
-# 
-# 
-# 
-# # Validation:
-# pred_1 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Inception_V3_validation_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# pred_2 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/ResNet50_validation_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# pred_3 <- readr::read_csv("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Xception_validation_binary_probabilities.csv") %>%
-#   dplyr::select(V2) %>% 
-#   dplyr::pull()
-# predictions <- base::cbind(pred_1, pred_2, pred_3); predictions
-# 
-# files <- count_files(path = "D:\\GitHub\\Datasets\\Cats_And_Dogs\\validation")
-# actual_class <- base::rep(base::c(0, 1), times = files$category_obs)
-# actual_class <- base::factor(actual_class, levels = base::c(0, 1), labels = base::c(0, 1))
-# 
-# # Optimization
-# 
-# abc <- Optimize_Ensemble_Cutoff_Model(actual_class = actual_class,
-#                                predictions = predictions,
-#                                cuts = 25,
-#                                weights = 25,
-#                                key_metric = ACC,
-#                                )
-# 
-
-
-
-
+# Optimize ensemble binary model:
 Optimize_Ensemble_Cutoff_Model <- function(actual_class,
                                            predictions,
                                            cuts,
@@ -544,12 +562,13 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
                             dplyr::summarise_all(mean)))}
 
 # ------------------------------------------------------------------------------
-# Plot predictions distribution in division to binary classes:
-Visualize_Predictions_Distribution <- function(actual,
-                                               predicted,
-                                               bins = 10,
-                                               text_size = 7,
-                                               title_size = 9){
+# Plot predictions distribution in division to target classes:
+Display_Target_Class_Predictions_Distribution <- function(actual,
+                                                          predicted,
+                                                          labels,
+                                                          bins = 10,
+                                                          text_size = 7,
+                                                          title_size = 9){
   
   tibble::tibble(actual = base::factor(actual),
                  predicted = predicted) %>%
@@ -558,13 +577,14 @@ Visualize_Predictions_Distribution <- function(actual,
     dplyr::summarise(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
     tidyr::complete(cut, actual, fill = base::list(n = 0)) %>%
+    dplyr::mutate(actual = base::factor(actual, labels = labels, ordered = TRUE)) %>%
     ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = cut, y = n, label = n)) +
     ggplot2::geom_bar(stat = "identity", col = "black") +
     ggplot2::geom_label() +
     ggplot2::facet_grid(actual~.) +
     ggplot2::labs(x = "Prediction value",
                   y = "Count",
-                  title = "Predictions distribution per binary class") +
+                  title = "Probability distribution per target class") +
     ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
                    axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
                    axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
@@ -582,7 +602,107 @@ Visualize_Predictions_Distribution <- function(actual,
                    plot.caption = element_text(size = text_size, color = "black", face = "bold", hjust = 1),
                    legend.position = "none",
                    strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
-                   strip.text = element_text(size = text_size, face = "bold"))}
+                   strip.text = element_text(size = text_size, face = "bold")) -> plot
+  
+  tibble::tibble(actual = base::factor(actual),
+                 predicted = predicted) %>%
+    dplyr::mutate(cut = ggplot2::cut_interval(predicted, length = 1/bins)) %>%
+    dplyr::group_by(cut, actual) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(cut, actual, fill = base::list(n = 0)) %>%
+    dplyr::mutate(actual = base::factor(actual, labels = labels, ordered = TRUE)) %>%
+    tidyr::pivot_wider(id_cols = "actual",
+                       names_from = "cut",
+                       values_from = "n") %>%
+    mutate(Observations = rowSums(.[2:(bins + 1)])) -> results
+  
+  base::invisible(results)
+  plot %>%
+    base::print(.)
+  results %>%
+    knitr::kable(.)}
+
+# ------------------------------------------------------------------------------
+# Plot predictions distribution in division to all classes:
+Display_All_Classes_Predictions_Distribution <- function(actual,
+                                                         predicted,
+                                                         labels,
+                                                         bins = 10,
+                                                         text_size = 7,
+                                                         title_size = 9){
+  predicted %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(actual = actual,
+                  predicted = base::max.col(predicted)) %>%
+    tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                        names_to = "class",
+                        values_to = "probability") %>%
+    dplyr::mutate(cut = ggplot2::cut_interval(probability, length = 1/bins),
+                  cut = forcats::fct_rev(base::factor(cut, ordered = TRUE)),
+                  class = base::as.numeric(stringr::str_sub(class, 2, -1)),
+                  class = base::factor(class, labels = base::paste0("predicted_", labels), levels = 1:base::length(labels), ordered = TRUE),
+                  actual = base::factor(actual, labels = base::paste0("actual_", labels), levels = 1:base::length(labels), ordered = TRUE)) %>%
+    dplyr::group_by(actual, class, cut) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(actual, class, cut, fill = base::list(n = 0)) %>%
+    ggplot2::ggplot(data = ., mapping = ggplot2::aes(y = cut, x = n, label = n)) +
+    ggplot2::geom_bar(stat = "identity", col = "black") +
+    ggplot2::geom_label(color = "black", size = 3, label.size = 0.5, fontface = 1, fill = "white",label.padding = unit(0.15, "lines"), label.r = unit(0, "lines")) +
+    ggplot2::facet_grid(actual ~ class) +
+    ggplot2::labs(x = "Predicted class",
+                  y = "Actual class",
+                  title = "Probability distribution per classes") +
+    ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
+                   axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.title.y = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.title.x = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.ticks = element_line(size = 1, color = "black", linetype = "solid"),
+                   axis.ticks.length = unit(0.1, "cm"),
+                   plot.background = element_rect(fill = "gray80", color = "black", size = 1, linetype = "solid"),
+                   panel.background = element_rect(fill = "gray90", color = "black", size = 0.5, linetype = "solid"),
+                   panel.border = element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),
+                   panel.grid.major.x = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.major.y = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.minor.x = element_line(linetype = "blank"),
+                   panel.grid.minor.y = element_line(linetype = "blank"),
+                   plot.caption = element_text(size = text_size, color = "black", face = "bold", hjust = 1),
+                   legend.position = "none",
+                   strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
+                   strip.text = element_text(size = text_size, face = "bold")) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.1, 0.1))) -> plot
+  
+  predicted %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(actual = actual,
+                  predicted = base::max.col(predicted)) %>%
+    tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                        names_to = "class",
+                        values_to = "probability") %>%
+    dplyr::mutate(cut = ggplot2::cut_interval(probability, length = 1/bins),
+                  class = base::as.numeric(stringr::str_sub(class, 2, -1)),
+                  class = base::factor(class, labels = labels, levels = 1:base::length(labels), ordered = TRUE),
+                  actual = base::factor(actual, labels = labels, levels = 1:base::length(labels), ordered = TRUE)) %>%
+    dplyr::group_by(actual, class, cut) %>%
+    dplyr::summarise(n = dplyr::n()) %>%
+    dplyr::ungroup() %>%
+    tidyr::complete(actual, class, cut, fill = base::list(n = 0)) %>%
+    dplyr::mutate(actual = base::as.character(actual),
+                  class = base::as.character(class),
+                  cut = base::as.character(cut)) %>%
+    tidyr::pivot_wider(id_cols = base::c("actual", "cut"),
+                       names_from = "class",
+                       values_from = "n",
+                       names_prefix = "predicted_") %>%
+    dplyr::mutate(actual = base::paste0("actual_", actual)) -> results
+  
+  base::invisible(results)
+  plot %>%
+    base::print(.)
+  results %>%
+    knitr::kable(.)}
 
 
 # ------------------------------------------------------------------------------
