@@ -28,7 +28,7 @@ train_dir <- "D:/GitHub/Datasets/Cifar10/train"
 validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"
 test_dir <- "D:/GitHub/Datasets/Cifar10/test"
 models_store_dir <- base::paste(base::getwd(), "Xception/Categorical", sep = "/")
-callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5", sep = "/")
+callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
 callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
 
@@ -57,14 +57,15 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
-batch_size <- 16
+batch_size <- 8
 class_mode <- "categorical"
 shuffle <- TRUE
 epochs <- 1
-patience <- 10
+early_stopping_patience <- 10
+reduce_lr_on_plateu_patience <- 5
 monitor <- "val_loss"
 save_best_only <- TRUE
-mode <- "max"
+if (monitor == "val_loss"){mode <- "min"} else {mode <- "max"}
 verbose <- 1
 write_graph <- TRUE
 write_grads <- TRUE
@@ -162,24 +163,27 @@ history <- model %>% keras::fit_generator(generator = train_generator,
                                           epochs = epochs,
                                           validation_data = validation_generator,
                                           validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
-                                          callbacks = base::c(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
-                                                                                               monitor = monitor,
-                                                                                               verbose = verbose,
-                                                                                               save_best_only = save_best_only,
-                                                                                               mode = mode),
-                                                              keras::callback_early_stopping(monitor = monitor,
-                                                                                             min_delta = min_delta,
-                                                                                             verbose = verbose,
-                                                                                             patience = patience,
-                                                                                             restore_best_weights = restore_best_weights),
-                                                              keras::callback_tensorboard(log_dir = callback_tensorboard_path,
-                                                                                          histogram_freq = histogram_freq,
-                                                                                          write_graph = write_graph,
-                                                                                          write_grads = write_grads,
-                                                                                          write_images = write_images),
-                                                              keras::callback_csv_logger(filename = callback_csv_logger_path,
-                                                                                         separator = ";",
-                                                                                         append = TRUE)))
+                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                                                                                  monitor = monitor,
+                                                                                                  verbose = verbose,
+                                                                                                  save_best_only = save_best_only,
+                                                                                                  mode = mode),
+                                                                 keras::callback_early_stopping(monitor = monitor,
+                                                                                                min_delta = min_delta,
+                                                                                                verbose = verbose,
+                                                                                                patience = early_stopping_patience,
+                                                                                                restore_best_weights = restore_best_weights),
+                                                                 keras::callback_reduce_lr_on_plateau(monitor = monitor,
+                                                                                                      factor = 0.1,
+                                                                                                      patience = reduce_lr_on_plateu_patience),
+                                                                 keras::callback_tensorboard(log_dir = callback_tensorboard_path,
+                                                                                             histogram_freq = histogram_freq,
+                                                                                             write_graph = write_graph,
+                                                                                             write_grads = write_grads,
+                                                                                             write_images = write_images),
+                                                                 keras::callback_csv_logger(filename = callback_csv_logger_path,
+                                                                                            separator = ";",
+                                                                                            append = TRUE)))
 history$metrics %>%
   tibble::as_tibble() %>%
   dplyr::mutate(epoch = dplyr::row_number()) %>%
@@ -189,8 +193,8 @@ history$metrics %>%
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]; last_model
-model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "/"), compile = FALSE)
+last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
+model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
 # model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Categorical_Xception_Model.hdf5", compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 

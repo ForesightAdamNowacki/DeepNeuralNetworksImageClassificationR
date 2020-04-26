@@ -29,7 +29,7 @@ train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
 models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/DenseNet121/Binary"
-callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5", sep = "/")
+callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
 callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
 
@@ -66,7 +66,7 @@ early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_loss"
 save_best_only <- TRUE
-mode <- "max"
+if (monitor == "val_loss"){mode <- "min"} else {mode <- "max"}
 verbose <- 1
 write_graph <- TRUE
 write_grads <- TRUE
@@ -462,6 +462,12 @@ Display_Target_Class_Predictions_Distribution(actual = train_actual,
 validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_actual + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = validation_actual,
                                               predicted = validation_predicted_2,
+                                              labels = labels,
+                                              bins = 10)
+
+test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_actual + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = test_actual,
+                                              predicted = test_predicted_2,
                                               labels = labels,
                                               bins = 10)
 

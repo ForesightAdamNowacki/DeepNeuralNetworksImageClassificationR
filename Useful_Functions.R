@@ -22,8 +22,7 @@ Predict_Image <- function(image_path, model, classes, plot_image = TRUE){
   
   base::return(base::list(image_path = base::normalizePath(image_path),
                           predictions = prediction,
-                          predicted_class = labels[base::which.max(prediction)]))
-}
+                          predicted_class = labels[base::which.max(prediction)]))}
 
 # ------------------------------------------------------------------------------
 # Automaticaly organize correct and incorrect binary classifications:
@@ -91,8 +90,7 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
   if (base::isTRUE(save_summary_files)){
     base::invisible(base::list(all_files = summary_data,
                                correct_classification = summary_data_correct,
-                               incorrect_classification = summary_data_incorrect))}
-}
+                               incorrect_classification = summary_data_incorrect))}}
 
 # ------------------------------------------------------------------------------
 # Automaticaly organize correct and incorrect catogorical classifications:
@@ -158,8 +156,7 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
   if (base::isTRUE(save_summary_files)){
     base::invisible(base::list(all_files = summary_data,
                                correct_classification = summary_data_correct,
-                               incorrect_classification = summary_data_incorrect))}
-}
+                               incorrect_classification = summary_data_incorrect))}}
 
 # ------------------------------------------------------------------------------
 # Count files in train/validation/test directory per class:
@@ -704,7 +701,6 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
   results %>%
     knitr::kable(.)}
 
-
 # ------------------------------------------------------------------------------
 # BINARY MODEL EVALUATION
 # Function to verify the predictive and classification capabilities of the binary model.
@@ -749,6 +745,7 @@ Binary_Classifier_Verification <- function(actual,
   
   probability <- predicted
   if(base::length(base::unique(predicted)) > 2){predicted <- base::ifelse(predicted < cutoff, 0, 1)}
+  predicted <- base::factor(predicted, levels = base::c(0, 1), labels = base::c(0, 1))
   
   # Confusion matrix result:
   confusion_matrix <- base::table(actual, predicted)
@@ -918,8 +915,7 @@ Binary_Classifier_Verification <- function(actual,
   
   base::invisible(base::list("Confusion_Matrix_Explanation" = result_1,
                              "Confusion_Matrix_Result" = result_2,
-                             "Assessment_of_Classifier_Effectiveness" = result_3))
-}
+                             "Assessment_of_Classifier_Effectiveness" = result_3))}
 
 # ------------------------------------------------------------------------------
 # CUT-OFF OPTIMIZATION
@@ -1106,8 +1102,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   }
   
   gt_table %>% base::print(.)
-  base::invisible(df)
-}
+  base::invisible(df)}
 
 # ------------------------------------------------------------------------------
 # Categorical model evaluation:
@@ -1475,6 +1470,5 @@ Categorical_Model_Evaluation <- function(actual,
                                                      TP_cost = TP_cost)
   
   base::invisible(base::list("Categorical classification" = stats_4,
-                             "Binary classification" = binary_results))
-}
+                             "Binary classification" = binary_results))}
 
