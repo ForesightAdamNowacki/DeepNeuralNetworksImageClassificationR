@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# RESNET50 BINARY MODEL IMPLEMENTATION
+# VGG16 BINARY MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
@@ -9,10 +9,10 @@ utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
-# 2. Create 'ResNet50' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), "ResNet50", sep = "/"))
-# 3. Create 'Binary' subfolder in 'ResNet50' main folder
-base::dir.create(path = base::paste(base::getwd(), "ResNet50", "Binary", sep = "/"))
+# 2. Create 'VGG16' folder in cwd
+base::dir.create(path = base::paste(base::getwd(), "VGG16", sep = "/"))
+# 3. Create 'Binary' subfolder in 'VGG16' main folder
+base::dir.create(path = base::paste(base::getwd(), "VGG16", "Binary", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -28,10 +28,13 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/ResNet50/Binary"
-callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
-callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
+models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/VGG16/Binary"
+callback_model_checkpoint_path_1 <- base::paste(models_store_dir, "keras_model.freeze_weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
+callback_model_checkpoint_path_2 <- base::paste(models_store_dir, "keras_model.unfreeze_weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
+callback_tensorboard_path_1 <- base::paste(models_store_dir, "logs_freeze", sep = "/")
+callback_tensorboard_path_2 <- base::paste(models_store_dir, "logs_unfreeze", sep = "/")
+callback_csv_logger_path_1 <- base::paste(models_store_dir, "Optimization_logger_freeze.csv", sep = "/")
+callback_csv_logger_path_2 <- base::paste(models_store_dir, "Optimization_logger_unfreeze.csv", sep = "/")
 
 train_files <- Count_Files(path = train_dir); train_files
 validation_files <- Count_Files(path = validation_dir); validation_files
@@ -50,7 +53,9 @@ channels <- 3
 # Model structure:
 weights <- "imagenet"
 include_top <- FALSE
-activation <- "softmax"
+activation_1 <- "linear"
+activation_2 <- "relu"
+activation_3 <- "softmax"
 
 # Model compilation:
 loss <- "categorical_crossentropy"
@@ -58,10 +63,13 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
-batch_size <- 16
+batch_size_freeze <- 16
+batch_size_unfreeze <- 8
+epochs_freeze <- 10
+epochs_unfreeze <- 10
+
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 5
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_loss"
@@ -76,18 +84,26 @@ histogram_freq <- 1
 min_delta <- 0
 
 # ------------------------------------------------------------------------------
-# ResNet50 model architecture:
-model <- keras::application_resnet50(include_top = include_top,
+# VGG16 model architecture:
+model <- keras::application_vgg16(include_top = include_top,
                                      weights = weights,
                                      input_shape = base::c(image_size, image_size, channels))
 
 input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
   model %>%
-  keras::layer_global_average_pooling_2d() %>%
-  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation) 
+  keras::layer_flatten() %>%
+  keras::layer_dense(units = 4096, activation = activation_1) %>%
+  keras::layer_activation(activation = activation_2) %>%
+  keras::layer_dense(units = 4096, activation = activation_1) %>%
+  keras::layer_activation(activation = activation_2) %>%
+  keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation_3)
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
+
+base::print(base::length(model$trainable_weights))
+model %>% keras::freeze_weights(from = "input_2", to = "vgg16") # from including, to including
+base::print(base::length(model$trainable_weights))
 
 # ------------------------------------------------------------------------------
 # Upload pre-trained model for training:
@@ -131,7 +147,7 @@ train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
                                                      target_size = base::c(image_size, image_size),
-                                                     batch_size = batch_size,
+                                                     batch_size = batch_size_freeze,
                                                      class_mode = class_mode,
                                                      classes = base::levels(validation_files$category),
                                                      shuffle = shuffle)
@@ -140,35 +156,36 @@ validation_datagen <- keras::image_data_generator(rescale = 1/255)
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
                                                           target_size = base::c(image_size, image_size),
-                                                          batch_size = batch_size,
+                                                          batch_size = batch_size_freeze,
                                                           class_mode = class_mode,
                                                           classes = base::levels(validation_files$category),
                                                           shuffle = shuffle)
 
 # ------------------------------------------------------------------------------
 # Tensorboard:
-base::dir.create(path = callback_tensorboard_path)
-keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
+base::dir.create(path = callback_tensorboard_path_1)
+keras::tensorboard(log_dir = callback_tensorboard_path_1, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2
-# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/ResNet50/Binary
-# 4. tensorboard --logdir=logs --host=127.0.0.1
+# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/VGG16/Binary
+# 4. tensorboard --logdir=logs_freeze --host=127.0.0.1
 # 5. http://127.0.0.1:6006/
 # 6. Start model optimization
 # 7. F5 http://127.0.0.1:6006/ to examine the latest results
 
 # ------------------------------------------------------------------------------
-# Model optimization:
+# Model optimization first stage:
 history <- model %>% keras::fit_generator(generator = train_generator,
                                           steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
-                                          epochs = epochs,
+                                          epochs = epochs_freeze,
                                           validation_data = validation_generator,
                                           validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
-                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path_1,
                                                                                                   monitor = monitor,
                                                                                                   verbose = verbose,
-                                                                                                  save_best_only = save_best_only),
+                                                                                                  save_best_only = save_best_only,
+                                                                                                  mode = mode),
                                                                  keras::callback_early_stopping(monitor = monitor,
                                                                                                 min_delta = min_delta,
                                                                                                 verbose = verbose,
@@ -176,14 +193,13 @@ history <- model %>% keras::fit_generator(generator = train_generator,
                                                                                                 restore_best_weights = restore_best_weights),
                                                                  keras::callback_reduce_lr_on_plateau(monitor = monitor,
                                                                                                       factor = 0.1,
-                                                                                                      patience = reduce_lr_on_plateu_patience,
-                                                                                                      verbose = verbose),
-                                                                 keras::callback_tensorboard(log_dir = callback_tensorboard_path,
+                                                                                                      patience = reduce_lr_on_plateu_patience),
+                                                                 keras::callback_tensorboard(log_dir = callback_tensorboard_path_1,
                                                                                              histogram_freq = histogram_freq,
                                                                                              write_graph = write_graph,
                                                                                              write_grads = write_grads,
                                                                                              write_images = write_images),
-                                                                 keras::callback_csv_logger(filename = callback_csv_logger_path,
+                                                                 keras::callback_csv_logger(filename = callback_csv_logger_path_1,
                                                                                             separator = ";",
                                                                                             append = TRUE)))
 history$metrics %>%
@@ -197,7 +213,110 @@ history$metrics %>%
 keras::k_clear_session()
 last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
 model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
-# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_ResNet50_Model.hdf5", compile = FALSE)
+
+base::print(base::length(model$trainable_weights))
+model %>% keras::unfreeze_weights()
+base::print(base::length(model$trainable_weights))
+
+# ------------------------------------------------------------------------------
+# Model compilation:
+model %>% keras::compile(loss = loss,
+                         optimizer = optimizer, 
+                         metrics = metrics)
+
+# ------------------------------------------------------------------------------
+# Generators:
+train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
+                                             samplewise_center = FALSE,
+                                             featurewise_std_normalization = FALSE,
+                                             samplewise_std_normalization = FALSE,
+                                             zca_whitening = FALSE,
+                                             zca_epsilon = 1e-06,
+                                             rotation_range = 0,
+                                             width_shift_range = 0,
+                                             height_shift_range = 0,
+                                             brightness_range = base::c(1, 1),
+                                             shear_range = 0,
+                                             zoom_range = 0,
+                                             channel_shift_range = 0,
+                                             fill_mode = "nearest",
+                                             cval = 0,
+                                             horizontal_flip = FALSE,
+                                             vertical_flip = FALSE,
+                                             rescale = 1/255,
+                                             preprocessing_function = NULL,
+                                             data_format = NULL,
+                                             validation_split = 0)
+train_generator <- keras::flow_images_from_directory(directory = train_dir,
+                                                     generator = train_datagen, 
+                                                     target_size = base::c(image_size, image_size),
+                                                     batch_size = batch_size_unfreeze,
+                                                     class_mode = class_mode,
+                                                     classes = base::levels(validation_files$category),
+                                                     shuffle = shuffle)
+
+validation_datagen <- keras::image_data_generator(rescale = 1/255) 
+validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
+                                                          generator = validation_datagen,
+                                                          target_size = base::c(image_size, image_size),
+                                                          batch_size = batch_size_unfreeze,
+                                                          class_mode = class_mode,
+                                                          classes = base::levels(validation_files$category),
+                                                          shuffle = shuffle)
+
+# ------------------------------------------------------------------------------
+# Tensorboard:
+base::dir.create(path = callback_tensorboard_path_2)
+keras::tensorboard(log_dir = callback_tensorboard_path_2, host = "127.0.0.1")
+# If 'ERROR: invalid version specification':
+# 1. Anaconda Prompt
+# 2. conda activate GPU_ML_2
+# 3. cd D:/GitHub/DeepNeuralNetworksRepoR/VGG16/Binary
+# 4. tensorboard --logdir=logs_unfreeze --host=127.0.0.1
+# 5. http://127.0.0.1:6006/
+# 6. Start model optimization
+# 7. F5 http://127.0.0.1:6006/ to examine the latest results
+
+# ------------------------------------------------------------------------------
+# Model optimization second stage:
+history_2 <- model %>% keras::fit_generator(generator = train_generator,
+                                          steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
+                                          epochs = epochs_unfreeze,
+                                          validation_data = validation_generator,
+                                          validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
+                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path_2,
+                                                                                                  monitor = monitor,
+                                                                                                  verbose = verbose,
+                                                                                                  save_best_only = save_best_only),
+                                                                 keras::callback_early_stopping(monitor = monitor,
+                                                                                                min_delta = min_delta,
+                                                                                                verbose = verbose,
+                                                                                                patience = early_stopping_patience,
+                                                                                                restore_best_weights = restore_best_weights),
+                                                                 keras::callback_reduce_lr_on_plateau(monitor = monitor,
+                                                                                                      factor = 0.1,
+                                                                                                      patience = reduce_lr_on_plateu_patience,
+                                                                                                      verbose = verbose),
+                                                                 keras::callback_tensorboard(log_dir = callback_tensorboard_path_2,
+                                                                                             histogram_freq = histogram_freq,
+                                                                                             write_graph = write_graph,
+                                                                                             write_grads = write_grads,
+                                                                                             write_images = write_images),
+                                                                 keras::callback_csv_logger(filename = callback_csv_logger_path_2,
+                                                                                            separator = ";",
+                                                                                            append = TRUE)))
+history_2$metrics %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(epoch = dplyr::row_number()) %>%
+  base::as.data.frame() %>%
+  knitr::kable(.)
+
+# ------------------------------------------------------------------------------
+# Clear session and import the best trained model:
+keras::k_clear_session()
+last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
+model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
+# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_VGG16_Model.hdf5", compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
                          metrics = metrics)
@@ -213,7 +332,7 @@ train_datagen <- keras::image_data_generator(rescale = 1/255)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
                                                      target_size = base::c(image_size, image_size),
-                                                     batch_size = batch_size,
+                                                     batch_size = batch_size_unfreeze,
                                                      class_mode = class_mode,
                                                      classes = base::levels(validation_files$category),
                                                      shuffle = FALSE)
@@ -222,7 +341,7 @@ validation_datagen <- keras::image_data_generator(rescale = 1/255)
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
                                                           target_size = base::c(image_size, image_size),
-                                                          batch_size = batch_size,
+                                                          batch_size = batch_size_unfreeze,
                                                           class_mode = class_mode,
                                                           classes = base::levels(validation_files$category),
                                                           shuffle = FALSE)
@@ -231,7 +350,7 @@ test_datagen <- keras::image_data_generator(rescale = 1/255)
 test_generator <- keras::flow_images_from_directory(directory = test_dir,
                                                     generator = test_datagen,
                                                     target_size = base::c(image_size, image_size),
-                                                    batch_size = batch_size,
+                                                    batch_size = batch_size_unfreeze,
                                                     class_mode = class_mode,
                                                     shuffle = FALSE)
 
@@ -245,11 +364,11 @@ test_probabilities <- keras::predict_generator(model, test_generator, steps = ba
 base::setwd(models_store_dir)
 datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
-                    dplyr::mutate(filepath = train_generator$filepaths), base::paste(datetime, "ResNet50_train_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = train_generator$filepaths), base::paste(datetime, "VGG16_train_binary_probabilities.csv"))
 readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
-                    dplyr::mutate(filepath = validation_generator$filepaths), base::paste(datetime, "ResNet50_validation_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = validation_generator$filepaths), base::paste(datetime, "VGG16_validation_binary_probabilities.csv"))
 readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
-                    dplyr::mutate(filepath = test_generator$filepaths), base::paste(datetime, "ResNet50_test_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = test_generator$filepaths), base::paste(datetime, "VGG16_test_binary_probabilities.csv"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
@@ -260,7 +379,7 @@ train_predicted <- train_probabilities[,2]
 train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = default_cutoff,
-                                                       type_info = "Train ResNet50 default cutoff",
+                                                       type_info = "Train VGG16 default cutoff",
                                                        save = TRUE,
                                                        open = FALSE)
 
@@ -269,7 +388,7 @@ validation_predicted <- validation_probabilities[,2]
 validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = default_cutoff,
-                                                            type_info = "Validation ResNet50 default cutoff",
+                                                            type_info = "Validation VGG16 default cutoff",
                                                             save = TRUE,
                                                             open = FALSE)
 
@@ -278,7 +397,7 @@ test_predicted <- test_probabilities[,2]
 test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = default_cutoff,
-                                                      type_info = "Test ResNet50 default cutoff",
+                                                      type_info = "Test VGG16 default cutoff",
                                                       save = TRUE,
                                                       open = FALSE)
 
@@ -297,13 +416,13 @@ train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Default_Cutoff_ResNet50.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Default_Cutoff_VGG16.csv"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization on validation set:
 train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_actual,
                                                                    predicted = train_predicted,
-                                                                   type_info = "Train ResNet50",
+                                                                   type_info = "Train VGG16",
                                                                    seed_value = 42,
                                                                    top = 10,
                                                                    cuts = 100,
@@ -318,7 +437,7 @@ train_cutoff_optimization %>%
 
 validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_actual,
                                                                         predicted = validation_predicted,
-                                                                        type_info = "Validation ResNet50",
+                                                                        type_info = "Validation VGG16",
                                                                         seed_value = 42,
                                                                         top = 10,
                                                                         cuts = 100,
@@ -336,21 +455,21 @@ selected_cutoff <- validation_optimal_cutoff
 train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
                                                        predicted = train_predicted,
                                                        cutoff = selected_cutoff,
-                                                       type_info = "Train ResNet50 optimized cutoff",
+                                                       type_info = "Train VGG16 optimized cutoff",
                                                        save = TRUE,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
                                                             predicted = validation_predicted,
                                                             cutoff = selected_cutoff,
-                                                            type_info = "Validation ResNet50 optimized cutoff",
+                                                            type_info = "Validation VGG16 optimized cutoff",
                                                             save = TRUE,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
                                                       predicted = test_predicted,
                                                       cutoff = selected_cutoff,
-                                                      type_info = "Test ResNet50 optimized cutoff",
+                                                      type_info = "Test VGG16 optimized cutoff",
                                                       save = TRUE,
                                                       open = FALSE)
 
@@ -369,7 +488,7 @@ train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Optimized_Cutoff_ResNet50.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Optimized_Cutoff_VGG16.csv"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Final summary:
@@ -414,7 +533,7 @@ final_score_1_summary %>%
                 Validation_diff = Validation_optimized - Validation_default,
                 Test_diff = Test_optimized - Test_default,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Comparison_Default_Optimized_Cutoff_ResNet50.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Comparison_Default_Optimized_Cutoff_VGG16.csv"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Predict indicated image:
