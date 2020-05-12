@@ -1497,6 +1497,7 @@ Create_KFolds_Directories <- function(data_dir,
     dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
                   fold = caret::createFolds(class, k = folds, list = FALSE))
   
+  # base::unlink(target_dir, recursive = TRUE, force = TRUE)
   base::dir.create(path = target_dir, showWarnings = FALSE, recursive = TRUE)
   
   for (i in 1:folds){

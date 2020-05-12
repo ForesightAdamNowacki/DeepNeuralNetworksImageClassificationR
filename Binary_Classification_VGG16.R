@@ -54,7 +54,7 @@ class_mode <- "binary"
 shuffle <- TRUE
 epochs <- 1
 patience <- 10
-monitor <- "val_loss"
+monitor <- "val_acc"
 save_best_only <- TRUE
 mode <- "max"
 verbose <- 1

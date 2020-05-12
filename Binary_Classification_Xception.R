@@ -203,6 +203,14 @@ model %>% keras::compile(loss = loss,
                          metrics = metrics)
 
 # ------------------------------------------------------------------------------
+# Remove not optimal models:
+base::setwd(models_store_dir)
+saved_models <- base::sort(base::list.files()[base::grepl(".hdf5", base::list.files())])
+for (j in 1:(base::length(saved_models) - 1)){
+  base::cat("Remove .hdf5 file:", saved_models[j], "\n")
+  base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}
+
+# ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
 model %>% base::summary()

@@ -64,7 +64,7 @@ shuffle <- TRUE
 epochs <- 5
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
-monitor <- "val_loss"
+monitor <- "val_acc"
 save_best_only <- TRUE
 if (monitor == "val_loss"){mode <- "min"} else {mode <- "max"}
 verbose <- 1
@@ -201,6 +201,14 @@ model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, s
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
                          metrics = metrics)
+
+# ------------------------------------------------------------------------------
+# Remove not optimal models:
+base::setwd(models_store_dir)
+saved_models <- base::sort(base::list.files()[base::grepl(".hdf5", base::list.files())])
+for (j in 1:(base::length(saved_models) - 1)){
+  base::cat("Remove .hdf5 file:", saved_models[j], "\n")
+  base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}
 
 # ------------------------------------------------------------------------------
 # Visualize model:
