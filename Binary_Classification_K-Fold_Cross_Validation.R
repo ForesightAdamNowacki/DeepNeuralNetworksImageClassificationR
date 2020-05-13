@@ -27,11 +27,15 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 
 # Directories:
 models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/K-Fold_Cross_Validation/Binary"
-data_directory <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/data"
+repo_models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_CV"
+cv_data_dir <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/data"
+train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
+validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
+test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
 folds_directory <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/K-folds"
 base::unlink(folds_directory, force = TRUE, recursive = TRUE)
 folds <- 5
-Create_KFolds_Directories(data_dir = data_directory,
+Create_KFolds_Directories(data_dir = cv_data_dir,
                           target_dir = folds_directory,
                           folds = folds,
                           seed = 42)
@@ -54,8 +58,8 @@ for (i in base::seq_along(steps_dirs)){
   base::print(Count_Files(path = base::paste(steps_dirs[i], sep = "/")))
   base::cat("\n")}
 
-train_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "train", sep = "/")); train_files
-validation_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "validation", sep = "/")); validation_files
+cv_train_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "train", sep = "/")); cv_train_files
+cv_validation_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "validation", sep = "/")); cv_validation_files
 
 # ------------------------------------------------------------------------------
 # Clear session:
@@ -105,7 +109,7 @@ build_model <- function(image_size = 150, channels = 3,
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_dropout(rate = 0.5) %>%
     
-    keras::layer_dense(units = base::length(base::levels(validation_files$category)), activation = activation_1) %>%
+    keras::layer_dense(units = base::length(base::levels(cv_train_files$category)), activation = activation_1) %>%
     keras::layer_activation(activation = activation_3)
   
   model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
@@ -179,7 +183,7 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
                                                          target_size = base::c(image_size, image_size),
                                                          batch_size = batch_size,
                                                          class_mode = class_mode,
-                                                         classes = base::levels(train_files$category),
+                                                         classes = base::levels(cv_train_files$category),
                                                          shuffle = shuffle)
     
     validation_datagen <- keras::image_data_generator(rescale = 1/255) 
@@ -188,14 +192,14 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
                                                               target_size = base::c(image_size, image_size),
                                                               batch_size = batch_size,
                                                               class_mode = class_mode,
-                                                              classes = base::levels(train_files$category),
+                                                              classes = base::levels(cv_train_files$category),
                                                               shuffle = shuffle)
     
     history <- model %>% keras::fit_generator(generator = train_generator,
-                                              steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
+                                              steps_per_epoch = base::ceiling(base::sum(cv_train_files$category_obs)/train_generator$batch_size), 
                                               epochs = epochs,
                                               validation_data = validation_generator,
-                                              validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
+                                              validation_steps = base::ceiling(base::sum(cv_validation_files$category_obs)/train_generator$batch_size), 
                                               callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                       monitor = monitor,
                                                                                                       verbose = verbose,
@@ -245,6 +249,15 @@ logs_folders <- base::paste(base::getwd(), base::list.files()[base::grepl("logs"
 for (i in base::seq_along(logs_folders)){
   base::cat("Remove logs folder:", logs_folders[i], "\n")
   base::unlink(logs_folders[i], force = TRUE, recursive = TRUE)}
+
+# ------------------------------------------------------------------------------
+# Automaticaly change optimal fold's models directory:
+optimal_models <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
+base::file.copy(from = optimal_models,
+                to = base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/"))
+for (i in base::seq_along(optimal_models)){
+  base::unlink(optimal_models[i])}
+optimal_models_repo_store <- base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/")
 
 # ------------------------------------------------------------------------------
 # Cross validation results:
@@ -343,14 +356,45 @@ results_loss %>%
 ggplot2::ggsave("Plot_loss.png", loss_plot, units = "cm", width = 20, height = 20)
 
 # ------------------------------------------------------------------------------
+# Save predictions from all folds models:
+predict_folds_models <- function(data_dir, type, batch_size = 16){
+  
+  for (i in base::seq_along(optimal_models_repo_store)){
+    print(optimal_models_repo_store[i])
+    model <- build_model() %>%
+      keras::load_model_weights_hdf5(optimal_models_repo_store[i]) %>%
+      keras::compile(loss = "categorical_crossentropy",
+                     optimizer = keras::optimizer_adam(), 
+                     metrics = base::c("acc"))
+    
+    datagen <- keras::image_data_generator(rescale = 1/255)
+    generator <- keras::flow_images_from_directory(directory = data_dir,
+                                                   generator = datagen,
+                                                   target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]),
+                                                   batch_size = batch_size,
+                                                   class_mode = "categorical",
+                                                   shuffle = FALSE)
+    count_files <- Count_Files(path = data_dir)
+    prediction <- keras::predict_generator(model, generator, steps = base::ceiling(base::sum(count_files$category_obs)/generator$batch_size), verbose = 1)
+    prediction <- prediction %>%
+      tibble::as_tibble()
+    
+    filename <- base::paste(base::getwd(), base::paste(type, "prediction", i, "model.csv", sep = "_"), sep = "/")
+    prediction %>% 
+      readr::write_csv(filename)
+    
+    base::cat("Save file:", filename, "\n")}}
+
+predict_folds_models(data_dir = cv_data_dir, type = "cross_validation_data")
+predict_folds_models(data_dir = train_dir, type = "train_data")
+predict_folds_models(data_dir = validation_dir, type = "validation_data")
+predict_folds_models(data_dir = test_dir, type = "test_data")
+
+# ------------------------------------------------------------------------------
+
+
 # Zrobiæ:
 # Œredni wynik wszystkich pojedynczych 5 modeli na ca³ym zbiorze treningowym i testowym
 # Wynik ka¿dego modelu osobno na ca³ym zbiorze treningowym i testowym
-
-
-
-# https://github.com/ForesightAdamNowacki
-
-
 
 
