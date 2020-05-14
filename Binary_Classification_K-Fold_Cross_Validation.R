@@ -258,6 +258,8 @@ base::file.copy(from = optimal_models,
 for (i in base::seq_along(optimal_models)){
   base::unlink(optimal_models[i])}
 optimal_models_repo_store <- base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/")
+for (i in base::seq_along(optimal_models_repo_store)){
+  base::cat("Fold", i, "optimal model directory:", optimal_models_repo_store[i], "\n")}
 
 # ------------------------------------------------------------------------------
 # Cross validation results:
@@ -381,20 +383,104 @@ predict_folds_models <- function(data_dir, type, batch_size = 16){
     
     filename <- base::paste(base::getwd(), base::paste(type, "prediction", i, "model.csv", sep = "_"), sep = "/")
     prediction %>% 
+      dplyr::mutate(filepath = generator$filepaths,
+                    actual_class = generator$classes) %>%
       readr::write_csv(filename)
     
     base::cat("Save file:", filename, "\n")}}
 
-predict_folds_models(data_dir = cv_data_dir, type = "cross_validation_data")
+predict_folds_models(data_dir = cv_data_dir, type = "cv_data")
 predict_folds_models(data_dir = train_dir, type = "train_data")
 predict_folds_models(data_dir = validation_dir, type = "validation_data")
 predict_folds_models(data_dir = test_dir, type = "test_data")
 
 # ------------------------------------------------------------------------------
+# Model verification - default cutoff:
+default_cutoff <- 0.5
 
+# Cross validation data:
+cv_results <- base::list()
+for (i in 1:folds){
+  cv_results[[i]] <- readr::read_csv(base::list.files(pattern = "cv_data")[i])
+  cv_results[[i]]$model <- base::paste("model", i, sep = "_")}
+cv_results %>%
+  base::do.call(dplyr::bind_rows, .) %>%
+  dplyr::group_by(filepath) %>%
+  dplyr::summarise(V1 = base::mean(V1),
+                   V2 = base::mean(V2),
+                   actual_class = base::mean(actual_class)) -> cv_results
+  
+cv_verification <- Binary_Classifier_Verification(actual = cv_results$actual_class,
+                                                  predicted = cv_results$V2,
+                                                  cutoff = default_cutoff,
+                                                  type_info = "Cross validation data default cutoff",
+                                                  save = TRUE,
+                                                  open = FALSE)
 
-# Zrobiæ:
-# Œredni wynik wszystkich pojedynczych 5 modeli na ca³ym zbiorze treningowym i testowym
-# Wynik ka¿dego modelu osobno na ca³ym zbiorze treningowym i testowym
+# Train data:
+train_results <- base::list()
+for (i in 1:folds){
+  train_results[[i]] <- readr::read_csv(base::list.files(pattern = "train_data")[i])
+  train_results[[i]]$model <- base::paste("model", i, sep = "_")}
+train_results %>%
+  base::do.call(dplyr::bind_rows, .) %>%
+  dplyr::group_by(filepath) %>%
+  dplyr::summarise(V1 = base::mean(V1),
+                   V2 = base::mean(V2),
+                   actual_class = base::mean(actual_class)) -> train_results
+
+train_verification <- Binary_Classifier_Verification(actual = train_results$actual_class,
+                                                     predicted = train_results$V2,
+                                                     cutoff = default_cutoff,
+                                                     type_info = "Train data default cutoff",
+                                                     save = TRUE,
+                                                     open = FALSE)
+
+# Validation data:
+validation_results <- base::list()
+for (i in 1:folds){
+  validation_results[[i]] <- readr::read_csv(base::list.files(pattern = "validation_data")[i])
+  validation_results[[i]]$model <- base::paste("model", i, sep = "_")}
+validation_results %>%
+  base::do.call(dplyr::bind_rows, .) %>%
+  dplyr::group_by(filepath) %>%
+  dplyr::summarise(V1 = base::mean(V1),
+                   V2 = base::mean(V2),
+                   actual_class = base::mean(actual_class)) -> validation_results
+
+validation_verification <- Binary_Classifier_Verification(actual = validation_results$actual_class,
+                                                          predicted = validation_results$V2,
+                                                          cutoff = default_cutoff,
+                                                          type_info = "Validation data default cutoff",
+                                                          save = TRUE,
+                                                          open = FALSE)
+
+# Test data:
+test_results <- base::list()
+for (i in 1:folds){
+  test_results[[i]] <- readr::read_csv(base::list.files(pattern = "test_data")[i])
+  test_results[[i]]$model <- base::paste("model", i, sep = "_")}
+test_results %>%
+  base::do.call(dplyr::bind_rows, .) %>%
+  dplyr::group_by(filepath) %>%
+  dplyr::summarise(V1 = base::mean(V1),
+                   V2 = base::mean(V2),
+                   actual_class = base::mean(actual_class)) -> test_results
+
+test_verification <- Binary_Classifier_Verification(actual = test_results$actual_class,
+                                                    predicted = test_results$V2,
+                                                    cutoff = default_cutoff,
+                                                    type_info = "Test data default cutoff",
+                                                    save = TRUE,
+                                                    open = FALSE)
+
+final_score <- cv_verification$Assessment_of_Classifier_Effectiveness %>%
+  dplyr::select(Metric, Score) %>%
+  dplyr::rename(Score_cv = Score) %>%
+  dplyr::mutate(Score_train = train_verification$Assessment_of_Classifier_Effectiveness$Score,
+                Score_validation = validation_verification$Assessment_of_Classifier_Effectiveness$Score,
+                Score_test = test_verification$Assessment_of_Classifier_Effectiveness$Score,
+                Cutoff = default_cutoff) %>%
+  knitr::kable(.); final_score
 
 
