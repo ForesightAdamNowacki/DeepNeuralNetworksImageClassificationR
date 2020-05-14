@@ -251,7 +251,7 @@ for (i in base::seq_along(logs_folders)){
   base::unlink(logs_folders[i], force = TRUE, recursive = TRUE)}
 
 # ------------------------------------------------------------------------------
-# Automaticaly change optimal fold's models directory:
+# Save optimal model in local models repository: 
 optimal_models <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
 base::file.copy(from = optimal_models,
                 to = base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/"))

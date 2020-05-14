@@ -29,6 +29,7 @@ train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
 models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/Xception/Binary"
+models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
 callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
@@ -61,7 +62,7 @@ metrics <- base::c("acc")
 batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 1
+epochs <- 5
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_loss"
@@ -91,8 +92,8 @@ model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
 # ------------------------------------------------------------------------------
 # Upload pre-trained model for training:
-# last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]
-# model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "/"), compile = FALSE)
+# last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]
+# model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
@@ -193,22 +194,36 @@ history$metrics %>%
   knitr::kable(.)
 
 # ------------------------------------------------------------------------------
-# Clear session and import the best trained model:
-keras::k_clear_session()
-last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]; last_model
-model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
-# model <- keras::load_model_hdf5(filepath = "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_Xception_Model.hdf5", compile = FALSE)
-model %>% keras::compile(loss = loss,
-                         optimizer = optimizer, 
-                         metrics = metrics)
-
-# ------------------------------------------------------------------------------
 # Remove not optimal models:
 base::setwd(models_store_dir)
 saved_models <- base::sort(base::list.files()[base::grepl(".hdf5", base::list.files())])
-for (j in 1:(base::length(saved_models) - 1)){
-  base::cat("Remove .hdf5 file:", saved_models[j], "\n")
-  base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}
+if (length(saved_models) > 1){
+  for (j in 1:(base::length(saved_models) - 1)){
+    base::cat("Remove .hdf5 file:", saved_models[j], "\n")
+    base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
+
+# ------------------------------------------------------------------------------
+# Remove logs folder:
+logs_folder <- base::paste(base::getwd(), base::list.files()[base::grepl("logs", base::list.files())], sep = "/")
+base::unlink(logs_folder, force = TRUE, recursive = TRUE)
+
+# ------------------------------------------------------------------------------
+# Save optimal model in local models repository: 
+optimal_model <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Binary_Xception_Model.hdf5", sep = "/")
+base::file.copy(from = optimal_model,
+                to = optimal_model_repo_dir, 
+                overwrite = TRUE); base::cat("Optimal model directory:", optimal_model_repo_dir, "\n")
+base::unlink(optimal_model, recursive = TRUE, force = TRUE)
+
+# ------------------------------------------------------------------------------
+# Clear session and import the best trained model:
+keras::k_clear_session()
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Binary_Xception_Model.hdf5", sep = "/")
+model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
+model %>% keras::compile(loss = loss,
+                         optimizer = optimizer, 
+                         metrics = metrics)
 
 # ------------------------------------------------------------------------------
 # Visualize model:

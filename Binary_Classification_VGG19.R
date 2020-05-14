@@ -20,6 +20,7 @@ train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
 models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/VGG19/Binary"
+models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.2f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
 callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
@@ -81,8 +82,8 @@ model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
 # ------------------------------------------------------------------------------
 # Upload pre-trained model for training:
-# last_model <- base::list.files(path = models_store, pattern = ".hdf5")[base::length(base::list.files(path = models_store, pattern = ".hdf5"))]
-# model <- keras::load_model_hdf5(filepath = paste(models_store, last_model, sep = "/"), compile = FALSE)
+# last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]
+# model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
