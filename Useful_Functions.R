@@ -28,7 +28,8 @@ Predict_Image <- function(image_path, model, classes, plot_image = TRUE){
 # Automaticaly organize correct and incorrect binary classifications:
 Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
                                                               actual_classes,
-                                                              prediction,
+                                                              predicted,
+                                                              type_info,
                                                               cwd = models_store_dir,
                                                               cutoff = 0.5,
                                                               save_summary_files = TRUE,
@@ -47,9 +48,9 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
   
   summary_data <- tibble::tibble(files = base::c(category_1, category_2),
                                  actual_class = actual_classes,
-                                 prediction = prediction,
+                                 predicted = predicted,
                                  cutoff = cutoff) %>%
-    dplyr::mutate(predicted_class = base::ifelse(prediction < cutoff, 0, 1))
+    dplyr::mutate(predicted_class = base::ifelse(predicted < cutoff, 0, 1))
   
   summary_data_correct <- summary_data %>%
     dplyr::filter(actual_class == predicted_class) 
@@ -58,16 +59,16 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
     dplyr::filter(actual_class != predicted_class) 
   
   if (base::isTRUE(save_summary_files)){
-    readr::write_csv2(summary_data, base::paste(datetime, dataset_label, "all_classification.csv", sep = "_"))
-    readr::write_csv2(summary_data_correct, base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_"))
-    readr::write_csv2(summary_data_incorrect, base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_"))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "all_classification.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_")))}
+    readr::write_csv2(summary_data, base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_correct, base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_incorrect, base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
+    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_")))
+    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_")))
+    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_")))}
   
   # correct:
   if (base::isTRUE(save_correct_images)){
-    correct_classification_folder <- base::paste(datetime, dataset_label, "correct_classification", sep = "_")
+    correct_classification_folder <- base::paste(datetime, type_info, dataset_label, "correct_classifications", sep = "_")
     base::unlink(correct_classification_folder, recursive = TRUE)
     base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
     base::print(base::paste("Folder created:", correct_classification_folder))
@@ -78,7 +79,7 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
   
   # incorrect:
   if (base::isTRUE(save_incorrect_images)){
-    incorrect_classification_folder <- base::paste(datetime, dataset_label, "incorrect_classification", sep = "_")
+    incorrect_classification_folder <- base::paste(datetime, type_info, dataset_label, "incorrect_classifications", sep = "_")
     base::unlink(incorrect_classification_folder, recursive = TRUE)
     base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
     base::print(base::paste("Folder created:", incorrect_classification_folder))
@@ -96,7 +97,7 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
 # Automaticaly organize correct and incorrect catogorical classifications:
 Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
                                                                    actual_classes,
-                                                                   prediction,
+                                                                   predicted,
                                                                    cwd = models_store,
                                                                    save_summary_files = TRUE,
                                                                    save_correct_images = TRUE,
@@ -115,7 +116,7 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
   }
   summary_data <- base::do.call("bind_rows", lista) %>%
     dplyr::mutate(actual_class = actual_classes,
-                  predicted_class = base::max.col(prediction))
+                  predicted_class = base::max.col(predicted))
   
   summary_data_correct <- summary_data %>%
     dplyr::filter(actual_class == predicted_class) 
@@ -565,9 +566,14 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
 Display_Target_Class_Predictions_Distribution <- function(actual,
                                                           predicted,
                                                           labels,
+                                                          type_info,
                                                           bins = 10,
                                                           text_size = 7,
-                                                          title_size = 9){
+                                                          title_size = 9,
+                                                          save_plot = FALSE,
+                                                          plot_size = 20){
+  
+  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
   
   tibble::tibble(actual = base::factor(actual),
                  predicted = predicted) %>%
@@ -616,6 +622,10 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
                        values_from = "n") %>%
     mutate(Observations = rowSums(.[2:(bins + 1)])) -> results
   
+  if (save_plot == TRUE){
+    filename <- base::paste(datetime, type_info, "probability_distribution_per_target_class.png", sep = "_")
+    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)}
+  
   base::invisible(results)
   plot %>%
     base::print(.)
@@ -627,9 +637,15 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
 Display_All_Classes_Predictions_Distribution <- function(actual,
                                                          predicted,
                                                          labels,
+                                                         type_info,
                                                          bins = 10,
                                                          text_size = 7,
-                                                         title_size = 9){
+                                                         title_size = 9,
+                                                         save_plot = FALSE,
+                                                         plot_size = 20){
+  
+  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  
   predicted %>%
     tibble::as_tibble() %>%
     dplyr::mutate(actual = actual,
@@ -696,6 +712,10 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
                        values_from = "n",
                        names_prefix = "predicted_") %>%
     dplyr::mutate(actual = base::paste0("actual_", actual)) -> results
+  
+  if (save_plot == TRUE){
+    filename <- base::paste(datetime, type_info, "probability_distribution_all_classes.png", sep = "_")
+    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)}
   
   base::invisible(results)
   plot %>%
@@ -904,12 +924,12 @@ Binary_Classifier_Verification <- function(actual,
   
   if (save == TRUE){
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste0(sys_time, " Binary model evaluation metrics ", type_info, ".png"), ":", "-"),
+               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                vwidth = 900,
                vheight = 1600,
                expand = 5)
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model evaluation metrics ", type_info, ".png"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }
   }
   
@@ -1094,12 +1114,12 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   
   if (save == TRUE){
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste0(sys_time, " Binary model cut-off value optimization ", type_info, ".png"), ":", "-"),
+               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"),
                vwidth = 1600,
                vheight = 900,
                expand = 5)
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary model cut-off value optimization ", type_info, ".png"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"))
     }
   }
   
