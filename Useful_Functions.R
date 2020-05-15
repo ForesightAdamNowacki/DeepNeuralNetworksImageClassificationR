@@ -98,12 +98,13 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
 Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
                                                                    actual_classes,
                                                                    predicted,
+                                                                   type_info,
                                                                    cwd = models_store,
                                                                    save_summary_files = TRUE,
                                                                    save_correct_images = TRUE,
                                                                    save_incorrect_images = TRUE){
   
-  base::print(base::paste("Current working directory:", cwd))
+  base::cat("Current working directory:", cwd, "\n")
   base::setwd(cwd)
   
   datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
@@ -125,19 +126,19 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
     dplyr::filter(actual_class != predicted_class) 
   
   if (base::isTRUE(save_summary_files)){
-    readr::write_csv2(summary_data, base::paste(datetime, dataset_label, "all_classification.csv", sep = "_"))
-    readr::write_csv2(summary_data_correct, base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_"))
-    readr::write_csv2(summary_data_incorrect, base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_"))
-    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "all_classification.csv", sep = "_")))
-    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_")))
-    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_")))}
+    readr::write_csv2(summary_data, base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_correct, base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_incorrect, base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
+    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_")), "\n")
+    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_")), "\n")
+    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_")), "\n")}
   
   # correct:
   if (base::isTRUE(save_correct_images)){
-    correct_classification_folder <- base::paste(datetime, dataset_label, "correct_classification", sep = "_")
+    correct_classification_folder <- base::paste(datetime, type_info, dataset_label, "correct_classification", sep = "_")
     base::unlink(correct_classification_folder, recursive = TRUE)
     base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat(base::paste("Folder created:", correct_classification_folder))
+    base::cat("Folder created:", correct_classification_folder, "\n")
     
     correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
     base::file.copy(from = summary_data_correct$files,
@@ -145,10 +146,10 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
   
   # incorrect:
   if (base::isTRUE(save_incorrect_images)){
-    incorrect_classification_folder <- base::paste(datetime, dataset_label, "incorrect_classification", sep = "_")
+    incorrect_classification_folder <- base::paste(datetime, type_info, dataset_label, "incorrect_classification", sep = "_")
     base::unlink(incorrect_classification_folder, recursive = TRUE)
     base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat(base::paste("Folder created:", incorrect_classification_folder))
+    base::cat("Folder created:", incorrect_classification_folder, "\n")
     
     incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
     base::file.copy(from = summary_data_incorrect$files,
@@ -1135,17 +1136,17 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
 
 # ------------------------------------------------------------------------------
 # Categorical model evaluation:
-Categorical_Model_Evaluation <- function(actual,
-                                         probabilities,
-                                         labels,
-                                         type_info = "",
-                                         cutoff = 0.5,
-                                         FN_cost = 1,
-                                         FP_cost = 1,
-                                         TN_cost = 0,
-                                         TP_cost = 0,
-                                         save = FALSE,
-                                         open = TRUE){
+Categorical_Classifier_Verification <- function(actual,
+                                                probabilities,
+                                                labels,
+                                                type_info = "",
+                                                cutoff = 0.5,
+                                                FN_cost = 1,
+                                                FP_cost = 1,
+                                                TN_cost = 0,
+                                                TP_cost = 0,
+                                                save = FALSE,
+                                                open = TRUE){
   
   sys_time = base::Sys.time()
   
@@ -1288,7 +1289,7 @@ Categorical_Model_Evaluation <- function(actual,
   
   Binary_Classifier_Verification_2 <- function(actual,
                                                predicted,
-                                               type_info = "",
+                                               type_info,
                                                cutoff = 0.5,
                                                FN_cost = 1,
                                                FP_cost = 1,
@@ -1460,12 +1461,12 @@ Categorical_Model_Evaluation <- function(actual,
     
     if (save == TRUE){
       gt::gtsave(data = gt_table,
-                 filename = stringr::str_replace_all(base::paste0(sys_time, " Binary-categorical model evaluation metrics ", type_info, ".png"), ":", "-"),
+                 filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                  vwidth = 900,
                  vheight = 1600,
                  expand = 5)
       if (open == TRUE){
-        rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Binary-categorical model evaluation metrics ", type_info, ".png"), ":", "-"))
+        rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
       }
     }
     
@@ -1478,12 +1479,12 @@ Categorical_Model_Evaluation <- function(actual,
   
   if (save == TRUE){
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste0(sys_time, " Categorical model evaluation metrics ", type_info, ".png"), ":", "-"),
+               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                vwidth = 900,
                vheight = 600,
                expand = 5)
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, " Categorical model evaluation metrics ", type_info, ".png"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }
   }
   
