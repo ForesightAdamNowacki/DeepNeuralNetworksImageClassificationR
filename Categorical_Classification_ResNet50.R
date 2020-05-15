@@ -6,6 +6,10 @@
 utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
 
 # ------------------------------------------------------------------------------
+# Model name:
+model_name <- "ResNet50"
+
+# ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
@@ -19,7 +23,6 @@ base::dir.create(path = base::paste(base::getwd(), "ResNet50", "Categorical", se
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
-# keras::install_keras(tensorflow = "gpu")
 base::library(tidyverse)
 base::library(deepviz)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
@@ -31,7 +34,7 @@ models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/ResNet50/Categorical"
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
+callback_csv_logger_path <- base::paste(models_store_dir, base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "model_optimization_logger.csv", sep = "_"), sep = "/")
 
 train_files <- Count_Files(path = train_dir); train_files
 validation_files <- Count_Files(path = validation_dir); validation_files
