@@ -6,17 +6,20 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
+# Model name:
+model_name <- "DenseNet121"
+
+# ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'DenseNet121' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), "DenseNet121", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), DenseNet121, sep = "/"))
 # 3. Create 'Binary' subfolder in 'DenseNet121' main folder
-base::dir.create(path = base::paste(base::getwd(), "DenseNet121", "Binary", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), DenseNet121, "Binary", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
-base::remove(list = base::ls())
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
@@ -32,7 +35,7 @@ models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/DenseNet121/Binary"
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
+callback_csv_logger_path <- base::paste(models_store_dir, base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "model_optimization_logger.csv", sep = "_"), sep = "/")
 
 train_files <- Count_Files(path = train_dir); train_files
 validation_files <- Count_Files(path = validation_dir); validation_files
@@ -62,7 +65,7 @@ metrics <- base::c("acc")
 batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 1
+epochs <- 3
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_acc"
@@ -196,7 +199,7 @@ history$metrics %>%
 # ------------------------------------------------------------------------------
 # Remove not optimal models:
 base::setwd(models_store_dir)
-saved_models <- base::sort(base::list.files()[base::grepl(".hdf5", base::list.files())])
+saved_models <- base::sort(base::list.files(pattern = ".hdf5"))
 if (length(saved_models) > 1){
   for (j in 1:(base::length(saved_models) - 1)){
     base::cat("Remove .hdf5 file:", saved_models[j], "\n")
@@ -204,13 +207,13 @@ if (length(saved_models) > 1){
 
 # ------------------------------------------------------------------------------
 # Remove logs folder:
-logs_folder <- base::paste(base::getwd(), base::list.files()[base::grepl("logs", base::list.files())], sep = "/")
+logs_folder <- base::paste(base::getwd(), base::list.files(pattern = "logs"), sep = "/")
 base::unlink(logs_folder, force = TRUE, recursive = TRUE)
 
 # ------------------------------------------------------------------------------
 # Save optimal model in local models repository: 
 optimal_model <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Binary_DenseNet121_Model.hdf5", sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Binary", model_name, "Model.hdf5", sep = "_"), sep = "/")
 base::file.copy(from = optimal_model,
                 to = optimal_model_repo_dir, 
                 overwrite = TRUE); base::cat("Optimal model directory:", optimal_model_repo_dir, "\n")
@@ -219,7 +222,7 @@ base::unlink(optimal_model, recursive = TRUE, force = TRUE)
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Binary_DenseNet121_Model.hdf5", sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Binary", model_name, "Model.hdf5", sep = "_"), sep = "/")
 model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
@@ -260,49 +263,53 @@ test_generator <- keras::flow_images_from_directory(directory = test_dir,
 
 train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size)); train_evaluation
 validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size)); validation_evaluation
+test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size)); test_evaluation
 
 train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
 validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
 base::setwd(models_store_dir)
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
-                    dplyr::mutate(filepath = train_generator$filepaths), base::paste(datetime, "DenseNet121_train_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = train_generator$filepaths,
+                                  actual_class = train_generator$classes,
+                                  model = model_name),
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "train_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
-                    dplyr::mutate(filepath = validation_generator$filepaths), base::paste(datetime, "DenseNet121_validation_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = validation_generator$filepaths,
+                                  actual_class = validation_generator$classes,
+                                  model = model_name),
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "validation_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
-                    dplyr::mutate(filepath = test_generator$filepaths), base::paste(datetime, "DenseNet121_test_binary_probabilities.csv"))
+                    dplyr::mutate(filepath = test_generator$filepaths,
+                                  actual_class = test_generator$classes,
+                                  model = model_name), 
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "test_binary_probabilities.csv", sep = "_"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
 default_cutoff <- 0.5
+save_option <- TRUE
 
-train_actual <- base::rep(base::c(0, 1), times = train_files$category_obs)
-train_predicted <- train_probabilities[,2]
-train_verification_1 <- Binary_Classifier_Verification(actual = train_actual,
-                                                       predicted = train_predicted,
+train_verification_1 <- Binary_Classifier_Verification(actual = train_generator$classes,
+                                                       predicted = train_probabilities[,2],
                                                        cutoff = default_cutoff,
-                                                       type_info = "Train DenseNet121 default cutoff",
-                                                       save = TRUE,
+                                                       type_info = base::paste(model_name, "default_cutoff", "train", sep = "_"),
+                                                       save = save_option,
                                                        open = FALSE)
 
-validation_actual <- base::rep(base::c(0, 1), times = validation_files$category_obs)
-validation_predicted <- validation_probabilities[,2]
-validation_verification_1 <- Binary_Classifier_Verification(actual = validation_actual,
-                                                            predicted = validation_predicted,
+validation_verification_1 <- Binary_Classifier_Verification(actual = validation_generator$classes,
+                                                            predicted = validation_probabilities[,2],
                                                             cutoff = default_cutoff,
-                                                            type_info = "Validation DenseNet121 default cutoff",
-                                                            save = TRUE,
+                                                            type_info = base::paste(model_name, "default_cutoff", "validation", sep = "_"),
+                                                            save = save_option,
                                                             open = FALSE)
 
-test_actual <- base::c(base::rep(0, test_files$category_obs[1]/2), base::rep(1, test_files$category_obs[1]/2))
-test_predicted <- test_probabilities[,2]
-test_verification_1 <- Binary_Classifier_Verification(actual = test_actual,
-                                                      predicted = test_predicted,
+test_verification_1 <- Binary_Classifier_Verification(actual = test_generator$classes,
+                                                      predicted = test_probabilities[,2],
                                                       cutoff = default_cutoff,
-                                                      type_info = "Test DenseNet121 default cutoff",
-                                                      save = TRUE,
+                                                      type_info = base::paste(model_name, "default_cutoff", "test", sep = "_"),
+                                                      save = save_option,
                                                       open = FALSE)
 
 final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
@@ -320,61 +327,83 @@ train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Default_Cutoff_DenseNet121.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_default_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
-# Model verification - cutoff optimization on validation set:
-train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_actual,
-                                                                   predicted = train_predicted,
-                                                                   type_info = "Train DenseNet121",
+# Model verification - cutoff optimization:
+save_option <- TRUE
+train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_generator$classes,
+                                                                   predicted = train_probabilities[,2],
+                                                                   type_info = base::paste(model_name, "train", sep = "_"),
                                                                    seed_value = 42,
                                                                    top = 10,
                                                                    cuts = 100,
                                                                    key_metric = ACC,
                                                                    ascending = FALSE,
-                                                                   save = TRUE,
+                                                                   save = save_option,
                                                                    open = FALSE)
 train_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_optimal_cutoff; train_optimal_cutoff
 
-validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_actual,
-                                                                        predicted = validation_predicted,
-                                                                        type_info = "Validation DenseNet121",
+validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_generator$classes,
+                                                                        predicted = validation_probabilities[,2],
+                                                                        type_info = base::paste(model_name, "validation", sep = "_"),
                                                                         seed_value = 42,
                                                                         top = 10,
                                                                         cuts = 100,
                                                                         key_metric = ACC,
                                                                         ascending = FALSE,
-                                                                        save = TRUE,
+                                                                        save = save_option,
                                                                         open = FALSE)
 validation_cutoff_optimization %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
 
-selected_cutoff <- validation_optimal_cutoff
+train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = base::c(train_generator$classes, validation_generator$classes),
+                                                                              predicted = base::c(train_probabilities[,2], validation_probabilities[,2]),
+                                                                              type_info = base::paste(model_name, "train", "validation", sep = "_"),
+                                                                              seed_value = 42,
+                                                                              top = 10,
+                                                                              cuts = 100,
+                                                                              key_metric = ACC,
+                                                                              ascending = FALSE,
+                                                                              save = save_option,
+                                                                              open = FALSE)
 
-train_verification_2 <- Binary_Classifier_Verification(actual = train_actual,
-                                                       predicted = train_predicted,
+train_validation_cutoff_optimization %>%
+  dplyr::select(CUTOFF) %>%
+  dplyr::pull() %>%
+  base::mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff
+
+# Select cutoff:
+# * train_optimal_cutoff
+# * validation_optimal_cutoff
+# * train_validation_optimal_cutoff
+selected_cutoff <- validation_optimal_cutoff
+save_option <- TRUE
+
+train_verification_2 <- Binary_Classifier_Verification(actual = train_generator$classes,
+                                                       predicted = train_probabilities[,2],
                                                        cutoff = selected_cutoff,
-                                                       type_info = "Train DenseNet121 optimized cutoff",
-                                                       save = TRUE,
+                                                       type_info = base::paste(model_name, "optimized_cutoff", "train", sep = "_"),
+                                                       save = save_option,
                                                        open = FALSE)
 
-validation_verification_2 <- Binary_Classifier_Verification(actual = validation_actual,
-                                                            predicted = validation_predicted,
+validation_verification_2 <- Binary_Classifier_Verification(actual = validation_generator$classes,
+                                                            predicted = validation_probabilities[,2],
                                                             cutoff = selected_cutoff,
-                                                            type_info = "Validation DenseNet121 optimized cutoff",
-                                                            save = TRUE,
+                                                            type_info = base::paste(model_name, "optimized_cutoff", "validation", sep = "_"),
+                                                            save = save_option,
                                                             open = FALSE)
 
-test_verification_2 <- Binary_Classifier_Verification(actual = test_actual,
-                                                      predicted = test_predicted,
+test_verification_2 <- Binary_Classifier_Verification(actual = test_generator$classes,
+                                                      predicted = test_probabilities[,2],
                                                       cutoff = selected_cutoff,
-                                                      type_info = "Test DenseNet121 optimized cutoff",
-                                                      save = TRUE,
+                                                      type_info = base::paste(model_name, "optimized_cutoff", "test", sep = "_"),
+                                                      save = save_option,
                                                       open = FALSE)
 
 final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
@@ -392,10 +421,10 @@ train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Optimized_Cutoff_DenseNet121.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_optimized_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
-# Final summary:
+# Final summary - cutoff summary comparison:
 final_score_1_summary <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
@@ -437,7 +466,7 @@ final_score_1_summary %>%
                 Validation_diff = Validation_optimized - Validation_default,
                 Test_diff = Test_optimized - Test_default,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Summary_Comparison_Default_Optimized_Cutoff_DenseNet121.csv"), sep = "/"))
+  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_cutoff_summary_comparison.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Predict indicated image:
@@ -452,67 +481,97 @@ Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, 
               plot_image = TRUE)
 
 # ------------------------------------------------------------------------------
-# Save true and false predictions:
+# Save correct and incorrect predictions:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
 # Train:
 Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
-                                                                                                    actual_classes = train_actual,
-                                                                                                    prediction = train_predicted,
+                                                                                                    actual = train_generator$classes,
+                                                                                                    predicted = train_probabilities[,2],
+                                                                                                    type_info = model_name,
                                                                                                     cwd = models_store_dir,
                                                                                                     cutoff = 0.5,
-                                                                                                    save_summary_files = TRUE,
-                                                                                                    save_correct_images = FALSE,
-                                                                                                    save_incorrect_images = FALSE)
+                                                                                                    save_summary_files = save_summary_files,
+                                                                                                    save_correct_images = save_correct_images,
+                                                                                                    save_incorrect_images = save_incorrect_images)
 
 # Validation:
 Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
-                                                                                                         actual_classes = validation_actual,
-                                                                                                         prediction = validation_predicted,
+                                                                                                         actual = validation_generator$classes,
+                                                                                                         predicted = validation_probabilities[,2],
+                                                                                                         type_info = model_name,
                                                                                                          cwd = models_store_dir,
                                                                                                          cutoff = 0.5,
-                                                                                                         save_summary_files = TRUE,
-                                                                                                         save_correct_images = FALSE,
-                                                                                                         save_incorrect_images = FALSE)
+                                                                                                         save_summary_files = save_summary_files,
+                                                                                                         save_correct_images = save_correct_images,
+                                                                                                         save_incorrect_images = save_incorrect_images)
+
+# Test:
+Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/test",
+                                                                                                   actual = test_generator$classes,
+                                                                                                   predicted = test_probabilities[,2],
+                                                                                                   type_info = model_name,
+                                                                                                   cwd = models_store_dir,
+                                                                                                   cutoff = 0.5,
+                                                                                                   save_summary_files = save_summary_files,
+                                                                                                   save_correct_images = save_correct_images,
+                                                                                                   save_incorrect_images = save_incorrect_images)
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
+save_plot <- TRUE
 labels <- base::sort(base::as.character(train_files$category)); labels
-train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_actual + 1), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = train_actual,
+
+train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = train_generator$classes,
                                               predicted = train_predicted_2,
                                               labels = labels,
-                                              bins = 10)
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "train", sep = "_"),
+                                              save_plot = save_plot)
 
-validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_actual + 1), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = validation_actual,
+validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = validation_generator$classes,
                                               predicted = validation_predicted_2,
                                               labels = labels,
-                                              bins = 10)
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "validation", sep = "_"),
+                                              save_plot = save_plot)
 
-test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_actual + 1), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = test_actual,
+test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = test_generator$classes,
                                               predicted = test_predicted_2,
                                               labels = labels,
-                                              bins = 10)
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "test", sep = "_"),
+                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
-train_actual_2 <- train_actual + 1
-Display_All_Classes_Predictions_Distribution(actual = train_actual_2,
+save_plot <- TRUE
+
+Display_All_Classes_Predictions_Distribution(actual = train_generator$classes + 1,
                                              predicted = train_probabilities,
                                              labels = labels,
-                                             bins = 10)
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "train", sep = "_"),
+                                             save_plot = save_plot)
 
-validation_actual_2 <- validation_actual + 1
-Display_All_Classes_Predictions_Distribution(actual = validation_actual_2,
+Display_All_Classes_Predictions_Distribution(actual = validation_generator$classes + 1,
                                              predicted = validation_probabilities,
                                              labels = labels,
-                                             bins = 10)
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "validation", sep = "_"),
+                                             save_plot = save_plot)
 
-test_actual_2 <- test_actual + 1
-Display_All_Classes_Predictions_Distribution(actual = test_actual_2,
+Display_All_Classes_Predictions_Distribution(actual = test_generator$classes + 1,
                                              predicted = test_probabilities,
                                              labels = labels,
-                                             bins = 10)
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "test", sep = "_"),
+                                             save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

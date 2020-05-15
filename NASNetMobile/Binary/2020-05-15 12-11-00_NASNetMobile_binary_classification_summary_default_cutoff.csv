@@ -1,0 +1,27 @@
+Metric;Score_train;Score_validation;Score_test;Cutoff
+Number of Observations;9000,000000;3000,000000;1000,000000;0,5
+True Negative;4415,000000;1474,000000; 492,000000;0,5
+False Positive;  85,000000;  26,000000;   8,000000;0,5
+False Negative;1064,000000; 371,000000; 114,000000;0,5
+True Positive;3436,000000;1129,000000; 386,000000;0,5
+Condition Negative;4500,000000;1500,000000; 500,000000;0,5
+Condition Positive;4500,000000;1500,000000; 500,000000;0,5
+Accuracy;   0,872333;   0,867667;   0,878000;0,5
+Balanced Accuracy;   0,872333;   0,867667;   0,878000;0,5
+Area Under ROC Curve;   0,974293;   0,967716;   0,973096;0,5
+Bias;  -0,891222;  -0,885000;  -0,894000;0,5
+Classification Error;   0,127667;   0,132333;   0,122000;0,5
+True Positive Rate;   0,763556;   0,752667;   0,772000;0,5
+True Negative Rate;   0,981111;   0,982667;   0,984000;0,5
+Positive Prediction Value;   0,975859;   0,977489;   0,979695;0,5
+Negative Predictive Value;   0,805804;   0,798916;   0,811881;0,5
+False Negative Rate;   0,236444;   0,247333;   0,228000;0,5
+False Positive Rate;   0,018889;   0,017333;   0,016000;0,5
+False Discovery Rate;   0,024141;   0,022511;   0,020305;0,5
+False Omission Rate;   0,194196;   0,201084;   0,188119;0,5
+Threat Score;   0,749400;   0,739843;   0,759843;0,5
+F1 Score;   0,856751;   0,850471;   0,863535;0,5
+Bookmaker Informedness;   0,744667;   0,735333;   0,756000;0,5
+Markedness;   0,781663;   0,776405;   0,791577;0,5
+Gini Index;   0,948586;   0,935432;   0,946192;0,5
+Cost;1149,000000; 397,000000; 122,000000;0,5

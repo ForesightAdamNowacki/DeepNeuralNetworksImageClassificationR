@@ -6,6 +6,10 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
+# Model name:
+model_name <- "Xception"
+
+# ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
@@ -23,9 +27,6 @@ base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
-
-# Model name:
-model_name <- "Xception"
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
@@ -269,6 +270,7 @@ train_probabilities <- keras::predict_generator(model, train_generator, steps = 
 validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
+base::setwd(models_store_dir)
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
                     dplyr::mutate(filepath = train_generator$filepaths,
                                   actual_class = train_generator$classes,
@@ -423,7 +425,7 @@ train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_optimized_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
-# Final summary:
+# Final summary - cutoff summary comparison:
 final_score_1_summary <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
@@ -481,6 +483,10 @@ Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, 
 
 # ------------------------------------------------------------------------------
 # Save correct and incorrect predictions:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
 # Train:
 Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
                                                                                                     actual = train_generator$classes,
@@ -488,9 +494,9 @@ Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Bin
                                                                                                     type_info = model_name,
                                                                                                     cwd = models_store_dir,
                                                                                                     cutoff = 0.5,
-                                                                                                    save_summary_files = TRUE,
-                                                                                                    save_correct_images = FALSE,
-                                                                                                    save_incorrect_images = FALSE)
+                                                                                                    save_summary_files = save_summary_files,
+                                                                                                    save_correct_images = save_correct_images,
+                                                                                                    save_incorrect_images = save_incorrect_images)
 
 # Validation:
 Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
@@ -499,9 +505,9 @@ Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrec
                                                                                                          type_info = model_name,
                                                                                                          cwd = models_store_dir,
                                                                                                          cutoff = 0.5,
-                                                                                                         save_summary_files = TRUE,
-                                                                                                         save_correct_images = FALSE,
-                                                                                                         save_incorrect_images = FALSE)
+                                                                                                         save_summary_files = save_summary_files,
+                                                                                                         save_correct_images = save_correct_images,
+                                                                                                         save_incorrect_images = save_incorrect_images)
 
 # Test:
 Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/test",
@@ -510,20 +516,22 @@ Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Bina
                                                                                                    type_info = model_name,
                                                                                                    cwd = models_store_dir,
                                                                                                    cutoff = 0.5,
-                                                                                                   save_summary_files = TRUE,
-                                                                                                   save_correct_images = FALSE,
-                                                                                                   save_incorrect_images = FALSE)
+                                                                                                   save_summary_files = save_summary_files,
+                                                                                                   save_correct_images = save_correct_images,
+                                                                                                   save_incorrect_images = save_incorrect_images)
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
+save_plot <- TRUE
 labels <- base::sort(base::as.character(train_files$category)); labels
+
 train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = train_generator$classes,
                                               predicted = train_predicted_2,
                                               labels = labels,
                                               bins = 10,
                                               type_info = base::paste(model_name, "train", sep = "_"),
-                                              save_plot = TRUE)
+                                              save_plot = save_plot)
 
 validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = validation_generator$classes,
@@ -531,7 +539,7 @@ Display_Target_Class_Predictions_Distribution(actual = validation_generator$clas
                                               labels = labels,
                                               bins = 10,
                                               type_info = base::paste(model_name, "validation", sep = "_"),
-                                              save_plot = TRUE)
+                                              save_plot = save_plot)
 
 test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = test_generator$classes,
@@ -539,30 +547,32 @@ Display_Target_Class_Predictions_Distribution(actual = test_generator$classes,
                                               labels = labels,
                                               bins = 10,
                                               type_info = base::paste(model_name, "test", sep = "_"),
-                                              save_plot = TRUE)
+                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
+save_plot <- TRUE
+
 Display_All_Classes_Predictions_Distribution(actual = train_generator$classes + 1,
                                              predicted = train_probabilities,
                                              labels = labels,
                                              bins = 10,
                                              type_info = base::paste(model_name, "train", sep = "_"),
-                                             save_plot = TRUE)
+                                             save_plot = save_plot)
 
 Display_All_Classes_Predictions_Distribution(actual = validation_generator$classes + 1,
                                              predicted = validation_probabilities,
                                              labels = labels,
                                              bins = 10,
                                              type_info = base::paste(model_name, "validation", sep = "_"),
-                                             save_plot = TRUE)
+                                             save_plot = save_plot)
 
 Display_All_Classes_Predictions_Distribution(actual = test_generator$classes + 1,
                                              predicted = test_probabilities,
                                              labels = labels,
                                              bins = 10,
                                              type_info = base::paste(model_name, "test", sep = "_"),
-                                             save_plot = TRUE)
+                                             save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

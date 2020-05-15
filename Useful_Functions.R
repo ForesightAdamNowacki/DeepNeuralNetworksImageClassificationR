@@ -36,7 +36,7 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
                                                               save_correct_images = TRUE,
                                                               save_incorrect_images = TRUE){
   
-  base::print(base::paste("Current working directory:", cwd))
+  base::cat("Current working directory:", cwd, "\n")
   base::setwd(cwd)
   
   datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
@@ -62,16 +62,16 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
     readr::write_csv2(summary_data, base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
     readr::write_csv2(summary_data_correct, base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
     readr::write_csv2(summary_data_incorrect, base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
-    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_")))}
+    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"), "\n")
+    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"), "\n")
+    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"), "\n")}
   
   # correct:
   if (base::isTRUE(save_correct_images)){
     correct_classification_folder <- base::paste(datetime, type_info, dataset_label, "correct_classifications", sep = "_")
     base::unlink(correct_classification_folder, recursive = TRUE)
     base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::print(base::paste("Folder created:", correct_classification_folder))
+    base::cat("Folder created:", correct_classification_folder, "\n")
     
     correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
     base::file.copy(from = summary_data_correct$files,
@@ -82,7 +82,7 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
     incorrect_classification_folder <- base::paste(datetime, type_info, dataset_label, "incorrect_classifications", sep = "_")
     base::unlink(incorrect_classification_folder, recursive = TRUE)
     base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::print(base::paste("Folder created:", incorrect_classification_folder))
+    base::cat("Folder created:", incorrect_classification_folder, "\n")
     
     incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
     base::file.copy(from = summary_data_incorrect$files,
@@ -128,16 +128,16 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
     readr::write_csv2(summary_data, base::paste(datetime, dataset_label, "all_classification.csv", sep = "_"))
     readr::write_csv2(summary_data_correct, base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_"))
     readr::write_csv2(summary_data_incorrect, base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_"))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "all_classification.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_")))
-    base::print(base::paste("File created:", base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_")))}
+    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "all_classification.csv", sep = "_")))
+    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "correct_classification.csv", sep = "_")))
+    base::cat(base::paste("File created:", base::paste(datetime, dataset_label, "incorrect_classification.csv", sep = "_")))}
   
   # correct:
   if (base::isTRUE(save_correct_images)){
     correct_classification_folder <- base::paste(datetime, dataset_label, "correct_classification", sep = "_")
     base::unlink(correct_classification_folder, recursive = TRUE)
     base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::print(base::paste("Folder created:", correct_classification_folder))
+    base::cat(base::paste("Folder created:", correct_classification_folder))
     
     correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
     base::file.copy(from = summary_data_correct$files,
@@ -148,7 +148,7 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
     incorrect_classification_folder <- base::paste(datetime, dataset_label, "incorrect_classification", sep = "_")
     base::unlink(incorrect_classification_folder, recursive = TRUE)
     base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::print(base::paste("Folder created:", incorrect_classification_folder))
+    base::cat(base::paste("Folder created:", incorrect_classification_folder))
     
     incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
     base::file.copy(from = summary_data_incorrect$files,
@@ -609,6 +609,11 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
                    strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
                    strip.text = element_text(size = text_size, face = "bold")) -> plot
   
+  bars <- plot$data %>%
+    dplyr::select(cut) %>%
+    dplyr::distinct() %>%
+    base::nrow()
+  
   tibble::tibble(actual = base::factor(actual),
                  predicted = predicted) %>%
     dplyr::mutate(cut = ggplot2::cut_interval(predicted, length = 1/bins)) %>%
@@ -620,11 +625,12 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
     tidyr::pivot_wider(id_cols = "actual",
                        names_from = "cut",
                        values_from = "n") %>%
-    mutate(Observations = rowSums(.[2:(bins + 1)])) -> results
+    mutate(Observations = rowSums(.[2:(bars + 1)])) -> results
   
   if (save_plot == TRUE){
     filename <- base::paste(datetime, type_info, "probability_distribution_per_target_class.png", sep = "_")
-    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)}
+    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
+    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
   
   base::invisible(results)
   plot %>%
@@ -715,7 +721,8 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
   
   if (save_plot == TRUE){
     filename <- base::paste(datetime, type_info, "probability_distribution_all_classes.png", sep = "_")
-    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)}
+    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
+    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
   
   base::invisible(results)
   plot %>%
