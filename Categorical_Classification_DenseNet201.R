@@ -6,20 +6,23 @@
 utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
 
 # ------------------------------------------------------------------------------
+# Model name:
+model_name <- "DenseNet201"
+
+# ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'DenseNet201' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), "DenseNet201", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
 # 3. Create 'Categorical' subfolder in 'DenseNet201' main folder
-base::dir.create(path = base::paste(base::getwd(), "DenseNet201", "Categorical", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, "Categorical", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
-# keras::install_keras(tensorflow = "gpu")
 base::library(tidyverse)
 base::library(deepviz)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
@@ -31,7 +34,7 @@ models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/DenseNet201/Categorical"
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, "Optimization_logger.csv", sep = "/")
+callback_csv_logger_path <- base::paste(models_store_dir, base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "model_optimization_logger.csv", sep = "_"), sep = "/")
 
 train_files <- Count_Files(path = train_dir); train_files
 validation_files <- Count_Files(path = validation_dir); validation_files
@@ -58,7 +61,7 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
-batch_size <- 16
+batch_size <- 8
 class_mode <- "categorical"
 shuffle <- TRUE
 epochs <- 1
@@ -194,7 +197,7 @@ history$metrics %>%
 # ------------------------------------------------------------------------------
 # Remove not optimal models:
 base::setwd(models_store_dir)
-saved_models <- base::sort(base::list.files()[base::grepl(".hdf5", base::list.files())])
+saved_models <- base::sort(base::list.files(pattern = ".hdf5"))
 if (length(saved_models) > 1){
   for (j in 1:(base::length(saved_models) - 1)){
     base::cat("Remove .hdf5 file:", saved_models[j], "\n")
@@ -202,13 +205,13 @@ if (length(saved_models) > 1){
 
 # ------------------------------------------------------------------------------
 # Remove logs folder:
-logs_folder <- base::paste(base::getwd(), base::list.files()[base::grepl("logs", base::list.files())], sep = "/")
+logs_folder <- base::paste(base::getwd(), base::list.files(pattern = "logs"), sep = "/")
 base::unlink(logs_folder, force = TRUE, recursive = TRUE)
 
 # ------------------------------------------------------------------------------
 # Save optimal model in local models repository: 
 optimal_model <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Categorical_DenseNet201_Model.hdf5", sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Categorical", model_name, "Model.hdf5", sep = "_"), sep = "/")
 base::file.copy(from = optimal_model,
                 to = optimal_model_repo_dir, 
                 overwrite = TRUE); base::cat("Optimal model directory:", optimal_model_repo_dir, "\n")
@@ -217,7 +220,7 @@ base::unlink(optimal_model, recursive = TRUE, force = TRUE)
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, "Categorical_DenseNet201_Model.hdf5", sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Categorical", model_name, "Model.hdf5", sep = "_"), sep = "/")
 model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
@@ -265,48 +268,54 @@ validation_probabilities <- keras::predict_generator(model, validation_generator
 test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
 
 base::setwd(models_store_dir)
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
-                    dplyr::mutate(filepath = train_generator$filepaths), base::paste(datetime, "DenseNet201_train_categorical_probabilities.csv"))
+                    dplyr::mutate(filepath = train_generator$filepaths,
+                                  actual_class = train_generator$classes + 1,
+                                  model = model_name),
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "train_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
-                    dplyr::mutate(filepath = validation_generator$filepaths), base::paste(datetime, "DenseNet201_validation_categorical_probabilities.csv"))
+                    dplyr::mutate(filepath = validation_generator$filepaths,
+                                  actual_class = validation_generator$classes + 1,
+                                  model = model_name),
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "validation_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
-                    dplyr::mutate(filepath = test_generator$filepaths), base::paste(datetime, "DenseNet201_test_categorical_probabilities.csv"))
+                    dplyr::mutate(filepath = test_generator$filepaths,
+                                  actual_class = test_generator$classes + 1,
+                                  model = model_name), 
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "test_binary_probabilities.csv", sep = "_"))
 
 # ------------------------------------------------------------------------------
 # Model verification:
 labels <- base::sort(base::as.character(train_files$category)); labels
-train_actual <- base::rep(x = 1:base::length(train_files$category), times = train_files$category_obs); train_actual
-validation_actual <- base::rep(x = 1:base::length(validation_files$category), times = validation_files$category_obs); validation_actual
-test_actual <- base::rep(x = 1:base::length(test_files$category), times = test_files$category_obs); test_actual
+save_option <- TRUE
 
-Categorical_train_results <- Categorical_Model_Evaluation(actual = train_actual,
-                                                          probabilities = train_probabilities,
-                                                          labels = labels,
-                                                          type_info = "Train DenseNet201",
-                                                          save = TRUE,
-                                                          open = FALSE)
+Categorical_train_results <- Categorical_Classifier_Verification(actual = train_generator$classes + 1,
+                                                                 probabilities = train_probabilities,
+                                                                 labels = labels,
+                                                                 type_info = base::paste(model_name, "train", sep = "_"),
+                                                                 save = save_option,
+                                                                 open = FALSE)
 
-Categorical_validation_results <- Categorical_Model_Evaluation(actual = validation_actual,
-                                                               probabilities = validation_probabilities,
-                                                               labels = labels,
-                                                               type_info = "Validation DenseNet201",
-                                                               save = TRUE,
-                                                               open = FALSE)
+Categorical_validation_results <- Categorical_Classifier_Verification(actual = validation_generator$classes + 1,
+                                                                      probabilities = validation_probabilities,
+                                                                      labels = labels,
+                                                                      type_info = base::paste(model_name, "validation", sep = "_"),
+                                                                      save = save_option,
+                                                                      open = FALSE)
 
-Categorical_test_results <- Categorical_Model_Evaluation(actual = test_actual,
-                                                         probabilities = test_probabilities,
-                                                         labels = labels,
-                                                         type_info = "Test DenseNet201",
-                                                         save = TRUE,
-                                                         open = FALSE)
+Categorical_test_results <- Categorical_Classifier_Verification(actual = test_generator$classes + 1,
+                                                                probabilities = test_probabilities,
+                                                                labels = labels,
+                                                                type_info = base::paste(model_name, "test", sep = "_"),
+                                                                save = save_option,
+                                                                open = FALSE)
 
 # ------------------------------------------------------------------------------
 # Predict indicated image:
 labels <- base::sort(base::as.character(train_files$category)); labels
 set <- "train"
 category <- "automobile"  
-id <- 3
+id <- 1
 
 Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cifar10", set, category, base::list.files(base::paste("D:/GitHub/Datasets/Cifar10", set, category, sep = "/")), sep = "/")[id],
               model = model,
@@ -315,69 +324,96 @@ Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cifar10", set, catego
 
 # ------------------------------------------------------------------------------
 # Save true and false predictions:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
 # Train:
 Train_Correct_Incorrect_Categorical_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = "D:/GitHub/Datasets/Cifar10/train",
-                                                                                                              actual_classes = train_actual,
-                                                                                                              prediction = train_probabilities,
+                                                                                                              actual_classes = train_generator$classes + 1,
+                                                                                                              predicted = train_probabilities,
+                                                                                                              type_info = model_name,
                                                                                                               cwd = models_store_dir,
-                                                                                                              save_summary_files = TRUE,
-                                                                                                              save_correct_images = FALSE,
-                                                                                                              save_incorrect_images = FALSE)
+                                                                                                              save_summary_files = save_summary_files,
+                                                                                                              save_correct_images = save_correct_images,
+                                                                                                              save_incorrect_images = save_incorrect_images)
 
 # Validation:
 Validation_Correct_Incorrect_Categorical_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = "D:/GitHub/Datasets/Cifar10/validation",
-                                                                                                                   actual_classes = validation_actual,
-                                                                                                                   prediction = validation_probabilities,
+                                                                                                                   actual_classes = validation_generator$classes + 1,
+                                                                                                                   predicted = validation_probabilities,
+                                                                                                                   type_info = model_name,
                                                                                                                    cwd = models_store_dir,
-                                                                                                                   save_summary_files = TRUE,
-                                                                                                                   save_correct_images = FALSE,
-                                                                                                                   save_incorrect_images = FALSE)
+                                                                                                                   save_summary_files = save_summary_files,
+                                                                                                                   save_correct_images = save_correct_images,
+                                                                                                                   save_incorrect_images = save_incorrect_images)
 
 # Test:
 Test_Correct_Incorrect_Categorical_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = "D:/GitHub/Datasets/Cifar10/test",
-                                                                                                             actual_classes = test_actual,
-                                                                                                             prediction = test_probabilities,
+                                                                                                             actual_classes = test_generator$classes + 1,
+                                                                                                             predicted = test_probabilities,
+                                                                                                             type_info = model_name,
                                                                                                              cwd = models_store_dir,
-                                                                                                             save_summary_files = TRUE,
-                                                                                                             save_correct_images = FALSE,
-                                                                                                             save_incorrect_images = FALSE)
+                                                                                                             save_summary_files = save_summary_files,
+                                                                                                             save_correct_images = save_correct_images,
+                                                                                                             save_incorrect_images = save_incorrect_images)
 
 # ------------------------------------------------------------------------------
-# Plot predictions distribution in division to target classes:
-train_predicted <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_actual), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = train_actual,
-                                              predicted = train_predicted,
-                                              labels = labels,
-                                              bins = 10)
+# Visualize predictions distribution:
+save_plot <- TRUE
+labels <- base::sort(base::as.character(train_files$category)); labels
 
-validation_predicted <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_actual), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = validation_actual,
-                                              predicted = validation_predicted,
+train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = train_generator$classes,
+                                              predicted = train_predicted_2,
                                               labels = labels,
-                                              bins = 10)
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "train", sep = "_"),
+                                              save_plot = save_plot)
 
-test_predicted <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_actual), byrow = FALSE, ncol = 2)]
-Display_Target_Class_Predictions_Distribution(actual = test_actual,
-                                              predicted = test_predicted,
+validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = validation_generator$classes,
+                                              predicted = validation_predicted_2,
                                               labels = labels,
-                                              bins = 10)
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "validation", sep = "_"),
+                                              save_plot = save_plot)
+
+test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_generator$classes + 1), byrow = FALSE, ncol = 2)]
+Display_Target_Class_Predictions_Distribution(actual = test_generator$classes,
+                                              predicted = test_predicted_2,
+                                              labels = labels,
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "test", sep = "_"),
+                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
-Display_All_Classes_Predictions_Distribution(actual = train_actual,
+save_plot <- TRUE
+
+Display_All_Classes_Predictions_Distribution(actual = train_generator$classes + 1,
                                              predicted = train_probabilities,
                                              labels = labels,
-                                             bins = 5)
+                                             bins = 4,
+                                             type_info = base::paste(model_name, "train", sep = "_"),
+                                             save_plot = save_plot,
+                                             plot_size = 30)
 
-Display_All_Classes_Predictions_Distribution(actual = validation_actual,
+Display_All_Classes_Predictions_Distribution(actual = validation_generator$classes + 1,
                                              predicted = validation_probabilities,
                                              labels = labels,
-                                             bins = 5)
+                                             bins = 4,
+                                             type_info = base::paste(model_name, "validation", sep = "_"),
+                                             save_plot = save_plot,
+                                             plot_size = 30)
 
-Display_All_Classes_Predictions_Distribution(actual = test_actual,
+Display_All_Classes_Predictions_Distribution(actual = test_generator$classes + 1,
                                              predicted = test_probabilities,
                                              labels = labels,
-                                             bins = 5)
+                                             bins = 4,
+                                             type_info = base::paste(model_name, "test", sep = "_"),
+                                             save_plot = save_plot,
+                                             plot_size = 30)
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

@@ -14,9 +14,9 @@ model_name <- "DenseNet121"
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'DenseNet121' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), DenseNet121, sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
 # 3. Create 'Binary' subfolder in 'DenseNet121' main folder
-base::dir.create(path = base::paste(base::getwd(), DenseNet121, "Binary", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, "Binary", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -65,7 +65,7 @@ metrics <- base::c("acc")
 batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 3
+epochs <- 1
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_acc"

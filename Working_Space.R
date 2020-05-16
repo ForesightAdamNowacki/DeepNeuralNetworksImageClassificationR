@@ -1,4 +1,16 @@
+# Environment:
+reticulate::use_condaenv("GPU_ML_2", required = TRUE)
+base::library(tensorflow)
+base::library(keras)
+# keras::install_keras(tensorflow = "gpu")
+base::library(tidyverse)
+base::library(deepviz)
+base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
+
+
 # Create k folds
+
+
 
 data_dir <- "D:\\GitHub\\Datasets\\Cats_And_Dogs_Small\\data"
 data_to <- "D:\\GitHub\\Datasets\\Cats_And_Dogs_Small\\K-folds"
@@ -145,6 +157,24 @@ for (i in base::seq_along(steps)){
 classes
 step
 folds
+
+
+
+
+directory <- "D:\\GitHub\\Datasets\\Cifar10\\test"
+directories <- base::list.dirs(directory)[-1]; directories
+
+for (i in base::seq_along(directories)){
+ class <- base::basename(directories[i])
+ old <- base::list.files(base::paste(directory, class, sep = "/"), full.names = TRUE)
+ new <- base::paste(class, base::list.files(base::paste(directory, class, sep = "/"), full.names = FALSE), sep = "_")
+ new <- base::paste(directory, class, new, sep = "/")
+ base::file.copy(from = old,
+                 to = new)
+ 
+}
+
+
 
 
 

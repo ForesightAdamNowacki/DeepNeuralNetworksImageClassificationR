@@ -14,9 +14,9 @@ model_name <- "ResNet50"
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'ResNet50' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), "ResNet50", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
 # 3. Create 'Categorical' subfolder in 'ResNet50' main folder
-base::dir.create(path = base::paste(base::getwd(), "ResNet50", "Categorical", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, "Categorical", sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:

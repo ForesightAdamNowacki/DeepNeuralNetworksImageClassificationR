@@ -20,7 +20,6 @@ base::dir.create(path = base::paste(base::getwd(), model_name, "Binary", sep = "
 
 # ------------------------------------------------------------------------------
 # Environment:
-base::remove(list = base::ls())
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)

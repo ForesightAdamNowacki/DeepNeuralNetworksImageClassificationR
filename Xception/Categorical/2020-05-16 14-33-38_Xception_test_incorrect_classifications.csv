@@ -1,0 +1,298 @@
+files;actual_class;predicted_class
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0001.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0006.png; 1;10
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0007.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0013.png; 1; 3
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0014.png; 1; 8
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0016.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0019.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0020.png; 1; 8
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0024.png; 1; 8
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0026.png; 1; 4
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0028.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0029.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0040.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0042.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0045.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0046.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0048.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0050.png; 1; 7
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0052.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0060.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0061.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0064.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0068.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0069.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0072.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0073.png; 1; 7
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0076.png; 1; 3
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0089.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0092.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0093.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/airplane/airplane_0097.png; 1; 9
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0003.png; 2;10
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0015.png; 2; 9
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0025.png; 2; 1
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0051.png; 2; 1
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0066.png; 2; 3
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0074.png; 2; 9
+D:/GitHub/Datasets/Cifar10/test/automobile/automobile_0081.png; 2; 3
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0002.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0005.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0007.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0008.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0010.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0012.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0013.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0015.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0018.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0021.png; 3; 8
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0024.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0025.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0026.png; 3; 8
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0032.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0035.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0037.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0039.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0040.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0048.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0050.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0062.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0063.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0064.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0067.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0068.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0069.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0070.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0071.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0072.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0074.png; 3; 1
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0076.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0085.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0091.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0093.png; 3; 6
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0097.png; 3; 4
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0098.png; 3; 7
+D:/GitHub/Datasets/Cifar10/test/bird/bird_0099.png; 3; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0003.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0004.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0005.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0007.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0009.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0012.png; 4; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0016.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0018.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0021.png; 4; 5
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0027.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0030.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0032.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0035.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0036.png; 4; 2
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0039.png; 4; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0040.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0041.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0042.png; 4; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0043.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0044.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0049.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0050.png; 4; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0055.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0057.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0060.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0064.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0065.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0067.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0071.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0073.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0074.png; 4; 8
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0078.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0079.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0082.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0083.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0084.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0085.png; 4; 7
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0086.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0087.png; 4; 9
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0089.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0090.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0091.png; 4; 1
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0092.png; 4; 6
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0093.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0095.png; 4; 5
+D:/GitHub/Datasets/Cifar10/test/cat/cat_0098.png; 4; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0001.png; 5; 1
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0003.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0004.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0005.png; 5; 1
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0006.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0007.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0008.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0010.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0011.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0013.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0015.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0020.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0022.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0023.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0025.png; 5; 6
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0026.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0028.png; 5; 9
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0029.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0030.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0031.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0033.png; 5; 6
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0034.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0035.png; 5; 6
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0037.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0038.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0041.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0048.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0049.png; 5; 1
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0054.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0055.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0057.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0058.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0059.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0060.png; 5; 6
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0061.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0063.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0066.png; 5; 1
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0067.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0069.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0071.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0072.png; 5; 1
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0075.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0086.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0090.png; 5; 4
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0093.png; 5; 2
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0094.png; 5; 7
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0097.png; 5; 3
+D:/GitHub/Datasets/Cifar10/test/deer/deer_0098.png; 5; 8
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0001.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0003.png; 6; 5
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0008.png; 6; 8
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0012.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0014.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0016.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0021.png; 6; 1
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0023.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0031.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0034.png; 6; 8
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0037.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0041.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0044.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0045.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0048.png; 6; 5
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0052.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0059.png; 6; 8
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0062.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0065.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0073.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0075.png; 6; 7
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0076.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0078.png; 6; 5
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0082.png; 6; 7
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0083.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0084.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0088.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0089.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0091.png; 6; 3
+D:/GitHub/Datasets/Cifar10/test/dog/dog_0099.png; 6; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0003.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0009.png; 7; 1
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0010.png; 7; 3
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0017.png; 7; 2
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0019.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0021.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0027.png; 7; 6
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0028.png; 7; 6
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0038.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0047.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0049.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0051.png; 7; 3
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0059.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0062.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0064.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0066.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0078.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0080.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0082.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0084.png; 7; 6
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0086.png; 7; 4
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0089.png; 7; 3
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0091.png; 7; 1
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0094.png; 7; 9
+D:/GitHub/Datasets/Cifar10/test/frog/frog_0100.png; 7; 3
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0002.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0005.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0006.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0011.png; 8; 1
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0012.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0013.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0015.png; 8; 5
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0017.png; 8; 7
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0021.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0022.png; 8; 7
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0024.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0025.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0026.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0032.png; 8; 3
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0039.png; 8; 1
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0040.png; 8; 3
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0043.png; 8; 3
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0045.png; 8; 9
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0054.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0059.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0062.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0067.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0075.png; 8; 7
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0076.png; 8; 5
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0078.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0082.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0088.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0092.png; 8; 4
+D:/GitHub/Datasets/Cifar10/test/horse/horse_0096.png; 8; 6
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0021.png; 9; 1
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0040.png; 9; 1
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0067.png; 9; 2
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0070.png; 9; 1
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0077.png; 9; 1
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0094.png; 9; 4
+D:/GitHub/Datasets/Cifar10/test/ship/ship_0096.png; 9; 1
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0002.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0008.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0014.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0018.png;10; 7
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0023.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0026.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0028.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0031.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0034.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0035.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0037.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0038.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0042.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0043.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0044.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0045.png;10; 4
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0047.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0051.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0052.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0054.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0059.png;10; 1
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0062.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0063.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0068.png;10; 4
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0071.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0075.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0076.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0079.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0085.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0087.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0088.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0092.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0095.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0096.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0097.png;10; 9
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0099.png;10; 2
+D:/GitHub/Datasets/Cifar10/test/truck/truck_0100.png;10; 2
