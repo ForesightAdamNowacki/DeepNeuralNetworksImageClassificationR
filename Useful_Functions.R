@@ -442,6 +442,7 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
                                            weights,
                                            key_metric = ACC,
                                            ascending = FALSE,
+                                           summary_type = "median",
                                            seed = 42,
                                            top = 10,
                                            TN_cost = 0,
@@ -551,16 +552,30 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
   }
   
   # Return results:
-  base::return(base::list(all_results = final_results,
-                          top_results = final_results %>% utils::head(top),
-                          optimized_cutoff = final_results %>%
-                            utils::head(top) %>%
-                            dplyr::select(CUTOFF) %>%
-                            dplyr::summarise_all(mean),
-                          optimized_weights = final_results %>%
-                            utils::head(top) %>%
-                            dplyr::select(dplyr::starts_with("model_")) %>%
-                            dplyr::summarise_all(mean)))}
+  if (summary_type == "mean"){
+    base::return(base::list(all_results = final_results,
+                            top_results = final_results %>% utils::head(top),
+                            optimized_cutoff = final_results %>%
+                              utils::head(top) %>%
+                              dplyr::select(CUTOFF) %>%
+                              dplyr::summarise_all(base::mean),
+                            optimized_weights = final_results %>%
+                              utils::head(top) %>%
+                              dplyr::select(dplyr::starts_with("model_")) %>%
+                              dplyr::summarise_all(base::mean)))}
+  
+  if (summary_type == "median"){
+    base::return(base::list(all_results = final_results,
+                            top_results = final_results %>% utils::head(top),
+                            optimized_cutoff = final_results %>%
+                              utils::head(top) %>%
+                              dplyr::select(CUTOFF) %>%
+                              dplyr::summarise_all(stats::median),
+                            optimized_weights = final_results %>%
+                              utils::head(top) %>%
+                              dplyr::select(dplyr::starts_with("model_")) %>%
+                              dplyr::summarise_all(stats::median)))}
+}
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to target classes:
@@ -733,19 +748,7 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
 
 # ------------------------------------------------------------------------------
 # BINARY MODEL EVALUATION
-# Function to verify the predictive and classification capabilities of the binary model.
-# ------------------------------------------------------------------------------
-# Environment:
-base::library(reticulate)
-reticulate::use_condaenv(condaenv = "GPU_ML_2", required = TRUE)
-base::library(Metrics)
-base::library(tidyverse)
-base::library(tibble)
-base::library(knitr)
-base::library(gridExtra)
-base::library(gt)
-
-# ------------------------------------------------------------------------------
+# Function to verify the predictive and classification capabilities of the binary model:
 Binary_Classifier_Verification <- function(actual,
                                            predicted,
                                            type_info = "",
@@ -1605,3 +1608,13 @@ Create_KFolds_Directories <- function(data_dir,
 }
 
 # ------------------------------------------------------------------------------
+# Display list structure:
+Display_List_Structure <- function(list, n = 1){
+  for(i in 1:base::length(list)){
+    for(j in 1:base::length(list[[i]])){
+      list[[i]][[j]] %>%
+        utils::head(n = n) %>%
+        knitr::kable() %>%
+        base::print()}}}
+
+
