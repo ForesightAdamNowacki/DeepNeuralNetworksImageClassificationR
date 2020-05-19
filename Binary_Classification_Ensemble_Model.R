@@ -9,9 +9,6 @@ utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 # Script variables:
 model_name <- "Ensemble_Model"
 model_type <- "Binary"
-dataset_types <- base::c("train", "validation", "test")
-ensemble_split_types <- base::c("train", "validation", "train_validation")
-script_seed <- 2020
 
 # ------------------------------------------------------------------------------
 # Intro:
@@ -43,341 +40,243 @@ validation_files <- Count_Files(path = validation_dir); validation_files
 test_files <- Count_Files(path = test_dir); test_files
 
 # ------------------------------------------------------------------------------
-# Models predictions:
-train_pattern <- "train_binary_probabilities"
-validation_pattern <- "validation_binary_probabilities"
-test_dir <- "test_binary_probabilities"
-
 models_vector <- base::c("ResNet50", "Xception", "MobileNet_V2", "Inception_V3", "Inception_ResNet_V2")
-all_predictions <- base::list()
-for (i in base::seq_along(models_vector)){
-  model <- base::list()
-  model[[1]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
-  model[[2]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
-  model[[3]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
-  all_predictions[[i]] <- model}
 
-Display_List_Structure(all_predictions, n = 5)
+# Build ensembel model with weights and cutoff optimization on train dataset:
+ensemble_1 <- Binary_Ensemble_Model(models_vector = models_vector,
+                                    optimization_dataset = "train",
+                                    save_option = TRUE,
+                                    default_cutoff = 0.5,
+                                    cuts = 50,
+                                    weights = 50,
+                                    key_metric = "ACC",
+                                    key_metric_as_string = TRUE,
+                                    ascending = FALSE,
+                                    top = 10,
+                                    seed = 1,
+                                    summary_type = "mean",
+                                    n = 5)
 
 # ------------------------------------------------------------------------------
-# Predictions:
+# Build ensembel model with weights and cutoff optimization on validation dataset:
+ensemble_2 <- Binary_Ensemble_Model(models_vector = models_vector,
+                                    optimization_dataset = "validation",
+                                    save_option = TRUE,
+                                    default_cutoff = 0.5,
+                                    cuts = 50,
+                                    weights = 50,
+                                    key_metric = "ACC",
+                                    key_metric_as_string = TRUE,
+                                    ascending = FALSE,
+                                    top = 10,
+                                    seed = 1,
+                                    summary_type = "mean",
+                                    n = 5)
+
+# ------------------------------------------------------------------------------
+# Build ensembel model with weights and cutoff optimization on combined train and validation dataset:
+ensemble_3 <- Binary_Ensemble_Model(models_vector = models_vector,
+                                    optimization_dataset = "train+validation",
+                                    save_option = TRUE,
+                                    default_cutoff = 0.5,
+                                    cuts = 50,
+                                    weights = 50,
+                                    key_metric = "ACC",
+                                    key_metric_as_string = TRUE,
+                                    ascending = FALSE,
+                                    top = 10,
+                                    seed = 1,
+                                    summary_type = "mean",
+                                    n = 5)
+
+# ------------------------------------------------------------------------------
+# Train dataset results - ensemble models and partial models summary and comparison:
+ensemble_1$train_dataset_results %>%
+  dplyr::rename(Ensemble_Model_1 = Ensemble_Model) %>%
+  dplyr::mutate(Ensemble_Model_2 = ensemble_2$train_dataset_results$Ensemble_Model,
+                Ensemble_Model_3 = ensemble_3$train_dataset_results$Ensemble_Model) %>%
+  knitr::kable()
+  
+# ------------------------------------------------------------------------------
+# Validation dataset results - ensemble models and partial models summary and comparison:
+ensemble_1$validation_dataset_results %>%
+  dplyr::rename(Ensemble_Model_1 = Ensemble_Model) %>%
+  dplyr::mutate(Ensemble_Model_2 = ensemble_2$validation_dataset_results$Ensemble_Model,
+                Ensemble_Model_3 = ensemble_3$validation_dataset_results$Ensemble_Model) %>%
+  knitr::kable()
+
+# ------------------------------------------------------------------------------
+# Test dataset results - ensemble models and partial models summary and comparison:
+ensemble_1$test_dataset_results %>%
+  dplyr::rename(Ensemble_Model_1 = Ensemble_Model) %>%
+  dplyr::mutate(Ensemble_Model_2 = ensemble_2$test_dataset_results$Ensemble_Model,
+                Ensemble_Model_3 = ensemble_3$test_dataset_results$Ensemble_Model) %>%
+  knitr::kable()
+
+# ------------------------------------------------------------------------------
+# Cutoffs comparison:
+base::list(ensemble_1 = ensemble_1$optimal_cutoff,
+           ensemble_2 = ensemble_2$optimal_cutoff,
+           ensemble_3 = ensemble_3$optimal_cutoff) 
+
+# ------------------------------------------------------------------------------
+# Partial models weights:
+base::list(ensemble_1 = ensemble_1$optimal_weights,
+           ensemble_2 = ensemble_2$optimal_weights,
+           ensemble_3 = ensemble_3$optimal_weights)
+
+base::list(ensemble_1 = ensemble_1$optimal_weights,
+           ensemble_2 = ensemble_2$optimal_weights,
+           ensemble_3 = ensemble_3$optimal_weights) %>%
+  base::lapply(., base::cbind) %>%
+  base::do.call(base::cbind, .) %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(Partial_Model = models_vector) %>%
+  tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                      names_to = "Ensemble_Model",
+                      values_to = "Weights") %>%
+  dplyr::mutate(Ensemble_Model = stringr::str_replace(Ensemble_Model, "V", "Ensemble_Model_"),
+                Partial_Model = base::factor(Partial_Model, levels = models_vector, labels = models_vector, ordered = TRUE)) %>%
+  ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = Partial_Model, y = Weights, fill = Ensemble_Model)) +
+  ggplot2::geom_bar(stat = "identity", color = "black", position = ggplot2::position_dodge()) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size = 9, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
+                 axis.text.y = ggplot2::element_text(size = 7, color = "black", face = "plain"),
+                 axis.text.x = ggplot2::element_text(size = 7, color = "black", face = "plain"),
+                 axis.title.y = ggplot2::element_text(size = 7, color = "black", face = "bold"),
+                 axis.title.x = ggplot2::element_text(size = 7, color = "black", face = "bold"),
+                 axis.ticks = ggplot2::element_line(size = 1, color = "black", linetype = "solid"),
+                 axis.ticks.length = ggplot2::unit(0.1, "cm"),
+                 plot.background = ggplot2::element_rect(fill = "gray80", color = "black", size = 1, linetype = "solid"),
+                 panel.background = ggplot2::element_rect(fill = "gray90", color = "black", size = 0.5, linetype = "solid"),
+                 panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),
+                 panel.grid.major.x = ggplot2::element_line(color = "black", linetype = "dotted"),
+                 panel.grid.major.y = ggplot2::element_line(color = "black", linetype = "dotted"),
+                 panel.grid.minor.x = ggplot2::element_line(linetype = "blank"),
+                 panel.grid.minor.y = ggplot2::element_line(linetype = "blank"),
+                 legend.box.background = ggplot2::element_rect(color = "black", size = 0.5, linetype = "solid"),
+                 legend.background = ggplot2::element_rect(fill = "gray90", size = 0.5, linetype = "solid", color = "black"),
+                 legend.position = "bottom",
+                 legend.box.spacing = ggplot2::unit(0.25, "cm"),
+                 legend.text = ggplot2::element_text(size = 7, color = "black", face = "plain"),
+                 legend.title = ggplot2::element_text(size = 7, color = "black", face = "bold")) +
+  ggplot2::guides(fill = guide_legend("Ensemble model:", nrow = 1)) +
+  ggplot2::labs(x = "Partial Model",
+                y = "Partial Model Contributions/Weights",
+                title = "Ensemble models")
+
+# ------------------------------------------------------------------------------
+# Organize correct and incorrect ensemble model predictions on train dataset:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
+Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = train_dir,
+                                                  actual_classes = base::rep(base::c(0, 1), train_files$category_obs),
+                                                  predicted = ensemble_3$train_models_predictions$Ensemble_Model,
+                                                  cutoff = ensemble_3$optimal_cutoff,
+                                                  type_info = "Ensemble_Model",
+                                                  save_summary_files = save_summary_files,
+                                                  save_correct_images = save_correct_images,
+                                                  save_incorrect_images = save_incorrect_images)
+
+# ------------------------------------------------------------------------------
+# Organize correct and incorrect ensemble model predictions on validation dataset:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
+Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = validation_dir,
+                                                  actual_classes = base::rep(base::c(0, 1), validation_files$category_obs),
+                                                  predicted = ensemble_3$validation_models_predictions$Ensemble_Model,
+                                                  cutoff = ensemble_3$optimal_cutoff,
+                                                  type_info = "Ensemble_Model",
+                                                  save_summary_files = save_summary_files,
+                                                  save_correct_images = save_correct_images,
+                                                  save_incorrect_images = save_incorrect_images)
+
+# ------------------------------------------------------------------------------
+# Organize correct and incorrect ensemble model predictions on test dataset:
+save_summary_files <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
+
+Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = test_dir,
+                                                  actual_classes = base::rep(base::c(0, 1), test_files$category_obs),
+                                                  predicted = ensemble_3$test_models_predictions$Ensemble_Model,
+                                                  cutoff = ensemble_3$optimal_cutoff,
+                                                  type_info = "Ensemble_Model",
+                                                  save_summary_files = save_summary_files,
+                                                  save_correct_images = save_correct_images,
+                                                  save_incorrect_images = save_incorrect_images)
+
+# ------------------------------------------------------------------------------
+# Visualize predictions distribution:
+save_plot <- TRUE
+labels <- base::sort(base::as.character(train_files$category)); labels
+
 # Train:
-train_predictions <- base::list()
-for (i in 1:base::length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]]$V2}
-train_predictions <- base::do.call(base::cbind, train_predictions)
-base::colnames(train_predictions) <- models_vector; utils::head(train_predictions); base::cat(base::dim(train_predictions))
+train_probabilities <- base::matrix(data = base::cbind(1 - ensemble_3$train_models_predictions$Ensemble_Model,
+                                                       ensemble_3$train_models_predictions$Ensemble_Model), ncol = 2)
+train_actual <- base::rep(base::c(0, 1), train_files$category_obs)
+train_predicted_2 <- train_probabilities[base::matrix(data = base::cbind(1:base::nrow(train_probabilities), train_actual + 1), byrow = FALSE, ncol = 2)]
+
+Display_Target_Class_Predictions_Distribution(actual = train_actual,
+                                              predicted = train_predicted_2,
+                                              labels = labels,
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "train", sep = "_"),
+                                              save_plot = save_plot)
 
 # Validation:
-validation_predictions <- base::list()
-for (i in 1:base::length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]]$V2}
-validation_predictions <- base::do.call(base::cbind, validation_predictions)
-base::colnames(validation_predictions) <- models_vector; utils::head(validation_predictions); base::cat(base::dim(validation_predictions))
+validation_probabilities <- base::matrix(data = base::cbind(1 - ensemble_3$validation_models_predictions$Ensemble_Model,
+                                                       ensemble_3$validation_models_predictions$Ensemble_Model), ncol = 2)
+validation_actual <- base::rep(base::c(0, 1), validation_files$category_obs)
+validation_predicted_2 <- validation_probabilities[base::matrix(data = base::cbind(1:base::nrow(validation_probabilities), validation_actual + 1), byrow = FALSE, ncol = 2)]
+
+Display_Target_Class_Predictions_Distribution(actual = validation_actual,
+                                              predicted = validation_predicted_2,
+                                              labels = labels,
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "validation", sep = "_"),
+                                              save_plot = save_plot)
 
 # Test:
-test_predictions <- base::list()
-for (i in 1:base::length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]]$V2}
-test_predictions <- base::do.call(base::cbind, test_predictions)
-base::colnames(test_predictions) <- models_vector; utils::head(test_predictions); base::cat(base::dim(test_predictions))
+test_probabilities <- base::matrix(data = base::cbind(1 - ensemble_3$test_models_predictions$Ensemble_Model,
+                                                            ensemble_3$test_models_predictions$Ensemble_Model), ncol = 2)
+test_actual <- base::rep(base::c(0, 1), test_files$category_obs)
+test_predicted_2 <- test_probabilities[base::matrix(data = base::cbind(1:base::nrow(test_probabilities), test_actual + 1), byrow = FALSE, ncol = 2)]
+
+Display_Target_Class_Predictions_Distribution(actual = test_actual,
+                                              predicted = test_predicted_2,
+                                              labels = labels,
+                                              bins = 10,
+                                              type_info = base::paste(model_name, "test", sep = "_"),
+                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
-# Actual:
-train_actual <- all_predictions[[1]][[1]]$actual_class; base::cat(base::length(train_actual), "\n"); base::print(base::table(train_actual))
-validation_actual <- all_predictions[[1]][[2]]$actual_class; base::cat(base::length(validation_actual), "\n"); base::print(base::table(validation_actual))
-test_actual <- all_predictions[[1]][[3]]$actual_class; base::cat(base::length(test_actual), "\n"); base::print(base::table(test_actual))
+# Plot predictions distribution in division to all classes:
+save_plot <- TRUE
 
-# ------------------------------------------------------------------------------
-# Train results for single component models:
-base::setwd(models_store_dir)
-save_option <- TRUE
-default_cutoff <- 0.5
+Display_All_Classes_Predictions_Distribution(actual = train_actual + 1,
+                                             predicted = train_probabilities,
+                                             labels = labels,
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "train", sep = "_"),
+                                             save_plot = save_plot)
 
-train_default <- base::list()
-for (i in 1:base::length(models_vector)){
-  Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = train_actual,
-                                                                           predicted = train_predictions[,i],
-                                                                           cutoff = default_cutoff,
-                                                                           type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[1], sep = "_"),
-                                                                           save = save_option,
-                                                                           open = FALSE)[[3]]
-  train_default[[i]] <- Assessment_of_Classifier_Effectiveness}
+Display_All_Classes_Predictions_Distribution(actual = validation_actual + 1,
+                                             predicted = validation_probabilities,
+                                             labels = labels,
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "validation", sep = "_"),
+                                             save_plot = save_plot)
 
-train_default_summary <- base::data.frame(Metric = train_default[[1]]$Metric)
-for (i in 1:base::length(models_vector)){train_default_summary <- dplyr::bind_cols(train_default_summary, train_default[[i]][5])}
-base::colnames(train_default_summary) <- base::c("Metric", models_vector)
-train_default_summary %>%
-  knitr::kable()
-
-# ------------------------------------------------------------------------------
-# Validation results for single component models:
-base::setwd(models_store_dir)
-save_option <- TRUE
-default_cutoff <- 0.5
-
-validation_default <- base::list()
-for (i in 1:base::length(models_vector)){
-  Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = validation_actual,
-                                                                           predicted = validation_predictions[,i],
-                                                                           cutoff = default_cutoff,
-                                                                           type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[2], sep = "_"),
-                                                                           save = save_option,
-                                                                           open = FALSE)[[3]]
-  validation_default[[i]] <- Assessment_of_Classifier_Effectiveness}
-
-validation_default_summary <- base::data.frame(Metric = validation_default[[1]]$Metric)
-for (i in 1:base::length(models_vector)){validation_default_summary <- dplyr::bind_cols(validation_default_summary, validation_default[[i]][5])}
-base::colnames(validation_default_summary) <- base::c("Metric", models_vector)
-validation_default_summary %>%
-  knitr::kable()
-
-# ------------------------------------------------------------------------------
-# Test results for single component models:
-base::setwd(models_store_dir)
-save_option <- TRUE
-default_cutoff <- 0.5
-
-test_default <- base::list()
-for (i in 1:base::length(models_vector)){
-  Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = test_actual,
-                                                                           predicted = test_predictions[,i],
-                                                                           cutoff = default_cutoff,
-                                                                           type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[3], sep = "_"),
-                                                                           save = save_option,
-                                                                           open = FALSE)[[3]]
-  test_default[[i]] <- Assessment_of_Classifier_Effectiveness}
-
-test_default_summary <- base::data.frame(Metric = test_default[[1]]$Metric)
-for (i in 1:base::length(models_vector)){test_default_summary <- dplyr::bind_cols(test_default_summary, test_default[[i]][5])}
-base::colnames(test_default_summary) <- base::c("Metric", models_vector)
-test_default_summary %>%
-  knitr::kable()
-
-# ------------------------------------------------------------------------------
-# Optimize cutoff and weights in ensemble model on train data using simulation approach:
-train_ensemble_optimization <- Optimize_Ensemble_Cutoff_Model(actual = train_actual,
-                                                              predictions = train_predictions,
-                                                              cuts = 50,
-                                                              weights = 50,
-                                                              top = 10,
-                                                              seed = script_seed,
-                                                              summary_type = "median")
-train_ensemble_optimization_cutoff <- train_ensemble_optimization[[3]] %>%
-  dplyr::pull()
-
-train_ensemble_optimization_weights <- train_ensemble_optimization[[4]] %>%
-  tidyr::pivot_longer(cols = dplyr::everything()) %>%
-  dplyr::select(value) %>%
-  dplyr::pull()
-
-train_result_train_optimization <- mapply("*", base::as.data.frame(train_predictions), train_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-validation_result_train_optimization <- mapply("*", base::as.data.frame(validation_predictions), train_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-test_result_train_optimization <- mapply("*", base::as.data.frame(test_predictions), train_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-train_ensemble_optimization_predictions <- base::list(train_result_train_optimization,
-                                                      validation_result_train_optimization,
-                                                      test_result_train_optimization)
-
-# ------------------------------------------------------------------------------
-# Optimize cutoff and weights in ensemble model on validation data using simulation approach:
-validation_ensemble_optimization <- Optimize_Ensemble_Cutoff_Model(actual = validation_actual,
-                                                              predictions = validation_predictions,
-                                                              cuts = 50,
-                                                              weights = 50,
-                                                              top = 10,
-                                                              seed = script_seed,
-                                                              summary_type = "median")
-validation_ensemble_optimization_cutoff <- validation_ensemble_optimization[[3]] %>%
-  dplyr::pull()
-
-validation_ensemble_optimization_weights <- validation_ensemble_optimization[[4]] %>%
-  tidyr::pivot_longer(cols = dplyr::everything()) %>%
-  dplyr::select(value) %>%
-  dplyr::pull()
-
-train_result_validation_optimization <- mapply("*", base::as.data.frame(train_predictions), validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-validation_result_validation_optimization <- mapply("*", base::as.data.frame(validation_predictions), validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-test_result_validation_optimization <- mapply("*", base::as.data.frame(test_predictions), validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-validation_ensemble_optimization_predictions <- base::list(train_result_validation_optimization,
-                                                           validation_result_validation_optimization,
-                                                           test_result_validation_optimization)
-
-# ------------------------------------------------------------------------------
-# Optimize cutoff and weights in ensemble model on train and validation data combined using simulation approach:
-train_validation_ensemble_optimization <- Optimize_Ensemble_Cutoff_Model(actual = base::c(train_actual, validation_actual),
-                                                                         predictions = base::rbind(train_predictions, validation_predictions),
-                                                                         cuts = 50,
-                                                                         weights = 50,
-                                                                         top = 10,
-                                                                         seed = script_seed,
-                                                                         summary_type = "median")
-train_validation_ensemble_optimization_cutoff <- validation_ensemble_optimization[[3]] %>%
-  dplyr::pull()
-
-train_validation_ensemble_optimization_weights <- validation_ensemble_optimization[[4]] %>%
-  tidyr::pivot_longer(cols = dplyr::everything()) %>%
-  dplyr::select(value) %>%
-  dplyr::pull()
-
-train_result_train_validation_optimization <- mapply("*", base::as.data.frame(train_predictions), train_validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-validation_result_train_validation_optimization <- mapply("*", base::as.data.frame(validation_predictions), train_validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-test_result_train_validation_optimization <- mapply("*", base::as.data.frame(test_predictions), train_validation_ensemble_optimization_weights) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(prediction = base::rowSums(.)) %>%
-  dplyr::select(prediction) %>%
-  dplyr::pull()
-
-train_validation_ensemble_optimization_predictions <- base::list(train_result_train_validation_optimization,
-                                                                 validation_result_train_validation_optimization,
-                                                                 test_result_train_validation_optimization)
-
-# ------------------------------------------------------------------------------
-# Ensemble model results on train data:
-base::setwd(models_store_dir)
-save_option <- TRUE
-optimized_cutoff <- base::c(train_ensemble_optimization_cutoff, validation_ensemble_optimization_cutoff, train_validation_ensemble_optimization_cutoff)
-ensemble_model_train_predictions <- base::list(train_result_train_optimization,
-                                               train_result_validation_optimization,
-                                               train_result_train_validation_optimization)
-
-train_dataset_ensemble_model_results <- base::list()
-for (i in 1:base::length(ensemble_model_train_predictions)){
-  train_dataset_ensemble_model_results[[i]] <- Binary_Classifier_Verification(actual = train_actual,
-                                                                         predicted = ensemble_model_train_predictions[[i]],
-                                                                         cutoff = optimized_cutoff[i],
-                                                                         type_info = base::paste(ensemble_split_types[i], "optimized_cutoff", dataset_types[1], sep = "_"),
-                                                                         save = save_option,
-                                                                         open = FALSE)[[3]]}
-
-train_optimized_ensemble_summary <- base::data.frame(Metric = train_dataset_ensemble_model_results[[1]]$Metric)
-for (i in 1:base::length(train_dataset_ensemble_model_results)){train_optimized_ensemble_summary <- dplyr::bind_cols(train_optimized_ensemble_summary, train_dataset_ensemble_model_results[[i]][5])}
-base::colnames(train_optimized_ensemble_summary) <- base::c("Metric", "train_optimized", "validation_optimized", "train_validation_optimized")
-train_optimized_ensemble_summary %>%
-  knitr::kable()
-
-train_default_summary %>%
-  dplyr::left_join(train_optimized_ensemble_summary, by = "Metric") %>%
-  knitr::kable()
-
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-train_default_summary %>%
-  dplyr::left_join(train_optimized_ensemble_summary, by = "Metric") %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "train_dataset_.csv", sep = "_"), sep = "/"))
-
-# ------------------------------------------------------------------------------
-# Ensemble model results on validation data:
-base::setwd(models_store_dir)
-save_option <- TRUE
-optimized_cutoff <- base::c(train_ensemble_optimization_cutoff, validation_ensemble_optimization_cutoff, train_validation_ensemble_optimization_cutoff)
-ensemble_model_validation_predictions <- base::list(validation_result_train_optimization, 
-                                                    validation_result_validation_optimization, 
-                                                    validation_result_train_validation_optimization)
-
-validation_dataset_ensemble_model_results <- base::list()
-for (i in 1:base::length(ensemble_model_train_predictions)){
-  validation_dataset_ensemble_model_results[[i]] <- Binary_Classifier_Verification(actual = validation_actual,
-                                                                              predicted = ensemble_model_validation_predictions[[i]],
-                                                                              cutoff = optimized_cutoff[i],
-                                                                              type_info = base::paste(ensemble_split_types[i], "optimized_cutoff", dataset_types[2], sep = "_"),
-                                                                              save = save_option,
-                                                                              open = FALSE)[[3]]}
-
-validation_optimized_ensemble_summary <- base::data.frame(Metric = validation_dataset_ensemble_model_results[[1]]$Metric)
-for (i in 1:base::length(validation_dataset_ensemble_model_results)){validation_optimized_ensemble_summary <- dplyr::bind_cols(validation_optimized_ensemble_summary, validation_dataset_ensemble_model_results[[i]][5])}
-base::colnames(validation_optimized_ensemble_summary) <- base::c("Metric", "train_optimized", "validation_optimized", "train_validation_optimized")
-validation_optimized_ensemble_summary %>%
-  knitr::kable()
-
-validation_default_summary %>%
-  dplyr::left_join(validation_optimized_ensemble_summary, by = "Metric") %>%
-  knitr::kable()
-
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-validation_default_summary %>%
-  dplyr::left_join(validation_optimized_ensemble_summary, by = "Metric") %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "validation_dataset_.csv", sep = "_"), sep = "/"))
-
-# ------------------------------------------------------------------------------
-# Ensemble model results on test data:
-base::setwd(models_store_dir)
-save_option <- TRUE
-optimized_cutoff <- base::c(train_ensemble_optimization_cutoff, validation_ensemble_optimization_cutoff, train_validation_ensemble_optimization_cutoff)
-ensemble_model_test_predictions <- base::list(test_result_train_optimization, 
-                                                    test_result_validation_optimization, 
-                                                    test_result_train_validation_optimization)
-
-test_dataset_ensemble_model_results <- base::list()
-for (i in 1:base::length(ensemble_model_test_predictions)){
-  test_dataset_ensemble_model_results[[i]] <- Binary_Classifier_Verification(actual = test_actual,
-                                                                                   predicted = ensemble_model_test_predictions[[i]],
-                                                                                   cutoff = optimized_cutoff[i],
-                                                                                   type_info = base::paste(ensemble_split_types[i], "optimized_cutoff", dataset_types[3], sep = "_"),
-                                                                                   save = save_option,
-                                                                                   open = FALSE)[[3]]}
-
-test_optimized_ensemble_summary <- base::data.frame(Metric = test_dataset_ensemble_model_results[[1]]$Metric)
-for (i in 1:base::length(test_dataset_ensemble_model_results)){test_optimized_ensemble_summary <- dplyr::bind_cols(test_optimized_ensemble_summary, test_dataset_ensemble_model_results[[i]][5])}
-base::colnames(test_optimized_ensemble_summary) <- base::c("Metric", "train_optimized", "validation_optimized", "train_validation_optimized")
-test_optimized_ensemble_summary %>%
-  knitr::kable()
-
-test_default_summary %>%
-  dplyr::left_join(test_optimized_ensemble_summary, by = "Metric") %>%
-  knitr::kable()
-
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-test_default_summary %>%
-  dplyr::left_join(test_optimized_ensemble_summary, by = "Metric") %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "test_dataset_.csv", sep = "_"), sep = "/"))
-
-# ------------------------------------------------------------------------------
-# Final summary of ensemble model results:
-ensemble_model_summary <- base::list(train_dataset = train_default_summary %>%
-                                       dplyr::left_join(train_optimized_ensemble_summary, by = "Metric"),
-                                     validation_dataset = validation_default_summary %>%
-                                       dplyr::left_join(validation_optimized_ensemble_summary, by = "Metric"),
-                                     test_dataset = test_default_summary %>%
-                                       dplyr::left_join(test_optimized_ensemble_summary, by = "Metric"))
-
-ensemble_model_summary %>%
-  base::lapply(., knitr::kable)
+Display_All_Classes_Predictions_Distribution(actual = test_actual + 1,
+                                             predicted = test_probabilities,
+                                             labels = labels,
+                                             bins = 10,
+                                             type_info = base::paste(model_name, "test", sep = "_"),
+                                             save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki
