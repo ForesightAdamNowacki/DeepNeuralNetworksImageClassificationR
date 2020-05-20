@@ -30,7 +30,7 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 train_dir <- "D:/GitHub/Datasets/Cifar10/train"
 validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"
 test_dir <- "D:/GitHub/Datasets/Cifar10/test"
-models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/DenseNet169/Categorical"
+models_store_dir <- base::paste(base::getwd(), model_name, "Categorical", sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")

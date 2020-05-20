@@ -16,6 +16,7 @@ The scripts collected on GitHub are divided into 3 main sections depending on th
 # Binary classification:
 Files intended for implementation and optimization of deep neural networks for binary classification contain "Binary_Classification" in the script name. Below is attached brief description and purpose of each script:
 * **Binary_Classification_CNN.R** - implementation of own deep neural network architecture for binary classification of images from the scratch,
+* **Binary_Classification_CNN_Hyperparameters_Optimization.R** - 
 * **Binary_Classification_DenseNet121.R** - implementation of the DenseNet121 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet169.R** - implementation of the DenseNet169 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet201.R** - implementation of the DenseNet201 model for binary image classification using pretrained weights on the ImageNet dataset,
@@ -38,6 +39,7 @@ Files intended for implementation and optimization of deep neural networks for b
 # Categorical classification:
 Files intended for implementation and optimization of deep neural networks for categorical classification contain "Categorical_Classification" in the script name. Below is attached brief description and purpose of each script:
 * **Categorical_Classification_CNN.R** - implementation of own deep neural network architecture for categorical classification of images from the scratch,
+* **Categorical_Classification_CNN_Hyperparameters_Optimization.R** - 
 * **Categorical_Classification_DenseNet121.R** - implementation of the DenseNet121 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet169.R** - implementation of the DenseNet169 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet201.R** - implementation of the DenseNet201 model for categorical image classification using pretrained weights on the ImageNet dataset,
@@ -58,8 +60,8 @@ Files intended for implementation and optimization of deep neural networks for c
 
 ----------
 # Auxiliary files and useful functions:
-* **Data_Augmentation.R** - manual testing and checking all settings and combinations of hyperparameters available in the Keras library used during data augmentation
-* **Useful_Functions.R** - collection of useful and accelerating functions for building, optimizing and testing models used in binary and multi-class classification files briefly described above
+* **Data_Augmentation.R** - manual testing and checking all settings and combinations of hyperparameters available in the Keras library used during data augmentation,
+* **Useful_Functions.R** - collection of useful and accelerating functions for building, optimizing and testing models used in binary and multi-class classification files briefly described above.
 
 ----------
 # Setup Anaconda environment instruction:
