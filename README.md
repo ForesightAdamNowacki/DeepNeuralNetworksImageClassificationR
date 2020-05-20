@@ -2,7 +2,7 @@
 ----------
 # DeepNeuralNetworksRepoR
 
-Deep Neural Networks architectures based on convolutional neural networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class image classification.
+Deep Neural Networks architectures based on convolutional neural networks using Keras and TensorFlow-GPU in R programming language. The repository is devoted to binary and multi-class image classification.
 
 ----------
 # Scripts description:
@@ -10,7 +10,7 @@ Deep Neural Networks architectures based on convolutional neural networks using 
 The scripts collected on GitHub are divided into 3 main sections depending on the purpose and the characteristics of the task: 
 * **binary classification**, 
 * **multi-class classification**,
-* **auxiliary files and functions**.
+* **auxiliary files and useful functions**.
 
 ----------
 # Binary classification:
@@ -19,7 +19,7 @@ Files intended for implementation and optimization of deep neural networks for b
 * **Binary_Classification_DenseNet121.R** - implementation of the DenseNet121 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet169.R** - implementation of the DenseNet169 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet201.R** - implementation of the DenseNet201 model for binary image classification using pretrained weights on the ImageNet dataset,
-* **Binary_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for binary classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameter of weights / contribution of partial models and the probability cutoff point.
+* **Binary_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for binary image classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameter of weights / contribution of partial models and the probability cutoff point.
 * **Binary_Classification_Inception_ResNet_V2.R** - implementation of the Inception ResNet V2 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_Inception_V3.R** - implementation of the Inception V3 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_K-Fold_Cross_Validation.R** - implementation of own deep neural network architecture for binary image classification from the scratch with cross-validation method,
@@ -32,65 +32,37 @@ Files intended for implementation and optimization of deep neural networks for b
 * **Binary_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
 * **Binary_Classification_VGG19_2nd_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
 * **Binary_Classification_VGG19_Pipe_Runner.R** - executable script sequentially compiling Binary_Classification_VGG19_1st_Stage.R and Binary_Classification_VGG19_2nd_Stage.R files,
-
-
-
-* **Binary_Categorical_Model_Evaluation.R:**
-	* **Binary_Classifier_Verification** - function calculates all most important metrics in binary classification problems for provided actual classes and predicted probabilities. Available key metrics: True Negative, 
-False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive 
-Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
-	* **Binary_Classifier_Cutoff_Optimization** - function optimizes cutoff level for chosen key metric: True Negative, False Positive, False Negative, True Positive, Condition Positive, Condition Negative, Accuracy,
-Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False Positive Rate, False Discovery Rate,
-False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
-	* **Categorical_Model_Evaluation** - function calculates Accuracy, Precision, Recall and F1 Score per classes and overall metrics calculated without division into classes for all provided observations. Additionaly
-function converts multi-class classification into binary classification problem for each available class separately and computes metrics such as: True Negative, False Positive, False Negative, True Positive, Condition Positive,
-Condition Negative, Accuracy, Balanced Accuracy, Area Under Curve, Bias, Classification Error, True Positive Rate, True Negative Rate, Positive Predictive Value, Negative Predictive Value, False Negative Rate, False 
-Positive Rate, False Discovery Rate, False Omission Rate, Threat Score, F1 Score, Bookmaker Informedness, Markedness, Gini Index, Cost.
-
-* **CNN_Binary_Model_Implementation.R:**
-	* will be updated soon
-
-* **Data_Augmentation.R:**
-	* **Image_Augmentation** - function gives the opportunity to inspect possible ways of image data augmentation techniques and adapt random image modification settings for a specific classification problem.
-
-* **Inseption_ResNet_V2_Binary_Classification.R:**
-	* will be updated soon
-
-* **Inception_V3_Binary_Classification.R:**
-	* Complete pipeline for binary classification problem in images using GoogLeNet Inception V3 pretrained model on ImageNet dataset.
-
-* **Inception_V3_Categorical_Classification.R:**
-	* Complete pipeline for multi-classification problem in images using GoogLeNet Inception V3 pretrained model on ImageNet dataset.
-
-* **ResNet50_Binary_Classification.R:**
-	* Complete pipeline for binary classification problem in images using ResNet50 pretrained model on ImageNet dataset.
-
-* **ResNet50_Categorical_Classification.R:**
-	* Complete pipeline for multi-classification problem in images using ResNet50 pretrained model on ImageNet dataset.
-
-* **Useful_Functions.R:**
-	* will be updated soon
-
-* **VGG16_Binary_Classification.R:**
-	* Complete pipeline for binary classification problem in images using VGG16 pretrained model on ImageNet dataset.
-
-* **VGG16_Categorical_Classification.R:**
-	* Complete pipeline for multi-classification problem in images using VGG16 pretrained model on ImageNet dataset.
-
-* **VGG19_Binary_Classification.R:**
-	* Complete pipeline for binary classification problem in images using VGG19 pretrained model on ImageNet dataset.
-
-* **VGG19_Categorical_Classification.R:**
-	* Complete pipeline for multi-classification problem in images using VGG19 pretrained model on ImageNet dataset.
-
-* **Xception_Binary_Classification.R:**
-	* Complete pipeline for binary classification problem in images using Xception pretrained model on ImageNet dataset.
-
-* **Xception_Categorical_Classification.R:**
-	* Complete pipeline for multi-classification problem in images using Xception pretrained model on ImageNet dataset.
+* **Binary_Classification_Xception.R** - implementation of the Xception model for binary image classification using pretrained weights on the ImageNet dataset.
 
 ----------
-# Setup Anaconda environment
+# Categorical classification:
+Files intended for implementation and optimization of deep neural networks for categorical classification contain "Categorical_Classification" in the script name. Below is attached brief description and purpose of each script:
+* **Categorical_Classification_CNN.R** - implementation of own deep neural network architecture for categorical classification of images from the scratch,
+* **Categorical_Classification_DenseNet121.R** - implementation of the DenseNet121 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_DenseNet169.R** - implementation of the DenseNet169 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_DenseNet201.R** - implementation of the DenseNet201 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_Ensemble_Model.R** - 
+* **Categorical_Classification_Inception_ResNet_V2.R** - implementation of the Inception ResNet V2 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_Inception_V3.R** - implementation of the Inception V3 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_K-Fold_Cross_Validation.R** - 
+* **Categorical_Classification_MobileNet_V2.R** - implementation of the MobileNet V2 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_NASNetMobile_V2.R** - implementation of the NASNetMobile model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_ResNet50.R** - implementation of the ResNet50 model for categorical image classification using pretrained weights on the ImageNet dataset,
+* **Categorical_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Categorical_Classification_VGG16_2nd_Stage.R** - implementation of the VGG16 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
+* **Categorical_Classification_VGG16_Pipe_Runner.R** - executable script sequentially compiling Categorical_Classification_VGG16_1st_Stage.R and Categorical_Classification_VGG16_2nd_Stage.R files,
+* **Categorical_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Categorical_Classification_VGG19_2nd_Stage.R** - implementation of the VGG19 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
+* **Categorical_Classification_VGG19_Pipe_Runner.R** - executable script sequentially compiling Categorical_Classification_VGG19_1st_Stage.R and Categorical_Classification_VGG19_2nd_Stage.R files,
+* **Categorical_Classification_Xception.R** - implementation of the Xception model for categorical image classification using pretrained weights on the ImageNet dataset.
+
+----------
+# Auxiliary files and useful functions:
+* **Data_Augmentation.R** - manual testing and checking all settings and combinations of hyperparameters available in the Keras library used during data augmentation
+* **Useful_Functions.R** - collection of useful and accelerating functions for building, optimizing and testing models used in binary and multi-class classification files briefly described above
+
+----------
+# Setup Anaconda environment instruction:
 1. **Install Anaconda Python 3.7 version:**
 * Download from https://www.anaconda.com/distribution/
 * Open Anaconda Prompt

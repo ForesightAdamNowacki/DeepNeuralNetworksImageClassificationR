@@ -1,10 +1,7 @@
 # ------------------------------------------------------------------------------
-# IMAGE AUGMENTATION
+# IMAGE DATA AUGMENTATION
 # The script used to test data augmentation settings.
-# ------------------------------------------------------------------------------
-# Data:
-# https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+
 # ------------------------------------------------------------------------------
 # Environment:
 base::library(reticulate)
@@ -104,5 +101,5 @@ Image_Augmentation <- function(image_path,
 # ------------------------------------------------------------------------------
 # Test image augmentation function:
 base::setwd(dir = "D:\\GitHub\\DeepNeuralNetworksRepoR\\Images")
-Image_Augmentation(image_path = "Dog_1.png", n = 1, plot_save = FALSE)
+Image_Augmentation(image_path = "Dog_1.png", n = 9, plot_save = FALSE)
 # ------------------------------------------------------------------------------
