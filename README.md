@@ -2,10 +2,38 @@
 ----------
 # DeepNeuralNetworksRepoR
 
-Deep Neural Networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class object classification for images data.
+Deep Neural Networks architectures based on convolutional neural networks using Keras and TensorFlow-GPU in R. The repository is devoted to binary and multi-class image classification.
 
 ----------
-# Scripts description
+# Scripts description:
+
+The scripts collected on GitHub are divided into 3 main sections depending on the purpose and the characteristics of the task: 
+* **binary classification**, 
+* **multi-class classification**,
+* **auxiliary files and functions**.
+
+----------
+# Binary classification:
+Files intended for implementation and optimization of deep neural networks for binary classification contain "Binary_Classification" in the script name. Below is attached brief description and purpose of each script:
+* **Binary_Classification_CNN.R** - implementation of own deep neural network architecture for binary classification of images from the scratch,
+* **Binary_Classification_DenseNet121.R** - implementation of the DenseNet121 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_DenseNet169.R** - implementation of the DenseNet169 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_DenseNet201.R** - implementation of the DenseNet201 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for binary classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameter of weights / contribution of partial models and the probability cutoff point.
+* **Binary_Classification_Inception_ResNet_V2.R** - implementation of the Inception ResNet V2 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_Inception_V3.R** - implementation of the Inception V3 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_K-Fold_Cross_Validation.R** - implementation of own deep neural network architecture for binary image classification from the scratch with cross-validation method,
+* **Binary_Classification_MobileNet_V2.R** - implementation of the MobileNet V2 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_NASNetMobile_V2.R** - implementation of the NASNetMobile model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_ResNet50.R** - implementation of the ResNet50 model for binary image classification using pretrained weights on the ImageNet dataset,
+* **Binary_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Binary_Classification_VGG16_2nd_Stage.R** - implementation of the VGG16 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
+* **Binary_Classification_VGG16_Pipe_Runner.R** - executable script sequentially compiling Binary_Classification_VGG16_1st_Stage.R and Binary_Classification_VGG16_2nd_Stage.R files,
+* **Binary_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Binary_Classification_VGG19_2nd_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
+* **Binary_Classification_VGG19_Pipe_Runner.R** - executable script sequentially compiling Binary_Classification_VGG19_1st_Stage.R and Binary_Classification_VGG19_2nd_Stage.R files,
+
+
 
 * **Binary_Categorical_Model_Evaluation.R:**
 	* **Binary_Classifier_Verification** - function calculates all most important metrics in binary classification problems for provided actual classes and predicted probabilities. Available key metrics: True Negative, 
