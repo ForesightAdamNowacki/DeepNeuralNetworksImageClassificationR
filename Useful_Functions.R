@@ -436,20 +436,20 @@ Split_Data_Train_Validation <- function(data_dir,
 
 # ------------------------------------------------------------------------------
 # Optimize ensemble binary model:
-Optimize_Ensemble_Cutoff_Model <- function(actual_class,
-                                           predictions,
-                                           cuts,
-                                           weights,
-                                           key_metric = ACC,
-                                           key_metric_as_string = FALSE,
-                                           ascending = FALSE,
-                                           summary_type = "median",
-                                           seed = 42,
-                                           top = 10,
-                                           TN_cost = 0,
-                                           FP_cost = 1,
-                                           FN_cost = 1,
-                                           TP_cost = 0){
+Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
+                                                  predictions,
+                                                  cuts,
+                                                  weights,
+                                                  key_metric = ACC,
+                                                  key_metric_as_string = FALSE,
+                                                  ascending = FALSE,
+                                                  summary_type = "mean",
+                                                  seed = 42,
+                                                  top = 10,
+                                                  TN_cost = 0,
+                                                  FP_cost = 1,
+                                                  FN_cost = 1,
+                                                  TP_cost = 0){
   
   # Libraries:
   if (!require(tidyverse)){utils::install.packages('tidyverse'); require('tidyverse')}  
@@ -463,10 +463,6 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
     key_metric <- rlang::sym(key_metric)
     key_metric <- dplyr::enquo(key_metric) 
     key_metric_name <- dplyr::quo_name(key_metric)}
-  
-  # # Key metric:
-  # key_metric <- dplyr::enquo(key_metric) 
-  # key_metric_name <- dplyr::quo_name(key_metric)
   
   # Generate cuts:
   base::set.seed(seed = seed)
@@ -548,7 +544,7 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
       df$MK[j] <- df$PPV[j] + df$NPV[j] - 1
       df$COST[j] <- TN_cost * df$TN[j] + FP_cost * df$FP[j] + FN_cost * df$FN[j] + TP_cost * df$TP[j]}
     results[[i]] <- df
-    utils::setTxtProgressBar(pb,i, title = "tytul", label = "abc")}
+    utils::setTxtProgressBar(pb,i)}
   
   base::cat("\n")
   
@@ -564,7 +560,7 @@ Optimize_Ensemble_Cutoff_Model <- function(actual_class,
     final_results %>%
       dplyr::arrange(dplyr::desc(!!key_metric)) -> final_results
   }
-
+  
   
   # Return results:
   if (summary_type == "mean"){
@@ -979,6 +975,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                                                   text_size = 8,
                                                   title_size = 10,
                                                   key_metric = CUTOFF,
+                                                  key_metric_as_string = FALSE,
                                                   ascending = TRUE,
                                                   seed_value = 42,
                                                   top = 25,
@@ -996,8 +993,21 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
   if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
   
-  key_metric <- dplyr::enquo(key_metric) 
-  key_metric_name <- dplyr::quo_name(key_metric)
+  
+  if (key_metric_as_string == FALSE){
+    key_metric <- dplyr::enquo(key_metric) 
+    key_metric_name <- dplyr::quo_name(key_metric)}
+  
+  if (key_metric_as_string == TRUE){
+    key_metric <- rlang::sym(key_metric)
+    key_metric <- dplyr::enquo(key_metric) 
+    key_metric_name <- dplyr::quo_name(key_metric)}
+  
+  
+  
+  
+  # key_metric <- dplyr::enquo(key_metric) 
+  # key_metric_name <- dplyr::quo_name(key_metric)
   
   base::set.seed(seed = seed_value)
   cuts_values <- stats::runif(n = cuts, min = 0, max = 1)
@@ -1158,13 +1168,8 @@ Categorical_Classifier_Verification <- function(actual,
                                                 probabilities,
                                                 labels,
                                                 type_info = "",
-                                                cutoff = 0.5,
-                                                FN_cost = 1,
-                                                FP_cost = 1,
-                                                TN_cost = 0,
-                                                TP_cost = 0,
-                                                save = FALSE,
-                                                open = TRUE){
+                                                save = TRUE,
+                                                open = FALSE){
   
   sys_time = base::Sys.time()
   
@@ -1237,17 +1242,20 @@ Categorical_Classifier_Verification <- function(actual,
     tidyr::replace_na(base::list(f1 = 0)) %>%
     dplyr::mutate(type = "Split into categories",
                   actual = base::as.character(actual)) %>%
-    dplyr::rename(class = actual) -> stats_2
+    dplyr::rename(class = actual) -> stats_2; stats_2
   
   stats_2 %>%
-    dplyr::mutate(class = "overall") %>%
+    dplyr::mutate(class = "Overall") %>%
     dplyr::group_by(class) %>%
     dplyr::summarise(records = base::sum(records),
                      correct = base::sum(correct),
                      incorrect = records - correct,
                      accuracy = correct/records,
                      inaccuracy = incorrect/records,
-                     type = "All categories") -> stats_3
+                     precision = base::mean(precision),
+                     recall = base::mean(recall),
+                     f1 = base::mean(f1),
+                     type = "All categories") -> stats_3; stats_3
   
   dplyr::bind_rows(stats_2, stats_3) %>%
     dplyr::rename(Class = class,
@@ -1258,21 +1266,24 @@ Categorical_Classifier_Verification <- function(actual,
                   Inaccuracy = inaccuracy,
                   Precision = precision,
                   Recall = recall,
-                  F1 = f1) -> stats_4
+                  F1 = f1,
+                  Type = type) -> stats_4; stats_4
   
-  probabilities %>%
-    base::as.data.frame() %>%
-    dplyr::mutate(id = dplyr::row_number()) %>%
-    tidyr::pivot_longer(cols = dplyr::starts_with("V"), names_to = "predicted_class", values_to = "probability") %>%
-    dplyr::mutate(predicted_class = base::as.numeric(stringr::str_sub(predicted_class, 2, -1))) %>%
-    dplyr::left_join(tibble::tibble(id = 1:base::length(actual),
-                                    actual = actual), by = base::c("id")) %>%
-    dplyr::mutate(ground_true = base::ifelse(predicted_class == actual, 1, 0)) %>%
-    dplyr::select(ground_true, probability) -> stats_5
+  stats_2 %>%
+    dplyr::rename(Class = class,
+                  Records = records,
+                  Correct = correct,
+                  Incorrect = incorrect, 
+                  Accuracy = accuracy,
+                  Inaccuracy = inaccuracy,
+                  Precision = precision,
+                  Recall = recall,
+                  F1 = f1,
+                  Type = type) -> stats_2
   
   stats_4 %>%
     dplyr::ungroup() %>%
-    gt::gt(rowname_col = "Class", groupname_col = "type") %>%
+    gt::gt(rowname_col = "Class", groupname_col = "Type") %>%
     gt::tab_header(title = gt::md(base::paste("Model's evaluation metrics", sys_time)),
                    subtitle = gt::md("Categorical classification model")) %>%
     gt::tab_source_note(gt::md("More information available at: **https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR**.")) %>%
@@ -1305,197 +1316,9 @@ Categorical_Classifier_Verification <- function(actual,
     gt::opt_table_outline(width = gt::px(3), color = "black") %>%
     gt::opt_table_lines() -> gt_table
   
-  Binary_Classifier_Verification_2 <- function(actual,
-                                               predicted,
-                                               type_info,
-                                               cutoff = 0.5,
-                                               FN_cost = 1,
-                                               FP_cost = 1,
-                                               TN_cost = 0,
-                                               TP_cost = 0,
-                                               save = FALSE,
-                                               open = TRUE){
-    
-    # Confusion matrix explanation:
-    result_1 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
-                               "Predicted Negative (0)" = base::c("True Negative (TN)", "False Negative (FN)"),
-                               "Predicted Positive (1)" = base::c("False Positive (FP)", "True Positive (TP)"))
-    
-    probability <- predicted
-    if(base::length(base::unique(predicted)) > 2){predicted <- base::ifelse(predicted < cutoff, 0, 1)}
-    
-    # Confusion matrix result:
-    confusion_matrix <- base::table(actual, predicted)
-    result_2 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
-                               "Predicted Negative (0)" = base::c(confusion_matrix[1, 1], confusion_matrix[2, 1]),
-                               "Predicted Positive (1)" = base::c(confusion_matrix[1, 2], confusion_matrix[2, 2])) 
-    
-    # Assessment of classifier effectiveness:
-    OBS <- base::sum(confusion_matrix); OBS_label <- "= TN + FP + FN + TP"
-    TN <- confusion_matrix[1, 1]; TN_label <- "= TN"
-    FP <- confusion_matrix[1, 2]; FP_label <- "= FP"
-    FN <- confusion_matrix[2, 1]; FN_label <- "= FN"
-    TP <- confusion_matrix[2, 2]; TP_label <- "= TP"
-    P <- FN + TP; P_label <- "= FN + TP"
-    N <- TN + FP; N_label <- "= TN + FP"
-    
-    # Accuracy (ACC):
-    ACC <- (TN + TP)/(TN + FN + FP + TP)
-    ACC_label <- "= (TN + TP)/(TN + FN + FP + TP) = (TN + TP)/(P + N)"
-    
-    # Balanced Accuracy (BACC):
-    BACC <- (TN/(TN + FP) + TP/(FN + TP))/2
-    BACC_label <- "= (TN/(TN + FP) + TP/(FN + TP))/2"
-    
-    # Area Under Curve (AUC):
-    AUC <- Metrics::auc(actual = actual, predicted = probability)
-    AUC_label <- "= Area Under ROC Curve"
-    # Bias:
-    BIAS <- base::mean(base::as.numeric(actual)) - base::mean(base::as.numeric(predicted))
-    BIAS_label <- "= mean(actual) - mean(predicted)"
-    # Classification Error (CE):
-    CE <- (FN + FP)/(TN + FN + FP + TP)
-    CE_label <- "= (FN + FP)/(TN + FN + FP + TP) = 1 - (TN + TP)/(TN + FN + FP + TP)"
-    # Recall, Sensitivity, hit rate, True Positive Rate (TPR):
-    TPR <- TP/(TP + FN)
-    TPR_label <- "= TP/(TP + FN) = TP/P = 1 - FNR"
-    # Specifity, selectivity, True Negative Rate (TNR):
-    TNR <- TN/(TN + FP)
-    TNR_label <- "= TN/(TN + FP) = TN/N = 1 - FPR"
-    # Precision, Positive Prediction Value (PPV):
-    PPV <- TP/(TP + FP)
-    PPV_label <- "= TP/(TP + FP) = 1 - FDR"
-    # Negative Predictive Value (NPV):
-    NPV <- TN/(TN + FN)
-    NPV_label <- "= TN/(TN + FN) = 1 - FOR"
-    # False Negative Rate (FNR), miss rate:
-    FNR <- FN/(FN + TP)
-    FNR_label <- "= FN/(FN + TP) = FN/P = 1 - TPR"
-    # False Positive Rate (FPR), fall-out:
-    FPR <- FP/(FP + TN)
-    FPR_label <- "= FP/(FP + TN) = FP/N = 1 - TNR"
-    # False Discovery Rate (FDR):
-    FDR <- FP/(FP + TP)
-    FDR_label <- "= FP/(FP + TP) = 1 - PPV"
-    # False Omission Rate (FOR):
-    FOR <- FN/(FN + TN)
-    FOR_label <- "= FN/(FN + TN) = 1 - NPV"
-    # Threat Score (TS), Critical Success Index (CSI):
-    TS <- TP/(TP + FN + FP)
-    TS_label <- "= TP/(TP + FN + FP)"
-    # F1:
-    F1 <- (2 * PPV * TPR)/(PPV + TPR)
-    F1_label <- "= (2 * PPV * TPR)/(PPV + TPR) = 2 * TP/(2 * TP + FP + FN)"
-    # Informedness, Bookmaker Informedness (BM):
-    BM <- TPR + TNR - 1
-    BM_label <- "= TPR + TNR - 1"
-    # Markedness (MK):
-    MK <- PPV + NPV - 1
-    MK_label <- "= PPV + NPV - 1"
-    # Gini Index:
-    GINI <- 2 * AUC - 1
-    GINI_label <- "= 2 * AUC - 1"
-    # Cost:
-    COST <- FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost
-    COST_label <- "= FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost"
-    
-    result_3 <- tibble::tibble(Metric = base::c("Number of Observations", "True Negative", "False Positive", "False Negative", "True Positive",
-                                                "Condition Negative", "Condition Positive", "Accuracy", "Balanced Accuracy", "Area Under ROC Curve",
-                                                "Bias", "Classification Error", "True Positive Rate", "True Negative Rate",
-                                                "Positive Prediction Value", "Negative Predictive Value", "False Negative Rate", "False Positive Rate",
-                                                "False Discovery Rate", "False Omission Rate", "Threat Score", "F1 Score",
-                                                "Bookmaker Informedness", "Markedness", "Gini Index", "Cost"),
-                               `Metric Abb` = base::c("RECORDS", "TN", "FP", "FN", "TP",
-                                                      "N", "P", "ACC", "BACC", "AUC",
-                                                      "BIAS", "CE", "TPR", "TNR", 
-                                                      "PPV", "NPV", "FNR", "FPR",
-                                                      "FDR", "FOR", "TS", "F1",
-                                                      "BM", "MK", "GINI", "COST"),
-                               `Metric Name` = base::c("-", "-", "Type I Error", "Type II Error", "-",
-                                                       "-", "-", "-", "-", "-",
-                                                       "-", "-", "Sensitivity, Recall, Hit Rate", "Specifity, Selectivity",
-                                                       "Precision", "-", "Miss Rate", "Fall-Out",
-                                                       "-", "-", "Critical Success Index", "-",
-                                                       "-", "-", "-", "-"),
-                               Score = base::round(base::c(OBS, TN, FP, FN, TP,
-                                                           N, P, ACC, BACC, AUC,
-                                                           BIAS, CE, TPR, TNR,
-                                                           PPV, NPV, FNR, FPR,
-                                                           FDR, FOR, TS, F1,
-                                                           BM, MK, GINI, COST), digits = 6),
-                               Calculation = base::c(OBS_label, TN_label, FP_label, FN_label, TP_label,
-                                                     N_label, P_label, ACC_label, BACC_label, AUC_label,
-                                                     BIAS_label, CE_label, TPR_label, TNR_label,
-                                                     PPV_label, NPV_label, FNR_label, FPR_label,
-                                                     FDR_label, FOR_label, TS_label, F1_label,
-                                                     BM_label, MK_label, GINI_label, COST_label),
-                               ID = base::c(1:7, 1:19)) %>%
-      dplyr::select(ID, Metric, `Metric Abb`, `Metric Name`, Score, Calculation)
-    
-    result_3 %>%
-      dplyr::mutate(Group = base::ifelse(Metric %in% base::c("Number of Observations", "True Negative",
-                                                             "False Positive", "False Negative",
-                                                             "True Positive", "Condition Positive",
-                                                             "Condition Negative"), 
-                                         "Confusion Matrix Result", "Assessment of Classifier Effectiveness")) %>%
-      gt::gt(rowname_col = "ID", groupname_col = "Group") %>%
-      gt::tab_header(title = gt::md(base::paste("Model's evaluation metrics", sys_time)),
-                     subtitle = gt::md("Binary-Categorical classification model")) %>%
-      gt::tab_source_note(gt::md(base::paste0("**Options**: ",
-                                              "**cutoff** = ", cutoff,
-                                              ", **TN_cost** = ", TN_cost,
-                                              ", **FP_cost** = ", FP_cost,
-                                              ", **FN_cost** = ", FN_cost,
-                                              ", **TP_cost** = ", TP_cost))) %>%
-      gt::tab_source_note(gt::md("More information available at: **https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR**.")) %>%
-      gt::tab_spanner(label = "Metrics section",
-                      columns = dplyr::vars(Metric, `Metric Abb`, `Metric Name`)) %>%
-      gt::tab_spanner(label = "Performance section",
-                      columns = dplyr::vars(Score, Calculation)) %>%
-      gt::fmt_number(columns = dplyr::vars(Score),
-                     decimals = 4,
-                     use_seps = FALSE) %>%
-      gt::cols_align(align = "left", columns = dplyr::vars(Metric, `Metric Abb`, `Metric Name`, Calculation)) %>%
-      gt::tab_options(heading.background.color = "black",
-                      table.background.color = "grey",
-                      column_labels.background.color = "black",
-                      row_group.background.color = "black",
-                      source_notes.background.color = "black",
-                      table.border.top.color = "black",
-                      table.border.top.width = gt::px(3),
-                      table.border.bottom.color = "black",
-                      table.border.bottom.width = gt::px(3),
-                      heading.title.font.size = 16,
-                      table.font.size = 12,
-                      source_notes.font.size = 10,
-                      table.width = gt::pct(100),
-                      data_row.padding = gt::px(5),
-                      row_group.padding = gt::px(10),
-                      source_notes.padding = gt::px(5)) %>% 
-      gt::opt_table_outline(width = gt::px(3), color = "black") %>%
-      gt::opt_table_lines() -> gt_table
+  if (save == TRUE){
     
     base::print(gt_table)
-    
-    if (save == TRUE){
-      gt::gtsave(data = gt_table,
-                 filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
-                 vwidth = 900,
-                 vheight = 1600,
-                 expand = 5)
-      if (open == TRUE){
-        rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
-      }
-    }
-    
-    base::invisible(base::list("Confusion_Matrix_Explanation" = result_1,
-                               "Confusion_Matrix_Result" = result_2,
-                               "Assessment_of_Classifier_Effectiveness" = result_3))
-  }
-  
-  base::print(gt_table)
-  
-  if (save == TRUE){
     gt::gtsave(data = gt_table,
                filename = stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                vwidth = 900,
@@ -1506,19 +1329,10 @@ Categorical_Classifier_Verification <- function(actual,
     }
   }
   
-  binary_results <- Binary_Classifier_Verification_2(actual = stats_5$ground_true,
-                                                     predicted = stats_5$probability,
-                                                     type_info = type_info,
-                                                     save = save,
-                                                     open = open,
-                                                     cutoff = cutoff,
-                                                     FN_cost = FN_cost,
-                                                     FP_cost = FP_cost,
-                                                     TN_cost = TN_cost,
-                                                     TP_cost = TP_cost)
-  
-  base::invisible(base::list("Categorical classification" = stats_4,
-                             "Binary classification" = binary_results))}
+  base::return(base::list(stats_2,
+                          stats_3,
+                          stats_4))
+}
 
 # ------------------------------------------------------------------------------
 # Prepare data for K-Fold Cross Validation:
@@ -1644,8 +1458,8 @@ Binary_Ensemble_Model <- function(models_vector,
                                   key_metric_as_string = TRUE,
                                   ascending = FALSE,
                                   top = 10,
-                                  seed = 10,
-                                  summary_type = "median",
+                                  seed = 42,
+                                  summary_type = "mean",
                                   cwd = models_store_dir,
                                   n = 3){ 
   
@@ -1758,17 +1572,17 @@ Binary_Ensemble_Model <- function(models_vector,
     predictions_optimization = base::rbind(train_predictions, validation_predictions)}
   
   # ------------------------------------------------------------------------------
-  # Optimize cutoff and weights in ensemble model on selected data using simulation approach:
-  ensemble_optimization <- Optimize_Ensemble_Cutoff_Model(actual = actual_optimization,
-                                                          predictions = predictions_optimization,
-                                                          cuts = cuts,
-                                                          weights = weights,
-                                                          key_metric = key_metric,
-                                                          key_metric_as_string = key_metric_as_string,
-                                                          ascending = ascending,
-                                                          top = top,
-                                                          seed = seed,
-                                                          summary_type = summary_type)
+  # Optimize cutoff and weights in binary ensemble model on selected data using simulation approach:
+  ensemble_optimization <- Optimize_Binary_Ensemble_Cutoff_Model(actual = actual_optimization,
+                                                                 predictions = predictions_optimization,
+                                                                 cuts = cuts,
+                                                                 weights = weights,
+                                                                 key_metric = key_metric,
+                                                                 key_metric_as_string = key_metric_as_string,
+                                                                 ascending = ascending,
+                                                                 top = top,
+                                                                 seed = seed,
+                                                                 summary_type = summary_type)
   ensemble_optimization_cutoff <- ensemble_optimization[[3]] %>%
     dplyr::pull()
   
@@ -1873,11 +1687,11 @@ Binary_Ensemble_Model <- function(models_vector,
   
   # ------------------------------------------------------------------------------
   # Final summary of ensemble model results:
-  ensemble_model_summary <- base::list(train_dataset = train_default_summary %>%
+  ensemble_model_summary <- base::list(train_dataset_results = train_default_summary %>%
                                          dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric"),
-                                       validation_dataset = validation_default_summary %>%
+                                       validation_dataset_results = validation_default_summary %>%
                                          dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric"),
-                                       test_dataset = test_default_summary %>%
+                                       test_dataset_results = test_default_summary %>%
                                          dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"))
   
   ensemble_model_summary %>%
@@ -1894,7 +1708,404 @@ Binary_Ensemble_Model <- function(models_vector,
                           test_dataset_results = test_default_summary %>%
                             dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"),
                           train_models_predictions = all_ensemble_model_predictions[[1]],
+                          train_actual_class = train_actual,
                           validation_models_predictions = all_ensemble_model_predictions[[2]],
-                          test_models_predictions = all_ensemble_model_predictions[[3]]))
+                          validation_actual_class = validation_actual,
+                          test_models_predictions = all_ensemble_model_predictions[[3]],
+                          test_actual_class = test_actual))
 }
+
+# ------------------------------------------------------------------------------
+# Calculate final predictions for several categorical models with indicated partial weights:
+Multiply_List_Values <- function(list, weights_vector){
+  for(i in 1:base::length(list)){
+    list[[i]] <- list[[i]] * weights_vector[i]}
+  base::return(list)}
+
+# ------------------------------------------------------------------------------
+# Optimize Categorical Ensemble Model:
+Optimize_Categorical_Ensemble_Cutoff_Model <- function(actual_class,
+                                                       predictions, # list
+                                                       weights,
+                                                       labels,
+                                                       models_vector,
+                                                       key_metric = Accuracy,
+                                                       key_metric_as_string = FALSE,
+                                                       ascending = FALSE,
+                                                       summary_type = "mean",
+                                                       seed = 42,
+                                                       top = 10){
+  
+  if (key_metric_as_string == FALSE){
+    key_metric <- dplyr::enquo(key_metric) 
+    key_metric_name <- dplyr::quo_name(key_metric)}
+  
+  if (key_metric_as_string == TRUE){
+    key_metric <- rlang::sym(key_metric)
+    key_metric <- dplyr::enquo(key_metric) 
+    key_metric_name <- dplyr::quo_name(key_metric)}
+  
+  # Generate waights:
+  base::set.seed(seed = seed)
+  weights_ <- base::matrix(data = stats::runif(base::length(predictions) * weights, min = 0, max = 1),
+                           nrow = weights,
+                           ncol = base::length(predictions))
+  
+  results_list <- base::list()
+  weights_list <- base::list()
+  base::cat("\n", "Ensemble model optimization:", "\n")
+  pb = txtProgressBar(min = 0, max = weights, initial = 0, style = 3) 
+  
+  for (j in 1:weights){
+    weights_vector <- weights_[j,]/base::sum(weights_[j,])
+    predictions_table <- Multiply_List_Values(predictions, weights_vector) %>%
+      base::Reduce("+", .)
+    
+    results_list[[j]] <- Categorical_Classifier_Verification(actual = actual_class,
+                                                             probabilities = predictions_table,
+                                                             labels = labels,
+                                                             save = FALSE,
+                                                             open = FALSE,
+                                                             type_info = "")[[2]]
+    weights_list[[j]] <- weights_vector
+    utils::setTxtProgressBar(pb, j)}
+  
+  base::cat("\n")
+  
+  results_list <- base::do.call(base::rbind, results_list) %>%
+    dplyr::mutate(class = NULL,
+                  type = NULL) %>%
+    dplyr::rename_all(funs(stringr::str_to_title(.)))
+  
+  weights_table <- base::do.call(base::rbind, weights_list) %>%
+    tibble::as_tibble() %>%
+    magrittr::set_colnames(base::paste("Model", models_vector, sep = "_"))
+  
+  # Arrange according to selected metric:
+  if(ascending == TRUE){
+    dplyr::bind_cols(results_list, weights_table) %>%
+      dplyr::arrange(!!key_metric) -> final_results
+  } else {
+    dplyr::bind_cols(results_list, weights_table) %>%
+      dplyr::arrange(dplyr::desc(!!key_metric)) -> final_results
+  }
+  
+  # Return results:
+  if (summary_type == "mean"){
+    base::return(base::list(all_results = final_results,
+                            top_results = final_results %>% utils::head(top),
+                            optimized_weights = final_results %>%
+                              dplyr::select(dplyr::starts_with("Model")) %>%
+                              utils::head(top) %>%
+                              dplyr::summarise_all(base::mean)))}
+  
+  if (summary_type == "median"){
+    base::return(base::list(all_results = final_results,
+                            top_results = final_results %>% utils::head(top),
+                            optimized_weights = final_results %>%
+                              dplyr::select(dplyr::starts_with("Model")) %>%
+                              utils::head(top) %>%
+                              dplyr::summarise_all(stats::median)))}
+}
+
+# ------------------------------------------------------------------------------
+# Build Ensemble model for categorical classification problem:
+Categorical_Ensemble_Model <- function(models_vector,
+                                       labels,
+                                       optimization_dataset = "train", # "train", "validation", "train+validation"
+                                       save_option = FALSE,
+                                       weights = 25,
+                                       key_metric = "Accuracy",
+                                       key_metric_as_string = TRUE,
+                                       ascending = FALSE,
+                                       top = 10,
+                                       seed = 42,
+                                       summary_type = "mean",
+                                       cwd = models_store_dir,
+                                       n = 3){
+  
+  train_pattern <- "train_categorical_probabilities"
+  validation_pattern <- "validation_categorical_probabilities"
+  test_dir <- "test_categorical_probabilities"
+  
+  dataset_types <- base::c("train_dataset", "validation_dataset", "test_dataset")
+  
+  all_predictions <- base::list()
+  for (i in base::seq_along(models_vector)){
+    model <- base::list()
+    model[[1]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
+    model[[2]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
+    model[[3]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
+    all_predictions[[i]] <- model}
+  
+  Display_List_Structure(all_predictions, n = n)
+  
+  # ------------------------------------------------------------------------------
+  # Predictions:
+  # Train:
+  train_predictions <- base::list()
+  for (i in 1:base::length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]] %>%
+    dplyr::select(dplyr::starts_with("V"))}
+  
+  # Validation:
+  validation_predictions <- base::list()
+  for (i in 1:base::length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]] %>%
+    dplyr::select(dplyr::starts_with("V"))}
+  
+  # Test:
+  test_predictions <- base::list()
+  for (i in 1:base::length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]] %>%
+    dplyr::select(dplyr::starts_with("V"))}
+  
+  # ------------------------------------------------------------------------------
+  # Actual:
+  train_actual <- all_predictions[[1]][[1]]$actual_class
+  validation_actual <- all_predictions[[1]][[2]]$actual_class
+  test_actual <- all_predictions[[1]][[3]]$actual_class
+  
+  # ------------------------------------------------------------------------------
+  # Change working directory to save all files in Ensemble_Model Categorical Folder:
+  base::setwd(cwd)
+  
+  # ------------------------------------------------------------------------------
+  # Train results for single component models:
+  train_component_results <- base::list()
+  for (i in 1:base::length(models_vector)){
+    train_component_results[[i]] <- Categorical_Classifier_Verification(actual = train_actual,
+                                                                        probabilities = train_predictions[[i]],
+                                                                        labels = labels,
+                                                                        save = save_option,
+                                                                        open = FALSE,
+                                                                        type_info = base::paste(models_vector[i], dataset_types[1], sep = "_"))[[3]] %>%
+      dplyr::mutate(Model = models_vector[i])}
+  
+  train_component_overall_results <- base::list()
+  for (i in 1:base::length(train_component_results)){
+    train_component_overall_results[[i]] <- train_component_results[[i]] %>%
+      dplyr::filter(Class == "Overall") %>%
+      dplyr::mutate(Type = NULL,
+                    Class = NULL) %>%
+      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                          names_to = "Metric",
+                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+      dplyr::mutate(Model = NULL)}
+  
+  train_component_overall_results_2 <- tibble::tibble(Metric = train_component_overall_results[[1]]$Metric)
+  for (i in 1:base::length(models_vector)){train_component_overall_results_2 <- dplyr::bind_cols(train_component_overall_results_2, train_component_overall_results[[i]][2])}
+  
+  # ------------------------------------------------------------------------------
+  # Validation results for single component models:
+  validation_component_results <- base::list()
+  for (i in 1:base::length(models_vector)){
+    validation_component_results[[i]] <- Categorical_Classifier_Verification(actual = validation_actual,
+                                                                             probabilities = validation_predictions[[i]],
+                                                                             labels = labels,
+                                                                             save = save_option,
+                                                                             open = FALSE,
+                                                                             type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[2], sep = "_"))[[3]] %>%
+      dplyr::mutate(Model = models_vector[i])}
+  
+  validation_component_overall_results <- base::list()
+  for (i in 1:base::length(validation_component_results)){
+    validation_component_overall_results[[i]] <- validation_component_results[[i]] %>%
+      dplyr::filter(Class == "Overall") %>%
+      dplyr::mutate(Type = NULL,
+                    Class = NULL) %>%
+      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                          names_to = "Metric",
+                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+      dplyr::mutate(Model = NULL)}
+  
+  validation_component_overall_results_2 <- tibble::tibble(Metric = validation_component_overall_results[[1]]$Metric)
+  for (i in 1:base::length(models_vector)){validation_component_overall_results_2 <- dplyr::bind_cols(validation_component_overall_results_2, validation_component_overall_results[[i]][2])}
+  
+  # ------------------------------------------------------------------------------
+  # Test results for single component models:
+  test_component_results <- base::list()
+  for (i in 1:base::length(models_vector)){
+    test_component_results[[i]] <- Categorical_Classifier_Verification(actual = test_actual,
+                                                                       probabilities = test_predictions[[i]],
+                                                                       labels = labels,
+                                                                       save = save_option,
+                                                                       open = FALSE,
+                                                                       type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[3], sep = "_"))[[3]] %>%
+      dplyr::mutate(Model = models_vector[i])}
+  
+  test_component_overall_results <- base::list()
+  for (i in 1:base::length(test_component_results)){
+    test_component_overall_results[[i]] <- test_component_results[[i]] %>%
+      dplyr::filter(Class == "Overall") %>%
+      dplyr::mutate(Type = NULL,
+                    Class = NULL) %>%
+      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                          names_to = "Metric",
+                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+      dplyr::mutate(Model = NULL)}
+  
+  test_component_overall_results_2 <- tibble::tibble(Metric = test_component_overall_results[[1]]$Metric)
+  for (i in 1:base::length(models_vector)){test_component_overall_results_2 <- dplyr::bind_cols(test_component_overall_results_2, test_component_overall_results[[i]][2])}
+  
+  # ------------------------------------------------------------------------------
+  # Optimization dataset:
+  if (optimization_dataset == "train"){
+    actual_optimization = train_actual
+    predictions_optimization = train_predictions}
+  
+  if (optimization_dataset == "validation"){
+    actual_optimization = validation_actual
+    predictions_optimization = validation_predictions}
+  
+  if (optimization_dataset == "train+validation"){
+    actual_optimization = base::c(train_actual, validation_actual)
+    predictions_optimization = base::list()
+    for(i in 1:base::length(models_vector)){
+      predictions_optimization[[i]] <- dplyr::bind_rows(train_predictions[[i]], validation_predictions[[i]])
+    }}
+  
+  # ------------------------------------------------------------------------------
+  # Optimize weights in ensemble categorical model on selected data using simulation approach:
+  ensemble_optimization <- Optimize_Categorical_Ensemble_Cutoff_Model(actual_class = actual_optimization,
+                                                                      predictions = predictions_optimization,
+                                                                      weights = weights,
+                                                                      labels = labels,
+                                                                      models_vector = models_vector,
+                                                                      key_metric_as_string = key_metric_as_string,
+                                                                      key_metric = key_metric,
+                                                                      seed = seed,
+                                                                      ascending = ascending,
+                                                                      summary_type = summary_type)
+  
+  ensemble_optimization_weights <- ensemble_optimization$optimized_weights %>%
+    tidyr::pivot_longer(cols = dplyr::everything()) %>%
+    dplyr::select(value) %>%
+    dplyr::pull()
+  
+  # ------------------------------------------------------------------------------
+  # Ensemble model predictions:
+  train_result <- Multiply_List_Values(list = train_predictions, weights_vector = ensemble_optimization_weights) %>%
+    base::Reduce("+", .)
+  
+  validation_result <- Multiply_List_Values(list = validation_predictions, weights_vector = ensemble_optimization_weights) %>%
+    base::Reduce("+", .)
+  
+  test_result <- Multiply_List_Values(list = test_predictions, weights_vector = ensemble_optimization_weights) %>%
+    base::Reduce("+", .)
+  
+  ensemble_model_predictions <- base::list(train_result,
+                                           validation_result,
+                                           test_result)
+  
+  # ------------------------------------------------------------------------------
+  # Train results for single component models:
+  train_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = train_actual,
+                                                                              probabilities = ensemble_model_predictions[[1]],
+                                                                              labels = labels,
+                                                                              type_info = base::paste("Ensemble_Model", dataset_types[1], sep = "_"),
+                                                                              save = save_option,
+                                                                              open = FALSE)
+  
+  train_dataset_ensemble_model_results_2 <- train_dataset_ensemble_model_results[[3]] %>%
+    dplyr::filter(Class == "Overall") %>%
+    dplyr::mutate(Type = NULL,
+                  Class = NULL) %>%
+    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                        names_to = "Metric",
+                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+  
+  if (save_option == TRUE){
+    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    train_component_overall_results_2 %>%
+      dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric") %>%
+      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_train_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    base::Sys.sleep(time = 1)}
+  
+  # ------------------------------------------------------------------------------
+  # Validation results for single component models:
+  validation_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = validation_actual,
+                                                                                   probabilities = ensemble_model_predictions[[2]],
+                                                                                   labels = labels,
+                                                                                   type_info = base::paste("Ensemble_Model", dataset_types[2], sep = "_"),
+                                                                                   save = save_option,
+                                                                                   open = FALSE)
+  
+  validation_dataset_ensemble_model_results_2 <- validation_dataset_ensemble_model_results[[3]] %>%
+    dplyr::filter(Class == "Overall") %>%
+    dplyr::mutate(Type = NULL,
+                  Class = NULL) %>%
+    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                        names_to = "Metric",
+                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+  
+  if (save_option == TRUE){
+    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    validation_component_overall_results_2 %>%
+      dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric") %>%
+      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_validation_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    base::Sys.sleep(time = 1)}
+  
+  # ------------------------------------------------------------------------------
+  # Test results for single component models:
+  test_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = test_actual,
+                                                                             probabilities = ensemble_model_predictions[[3]],
+                                                                             labels = labels,
+                                                                             type_info = base::paste("Ensemble_Model", dataset_types[3], sep = "_"),
+                                                                             save = save_option,
+                                                                             open = FALSE)
+  
+  test_dataset_ensemble_model_results_2 <- test_dataset_ensemble_model_results[[3]] %>%
+    dplyr::filter(Class == "Overall") %>%
+    dplyr::mutate(Type = NULL,
+                  Class = NULL) %>%
+    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+                        names_to = "Metric",
+                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+  
+  if (save_option == TRUE){
+    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    test_component_overall_results_2 %>%
+      dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric") %>%
+      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_test_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    base::Sys.sleep(time = 1)}
+  
+  # ------------------------------------------------------------------------------
+  # Set the initial working directory:
+  base::setwd(".."); base::setwd("..")
+  
+  # ------------------------------------------------------------------------------
+  # Final summary of ensemble model results:
+  ensemble_model_summary <- base::list(train_dataset_results = train_component_overall_results_2 %>%
+                                         dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
+                                       validation_dataset_results = validation_component_overall_results_2 %>%
+                                         dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
+                                       test_dataset_results = test_component_overall_results_2 %>%
+                                         dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"))
+  
+  ensemble_model_summary %>%
+    base::lapply(., knitr::kable)
+  
+  base::return(base::list(all_optimization_combinations = ensemble_optimization[[1]],
+                          top_optimization_combinations = ensemble_optimization[[2]],
+                          optimal_weights = ensemble_optimization_weights,
+                          train_dataset_results = train_component_overall_results_2 %>%
+                            dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
+                          validation_dataset_results = validation_component_overall_results_2 %>%
+                            dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
+                          test_dataset_results = test_component_overall_results_2 %>%
+                            dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"),
+                          train_models_predictions = train_predictions,
+                          train_ensemble_model_prediction = train_result %>%
+                            tibble::as_tibble(),
+                          train_actual_class = train_actual,
+                          validation_models_predictions = validation_predictions,
+                          validation_ensemble_model_prediction = validation_result %>%
+                            tibble::as_tibble(),
+                          validation_actual_class = validation_actual,
+                          test_models_predictions = test_predictions,
+                          test_ensemble_model_prediction = test_result %>%
+                            tibble::as_tibble(),
+                          test_actual_class = test_actual))
+}
+
+
+
 

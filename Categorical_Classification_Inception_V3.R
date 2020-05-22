@@ -273,17 +273,17 @@ readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
                     dplyr::mutate(filepath = train_generator$filepaths,
                                   actual_class = train_generator$classes + 1,
                                   model = model_name),
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "train_binary_probabilities.csv", sep = "_"))
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "train_categorical_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
                     dplyr::mutate(filepath = validation_generator$filepaths,
                                   actual_class = validation_generator$classes + 1,
                                   model = model_name),
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "validation_binary_probabilities.csv", sep = "_"))
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "validation_categorical_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
                     dplyr::mutate(filepath = test_generator$filepaths,
                                   actual_class = test_generator$classes + 1,
                                   model = model_name), 
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "test_binary_probabilities.csv", sep = "_"))
+                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "test_categorical_probabilities.csv", sep = "_"))
 
 # ------------------------------------------------------------------------------
 # Model verification:
