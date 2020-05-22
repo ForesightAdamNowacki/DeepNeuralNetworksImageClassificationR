@@ -1812,7 +1812,7 @@ Optimize_Categorical_Ensemble_Cutoff_Model <- function(actual_class,
 # Build Ensemble model for categorical classification problem:
 Categorical_Ensemble_Model <- function(models_vector,
                                        labels,
-                                       optimization_dataset = "train", # "train", "validation", "train+validation"
+                                       optimization_dataset, # "train", "validation", "train+validation"
                                        save_option = FALSE,
                                        weights = 25,
                                        key_metric = "Accuracy",
@@ -1902,7 +1902,7 @@ Categorical_Ensemble_Model <- function(models_vector,
                                                                              labels = labels,
                                                                              save = save_option,
                                                                              open = FALSE,
-                                                                             type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[2], sep = "_"))[[3]] %>%
+                                                                             type_info = base::paste(models_vector[i], dataset_types[2], sep = "_"))[[3]] %>%
       dplyr::mutate(Model = models_vector[i])}
   
   validation_component_overall_results <- base::list()
@@ -1928,7 +1928,7 @@ Categorical_Ensemble_Model <- function(models_vector,
                                                                        labels = labels,
                                                                        save = save_option,
                                                                        open = FALSE,
-                                                                       type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[3], sep = "_"))[[3]] %>%
+                                                                       type_info = base::paste(models_vector[i], dataset_types[3], sep = "_"))[[3]] %>%
       dplyr::mutate(Model = models_vector[i])}
   
   test_component_overall_results <- base::list()

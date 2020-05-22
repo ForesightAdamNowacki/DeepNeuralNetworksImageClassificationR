@@ -20,7 +20,7 @@ Files intended for implementation and optimization of deep neural networks for b
 * **Binary_Classification_DenseNet121.R** - implementation of the DenseNet121 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet169.R** - implementation of the DenseNet169 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_DenseNet201.R** - implementation of the DenseNet201 model for binary image classification using pretrained weights on the ImageNet dataset,
-* **Binary_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for binary image classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameter of weights / contribution of partial models and the probability cutoff point.
+* **Binary_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for binary image classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameters of weights / contribution of partial models and the probability cutoff point.
 * **Binary_Classification_Inception_ResNet_V2.R** - implementation of the Inception ResNet V2 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_Inception_V3.R** - implementation of the Inception V3 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_K-Fold_Cross_Validation.R** - implementation of own deep neural network architecture for binary image classification from the scratch with cross-validation method,
@@ -43,7 +43,7 @@ Files intended for implementation and optimization of deep neural networks for c
 * **Categorical_Classification_DenseNet121.R** - implementation of the DenseNet121 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet169.R** - implementation of the DenseNet169 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet201.R** - implementation of the DenseNet201 model for categorical image classification using pretrained weights on the ImageNet dataset,
-* **Categorical_Classification_Ensemble_Model.R** - 
+* **Categorical_Classification_Ensemble_Model.R** - implementation of the Meta-Classifier model for categorical image classification using previously trained component architectures with additional simulation (random grid search) optimization of the hyperparameters of weights / contribution of partial models.
 * **Categorical_Classification_Inception_ResNet_V2.R** - implementation of the Inception ResNet V2 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_Inception_V3.R** - implementation of the Inception V3 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_K-Fold_Cross_Validation.R** - 
