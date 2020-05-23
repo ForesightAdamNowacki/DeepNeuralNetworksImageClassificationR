@@ -40,7 +40,8 @@ Files intended for implementation and optimization of deep neural networks for b
 # Categorical classification:
 Files intended for implementation and optimization of deep neural networks for categorical classification contain "Categorical_Classification" in the script name. Below is attached brief description and purpose of each script:
 * **Categorical_Classification_CNN.R** - implementation of own deep neural network architecture for categorical classification of images from the scratch,
-* **Categorical_Classification_CNN_Hyperparameters_Optimization.R** - 
+* **Categorical_Classification_CNN_Hyperparameters_Optimization_1.R** - ,
+* **Categorical_Classification_CNN_Hyperparameters_Optimization_2.R** - ,
 * **Categorical_Classification_DenseNet121.R** - implementation of the DenseNet121 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet169.R** - implementation of the DenseNet169 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_DenseNet201.R** - implementation of the DenseNet201 model for categorical image classification using pretrained weights on the ImageNet dataset,

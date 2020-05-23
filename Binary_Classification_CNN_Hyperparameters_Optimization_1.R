@@ -50,8 +50,8 @@ Hyperparametrization_Optimization_Results <- Hyperparametrization_Optimization(h
                                                                                                                  filters_2 = base::c(64, 128),
                                                                                                                  filters_3 = base::c(128, 256),
                                                                                                                  filters_4 = base::c(128, 256),
-                                                                                                                 dense_units_1 = base::c(256, 512),
-                                                                                                                 dense_units_2 = base::c(256, 512)),
+                                                                                                                 dense_units_1 = base::c(256),
+                                                                                                                 dense_units_2 = base::c(256)),
                                   script_directory = "Binary_Classification_CNN_Hyperparameters_Optimization_2.R")
 
 Hyperparametrization_Optimization_Results %>%
