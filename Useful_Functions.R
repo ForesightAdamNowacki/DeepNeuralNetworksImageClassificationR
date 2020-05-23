@@ -2106,6 +2106,84 @@ Categorical_Ensemble_Model <- function(models_vector,
                           test_actual_class = test_actual))
 }
 
+# ------------------------------------------------------------------------------
+# Optimize values of hyperparameters:
+Hyperparametrization_Optimization <- function(hyperparameters_list,
+                                              script_directory,
+                                              sample = 1){
+  
+  # ------------------------------------------------------------------------------
+  # Initialize empty lists to store results:
+  history <- base::list()
+  history_ <<- history
+  final_results <- base::list()
+  
+  hyperparameters_df <- hyperparameters_list %>%
+    base::expand.grid() %>%
+    dplyr::sample_frac(size = sample)
+  
+  # ------------------------------------------------------------------------------
+  # Models optimization
+  for (i in 1:base::nrow(hyperparameters_df)){
+    i <<- i
+    base::cat("\n", base::paste(i, nrow(hyperparameters_df), sep = "/"), "hyperparameters combination optimization:", "\n")
+    hyperparameter_vector <<- base::paste(base::colnames(hyperparameters_df), hyperparameters_df[i,], collapse = "_", sep = "_") 
+    
+    for (j in 1:base::ncol(hyperparameters_df)){
+      j <<- j
+      hyperparameter <- base::colnames(hyperparameters_df)[j]
+      value <- hyperparameters_df[i,j]
+      base::assign(x = hyperparameter, value = value, inherits = TRUE)
+      base::cat("Hyperparameter:", hyperparameter, "=", value, "\n")}
 
-
+    # ------------------------------------------------------------------------------    
+    # Run optimization:
+    base::source(script_directory)
+    
+    # ------------------------------------------------------------------------------
+    # Remove not optimal models:
+    saved_models <- base::sort(base::list.files(path = models_store_dir, pattern = ".hdf5", full.names = TRUE))
+    saved_models <- saved_models[base::grepl(pattern = base::paste("keras_model_weights", i, "logs.hdf5", sep = "_"), saved_models)]
+    if (length(saved_models) > 1){
+      for (j in 1:(base::length(saved_models) - 1)){
+        base::cat("Remove .hdf5 file:", saved_models[j], "\n")
+        base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
+    
+    # ------------------------------------------------------------------------------
+    # Save metrics and hyperparameters:
+    final_metrics <- as_tibble(history_[[i]]$metrics)
+    generator_metrics <- base::list(batch_size = train_generator$batch_size,
+                                    train_images = train_generator$n,
+                                    train_batches = base::ceiling(train_generator$n/batch_size),
+                                    validation_images = validation_generator$n,
+                                    validation_batches = base::ceiling(validation_generator$n/batch_size),
+                                    class_mode = train_generator$class_mode,
+                                    classes = train_generator$num_classes,
+                                    color_mode = train_generator$color_mode,
+                                    image_shape = base::Reduce(base::paste, train_generator$image_shape),
+                                    loss_function = loss,
+                                    optimizer = stringr::str_sub(base::as.character(optimizer),
+                                                                 start = stringr::str_locate_all(base::as.character(optimizer), "\\.")[[1]] %>% tail(1) %>% .[1,1] + 1,
+                                                                 end = -2),
+                                    monitor = monitor) %>%
+      tibble::as_tibble() %>% 
+      dplyr::slice(rep(1, each = history_[[i]]$params$epochs))
+    hyperparameters <- hyperparameters_df[i,]%>% 
+      dplyr::slice(rep(1, each = history_[[i]]$params$epochs))
+    
+    final_results[[i]] <- dplyr::bind_cols(final_metrics, generator_metrics) %>%
+      dplyr::mutate(epoch = dplyr::row_number()) %>%
+      dplyr::select(epoch, loss, acc, val_loss, val_acc, lr, monitor,
+                    train_images, validation_images, batch_size, train_batches, validation_batches,
+                    classes, class_mode, loss_function, optimizer, 
+                    color_mode, image_shape) %>%
+      dplyr::bind_cols(hyperparameters) %>%
+      dplyr::mutate(Id = i)}
+  
+  # ------------------------------------------------------------------------------
+  # Return results:
+  final_results <- final_results %>%
+    base::do.call(dplyr::bind_rows, .)
+  
+  base::return(final_results)}
 
