@@ -2143,7 +2143,7 @@ Hyperparametrization_Optimization <- function(hyperparameters_list,
     # ------------------------------------------------------------------------------
     # Remove not optimal models:
     saved_models <- base::sort(base::list.files(path = models_store_dir, pattern = ".hdf5", full.names = TRUE))
-    saved_models <- saved_models[base::grepl(pattern = base::paste("keras_model_weights", i, "logs.hdf5", sep = "_"), saved_models)]
+    saved_models <- saved_models[base::grepl(pattern = base::paste("logs", i,  "keras_model.weights", sep = "_"), saved_models)]
     if (length(saved_models) > 1){
       for (j in 1:(base::length(saved_models) - 1)){
         base::cat("Remove .hdf5 file:", saved_models[j], "\n")

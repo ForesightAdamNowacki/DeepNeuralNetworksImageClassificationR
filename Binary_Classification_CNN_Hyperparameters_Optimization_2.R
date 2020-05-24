@@ -6,10 +6,9 @@ keras::k_clear_session()
 
 # ------------------------------------------------------------------------------
 # Directories:
-# callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste(i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
-callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste("{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}_keras_model_weights", i, "logs.hdf5", sep = "_"), sep = "/")
-callback_tensorboard_path <- base::paste(models_store_dir, base::paste(i, "logs", sep = "_"), sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, base::paste0(base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), i, model_name, hyperparameter_vector, sep = "_"), ".csv"), sep = "/")
+callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste("logs", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
+callback_tensorboard_path <- base::paste(models_store_dir, base::paste("logs", i, sep = "_"), sep = "/")
+callback_csv_logger_path <- base::paste(models_store_dir, base::paste0(base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), "logs", i, model_name, hyperparameter_vector, sep = "_"), ".csv"), sep = "/")
 
 # ------------------------------------------------------------------------------
 # Setting pipeline parameters values: 
@@ -92,7 +91,6 @@ model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
                          metrics = metrics)
-
 
 # ------------------------------------------------------------------------------
 # Generators:
