@@ -478,7 +478,7 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
   # Cutoff and weights optimization:
   results <- base::list()
   base::cat("\n", "Ensemble model optimization:", "\n")
-  pb = txtProgressBar(min = 0, max = cuts, initial = 0, style = 3) 
+  pb = utils::txtProgressBar(min = 0, max = cuts, initial = 0, style = 3) 
   
   for (i in 1:cuts){
     cut_value <- cuts_[i]
