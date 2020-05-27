@@ -6,8 +6,9 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
-# Model name:
+# Model:
 model_name <- "VGG19"
+model_name <- "Binary"
 
 # ------------------------------------------------------------------------------
 # Intro:
@@ -16,7 +17,7 @@ base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'VGG19' folder in cwd
 base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
 # 3. Create 'Binary' subfolder in 'VGG19' main folder
-base::dir.create(path = base::paste(base::getwd(), model_name, "Binary", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -31,7 +32,7 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-models_store_dir <- base::paste(base::getwd(), model_name, "Binary", sep = "/")
+models_store_dir <- base::paste(base::getwd(), model_name, model_type, sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.1st_stage_weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs_freeze_weights", sep = "/")

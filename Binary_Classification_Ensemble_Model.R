@@ -6,7 +6,7 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
-# Script variables:
+# Model:
 model_name <- "Ensemble_Model"
 model_type <- "Binary"
 
@@ -174,7 +174,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = train_dir,
                                                   actual_classes = base::rep(base::c(0, 1), train_files$category_obs),
                                                   predicted = ensemble_3$train_models_predictions$Ensemble_Model,
                                                   cutoff = ensemble_3$optimal_cutoff,
-                                                  type_info = "Ensemble_Model",
+                                                  type_info = model_name,
                                                   save_summary_files = save_summary_files,
                                                   save_correct_images = save_correct_images,
                                                   save_incorrect_images = save_incorrect_images)
@@ -189,7 +189,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = validation_dir,
                                                   actual_classes = base::rep(base::c(0, 1), validation_files$category_obs),
                                                   predicted = ensemble_3$validation_models_predictions$Ensemble_Model,
                                                   cutoff = ensemble_3$optimal_cutoff,
-                                                  type_info = "Ensemble_Model",
+                                                  type_info = model_name,
                                                   save_summary_files = save_summary_files,
                                                   save_correct_images = save_correct_images,
                                                   save_incorrect_images = save_incorrect_images)
@@ -204,7 +204,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = test_dir,
                                                   actual_classes = base::rep(base::c(0, 1), test_files$category_obs),
                                                   predicted = ensemble_3$test_models_predictions$Ensemble_Model,
                                                   cutoff = ensemble_3$optimal_cutoff,
-                                                  type_info = "Ensemble_Model",
+                                                  type_info = model_name,
                                                   save_summary_files = save_summary_files,
                                                   save_correct_images = save_correct_images,
                                                   save_incorrect_images = save_incorrect_images)

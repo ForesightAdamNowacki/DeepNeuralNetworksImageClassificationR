@@ -6,8 +6,9 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
-# Model name:
+# Model:
 model_name <- "VGG16"
+model_type <- "Binary"
 
 # ------------------------------------------------------------------------------
 # Intro:
@@ -27,7 +28,7 @@ base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-models_store_dir <- base::paste(base::getwd(), model_name, "Binary", sep = "/")
+models_store_dir <- base::paste(base::getwd(), model_name, model_type, sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.2nd_stage_weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
 callback_tensorboard_path <- base::paste(models_store_dir, "logs_unfreeze_weights", sep = "/")
@@ -193,7 +194,7 @@ base::unlink(logs_folder, force = TRUE, recursive = TRUE)
 # ------------------------------------------------------------------------------
 # Save optimal model in local models repository: 
 optimal_model <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Binary", model_name, "Model.hdf5", sep = "_"), sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
 base::file.copy(from = optimal_model,
                 to = optimal_model_repo_dir, 
                 overwrite = TRUE); base::cat("Optimal model directory:", optimal_model_repo_dir, "\n")
@@ -202,7 +203,7 @@ base::unlink(optimal_model, recursive = TRUE, force = TRUE)
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste("Binary", model_name, "Model.hdf5", sep = "_"), sep = "/")
+optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
 model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
@@ -467,7 +468,7 @@ save_correct_images <- FALSE
 save_incorrect_images <- FALSE
 
 # Train:
-Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/train",
+Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = train_dir,
                                                                                                     actual = train_generator$classes,
                                                                                                     predicted = train_probabilities[,2],
                                                                                                     type_info = model_name,
@@ -478,7 +479,7 @@ Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Bin
                                                                                                     save_incorrect_images = save_incorrect_images)
 
 # Validation:
-Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/validation",
+Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = validation_dir,
                                                                                                          actual = validation_generator$classes,
                                                                                                          predicted = validation_probabilities[,2],
                                                                                                          type_info = model_name,
@@ -489,7 +490,7 @@ Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrec
                                                                                                          save_incorrect_images = save_incorrect_images)
 
 # Test:
-Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = "D:/GitHub/Datasets/Cats_And_Dogs/test",
+Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = test_dir,
                                                                                                    actual = test_generator$classes,
                                                                                                    predicted = test_probabilities[,2],
                                                                                                    type_info = model_name,

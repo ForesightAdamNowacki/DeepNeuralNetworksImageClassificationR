@@ -6,7 +6,7 @@
 utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
-# Script variables:
+# Model:
 model_name <- "Ensemble_Model"
 model_type <- "Categorical"
 
@@ -74,7 +74,6 @@ ensemble_2 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          summary_type = "mean",
                                          cwd = models_store_dir,
                                          n = 3)
-
 
 # ------------------------------------------------------------------------------
 # Build ensembel model with weights and cutoff optimization on combined train and validation dataset:
@@ -162,49 +161,40 @@ base::list(ensemble_1 = ensemble_1$optimal_weights,
                 title = "Ensemble models")
 
 # ------------------------------------------------------------------------------
-# Organize correct and incorrect ensemble model predictions on train dataset:
+# Save correct and incorrect predictions:
 save_summary_files <- TRUE
 save_correct_images <- TRUE
 save_incorrect_images <- TRUE
 
-Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = train_dir,
-                                                       actual_classes = ensemble_3$train_actual_class,
-                                                       predicted = ensemble_3$train_ensemble_model_prediction,
-                                                       type_info = "Ensemble_Model",
-                                                       cwd = models_store_dir,
-                                                       save_summary_files = save_summary_files,
-                                                       save_correct_images = save_correct_images,
-                                                       save_incorrect_images = save_incorrect_images)
+# Train:
+Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = train_dir,
+                                                                                                         actual_classes = ensemble_3$train_actual_class,
+                                                                                                         predicted = ensemble_3$train_ensemble_model_prediction,
+                                                                                                         type_info = model_name,
+                                                                                                         cwd = models_store_dir,
+                                                                                                         save_summary_files = save_summary_files,
+                                                                                                         save_correct_images = save_correct_images,
+                                                                                                         save_incorrect_images = save_incorrect_images)
 
-# ------------------------------------------------------------------------------
-# Organize correct and incorrect ensemble model predictions on validation dataset:
-save_summary_files <- TRUE
-save_correct_images <- TRUE
-save_incorrect_images <- TRUE
+# Validation:
+Validation_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = validation_dir,
+                                                                                                              actual_classes = ensemble_3$validation_actual_class,
+                                                                                                              predicted = ensemble_3$validation_ensemble_model_prediction,
+                                                                                                              type_info = model_name,
+                                                                                                              cwd = models_store_dir,
+                                                                                                              save_summary_files = save_summary_files,
+                                                                                                              save_correct_images = save_correct_images,
+                                                                                                              save_incorrect_images = save_incorrect_images)
 
-Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = validation_dir,
-                                                       actual_classes = ensemble_3$validation_actual_class,
-                                                       predicted = ensemble_3$validation_ensemble_model_prediction,
-                                                       type_info = "Ensemble_Model",
-                                                       cwd = models_store_dir,
-                                                       save_summary_files = save_summary_files,
-                                                       save_correct_images = save_correct_images,
-                                                       save_incorrect_images = save_incorrect_images)
-
-# ------------------------------------------------------------------------------
-# Organize correct and incorrect ensemble model predictions on test dataset:
-save_summary_files <- TRUE
-save_correct_images <- TRUE
-save_incorrect_images <- TRUE
-
-Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = test_dir,
-                                                       actual_classes = ensemble_3$test_actual_class,
-                                                       predicted = ensemble_3$test_ensemble_model_prediction,
-                                                       type_info = "Ensemble_Model",
-                                                       cwd = models_store_dir,
-                                                       save_summary_files = save_summary_files,
-                                                       save_correct_images = save_correct_images,
-                                                       save_incorrect_images = save_incorrect_images)
+# Test:
+Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = test_dir,
+                                                                                                        actual_classes = ensemble_3$test_actual_class,
+                                                                                                        predicted = ensemble_3$test_ensemble_model_prediction,
+                                                                                                        type_info = model_name,
+                                                                                                        cwd = models_store_dir,
+                                                                                                        save_summary_files = save_summary_files,
+                                                                                                        save_correct_images = save_correct_images,
+                                                                                                        save_incorrect_images = save_incorrect_images)
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
