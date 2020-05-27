@@ -131,7 +131,6 @@ Display_Heatmap <- function(model, image_path){
 Display_Heatmap(model = model, image_path = "D:/GitHub/DeepNeuralNetworksRepoR/Data/Elephant.png")
 Display_Heatmap(model = model, image_path = "D:/GitHub/DeepNeuralNetworksRepoR/Data/Tank_Rosomak.png")
 Display_Heatmap(model = model, image_path = "D:/GitHub/DeepNeuralNetworksRepoR/Data/German_Shepherd.png")
-Display_Heatmap(model = model, image_path = "D:/GitHub/DeepNeuralNetworksRepoR/Data/Scooter.png")
 Display_Heatmap(model = model, image_path = "D:/GitHub/DeepNeuralNetworksRepoR/Data/Taxi.png")
 
 # ------------------------------------------------------------------------------
