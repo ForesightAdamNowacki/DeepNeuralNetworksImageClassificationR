@@ -1,23 +1,26 @@
 # ------------------------------------------------------------------------------
-# K-FOLD CROSS VALIDATION BINARY MODEL IMPLEMENTATION
+# K-FOLD CROSS VALIDATION CATEGORICAL MODEL IMPLEMENTATION
 # ------------------------------------------------------------------------------
-# Data:
-# https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# Data
+# https://www.kaggle.com/c/cifar-10/overview
+utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
+
+# ------------------------------------------------------------------------------
+# Model:
+model_name <- "Cross_Validation"
+model_type <- "Categorical"
 
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'K-FOLD_CROSS' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), "K-Fold_Cross_Validation", sep = "/"))
-# 3. Create 'Binary' subfolder in 'K-Fold_Cross_Validation' main folder
-base::unlink(base::paste(base::getwd(), "K-Fold_Cross_Validation", "Binary", sep = "/"), force = TRUE, recursive = TRUE)
-base::dir.create(path = base::paste(base::getwd(), "K-Fold_Cross_Validation", "Binary", sep = "/"))
+base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
+# 3. Create 'Categorical' subfolder in 'K-Fold_Cross_Validation' main folder
+base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
-base::remove(list = base::ls())
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
@@ -26,29 +29,34 @@ base::library(deepviz)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 
 # Directories:
-models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR/K-Fold_Cross_Validation/Binary"
-repo_models_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store/Binary_CV"
-cv_data_dir <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/data"
-train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
-validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
-test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-folds_directory <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/K-folds"
-base::unlink(folds_directory, force = TRUE, recursive = TRUE)
+train_dir <- "D:/GitHub/Datasets/Cifar10/train"
+validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"
+test_dir <- "D:/GitHub/Datasets/Cifar10/test"
+cv_data_dir <- "D:/GitHub/Datasets/Cifar10_Small/data"
+models_store_dir <-  base::paste(base::getwd(), model_name, model_type, sep = "/")
+repo_models_store_dir <- base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/")
+base::dir.create(path = base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, sep = "/"))
+base::dir.create(path = base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/"))
+folds_directory <- "D:/GitHub/Datasets/Cifar10_Small/folds"
+
+# ------------------------------------------------------------------------------
+# Create folds:
 folds <- 5
 Create_KFolds_Directories(data_dir = cv_data_dir,
                           target_dir = folds_directory,
                           folds = folds,
                           seed = 42)
-base::setwd(models_store_dir)
 
-folds_dirs <- base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("fold", base::list.files(folds_directory))], sep = "/")
+# Display number of observations per class in each fold:
+folds_dirs <- base::paste(folds_directory, base::list.files(path = folds_directory, pattern = "fold"), sep = "/")
 for (i in base::seq_along(folds_dirs)){
   base::cat(folds_dirs[i]); base::cat("\n")
   base::print(Count_Files(path = base::paste(folds_dirs[i], sep = "/")))
   base::cat("\n")}
 
+# Display number of observations per dataset type (train, validation) and class in each step of cross validation:
 steps_dirs <- base::expand.grid(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step", base::list.files(folds_directory))], sep = "/"),
-                  base::c("train", "validation")) %>%
+                                base::c("train", "validation")) %>%
   dplyr::mutate(steps_dirs = base::paste(Var1, Var2, sep = "/")) %>%
   dplyr::select(steps_dirs) %>%
   dplyr::pull() %>%
@@ -58,8 +66,25 @@ for (i in base::seq_along(steps_dirs)){
   base::print(Count_Files(path = base::paste(steps_dirs[i], sep = "/")))
   base::cat("\n")}
 
-cv_train_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "train", sep = "/")); cv_train_files
-cv_validation_files <- Count_Files(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step_1", base::list.files(folds_directory))], "validation", sep = "/")); cv_validation_files
+# Count train files:
+train_steps_dirs <- steps_dirs[base::grepl("train", steps_dirs)]
+train_steps_files <- base::list()
+for (i in 1:folds){train_steps_files[[i]] <- Count_Files(path = train_steps_dirs[i])}
+train_steps_files
+
+# Count validation files:
+validation_steps_dirs <- steps_dirs[base::grepl("validation", steps_dirs)]
+validation_steps_files <- base::list()
+for (i in 1:folds){validation_steps_files[[i]] <- Count_Files(path = validation_steps_dirs[i])}
+validation_steps_files
+
+# Main datasets:
+train_files <- Count_Files(path = train_dir); train_files
+validation_files <- Count_Files(path = validation_dir); validation_files
+test_files <- Count_Files(path = test_dir); test_files
+
+# Set current working directory:
+base::setwd(models_store_dir)
 
 # ------------------------------------------------------------------------------
 # Clear session:
@@ -109,7 +134,7 @@ build_model <- function(image_size = 150, channels = 3,
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_dropout(rate = 0.5) %>%
     
-    keras::layer_dense(units = base::length(base::levels(cv_train_files$category)), activation = activation_1) %>%
+    keras::layer_dense(units = base::length(base::list.files(path = cv_data_dir)), activation = activation_1) %>%
     keras::layer_activation(activation = activation_3)
   
   model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
@@ -119,8 +144,6 @@ build_model <- function(image_size = 150, channels = 3,
                            metrics = metrics)
   base::return(model)}
 
-model <- build_model()
-
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
@@ -128,14 +151,14 @@ model %>% base::summary()
 
 # ------------------------------------------------------------------------------
 # Cross validation algorithm:
-cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
-                                  image_size = 150, batch_size = 32, 
-                                  class_mode = "categorical", shuffle = TRUE,
-                                  early_stopping_patience = 10, 
-                                  reduce_lr_on_plateu_patience = 5, monitor = "val_acc",
-                                  save_best_only = TRUE, verbose = 1, write_graph = TRUE,
-                                  write_grads = TRUE, write_images = TRUE, min_delta = 0,
-                                  restore_best_weights = FALSE, histogram_freq = 1){
+Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_dir,
+                                         image_size = 150, batch_size = 32, 
+                                         class_mode = "categorical", shuffle = TRUE,
+                                         early_stopping_patience = 10, 
+                                         reduce_lr_on_plateu_patience = 5, monitor = "val_acc",
+                                         save_best_only = TRUE, verbose = 1, write_graph = TRUE,
+                                         write_grads = TRUE, write_images = TRUE, min_delta = 0,
+                                         restore_best_weights = FALSE, histogram_freq = 1){
   
   datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
   if (monitor == "val_loss"){mode <- "min"} else {mode <- "max"}
@@ -149,11 +172,11 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
     validation_dir <- base::paste0(folds_directory, "/step_", i, "/validation")
     callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste("fold", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
     callback_tensorboard_path <- base::paste(models_store_dir,  base::paste("fold", i, "logs", sep = "_"), sep = "/")
-    callback_csv_logger_path <- base::paste(models_store_dir, base::paste("fold", i, "Optimization_logger.csv", sep = "_"), sep = "/")
+    callback_csv_logger_path <- base::paste(models_store_dir, base::paste("fold", i, "optimization_logger.csv", sep = "_"), sep = "/")
     
     base::cat(base::paste("Fold:", i, "\n"))
-    base::cat(train_dir, "\n")
-    base::cat(validation_dir, "\n")
+    base::cat("Train directory:", train_dir, "\n")
+    base::cat("Validation directory:", validation_dir, "\n")
     
     model <- build_model(image_size = image_size)
     
@@ -183,7 +206,7 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
                                                          target_size = base::c(image_size, image_size),
                                                          batch_size = batch_size,
                                                          class_mode = class_mode,
-                                                         classes = base::levels(cv_train_files$category),
+                                                         classes = base::list.files(path = cv_data_dir),
                                                          shuffle = shuffle)
     
     validation_datagen <- keras::image_data_generator(rescale = 1/255) 
@@ -192,14 +215,14 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
                                                               target_size = base::c(image_size, image_size),
                                                               batch_size = batch_size,
                                                               class_mode = class_mode,
-                                                              classes = base::levels(cv_train_files$category),
+                                                              classes = base::list.files(path = cv_data_dir),
                                                               shuffle = shuffle)
     
     history <- model %>% keras::fit_generator(generator = train_generator,
-                                              steps_per_epoch = base::ceiling(base::sum(cv_train_files$category_obs)/train_generator$batch_size), 
+                                              steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size), 
                                               epochs = epochs,
                                               validation_data = validation_generator,
-                                              validation_steps = base::ceiling(base::sum(cv_validation_files$category_obs)/train_generator$batch_size), 
+                                              validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size), 
                                               callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                       monitor = monitor,
                                                                                                       verbose = verbose,
@@ -227,7 +250,8 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
                     fold = i) %>%
       tibble::as_tibble()
     
-    files <- base::paste(base::getwd(), base::list.files()[base::grepl(base::paste("fold", i, sep = "_"), base::list.files())], sep = "/")
+    
+    files <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = base::paste("fold", i, sep = "_")), sep = "/")
     files <- base::sort(files[base::grepl(".hdf5", files)])
     for (j in 1:(base::length(files) - 1)){
       base::cat("Remove .hdf5 file:", files[j], "\n")
@@ -236,26 +260,27 @@ cross_validation_pipe <- function(epochs, folds_directory,models_store_dir,
   
   history_list %>%
     base::do.call(dplyr::bind_rows, .) %>%
-    readr::write_csv(base::paste(datetime, "cross_validation_results.csv"))
+    readr::write_csv(base::paste(datetime, "CV_results.csv"))
 }
 
-cross_validation_pipe(epochs = 50,
-                      folds_directory = folds_directory,
-                      models_store_dir = models_store_dir)
+Cross_Validation_Pipe_Runner(epochs = 5,
+                             folds_directory = folds_directory,
+                             models_store_dir = models_store_dir)
 
 # ------------------------------------------------------------------------------
 # Remove logs folders if are not important:
-logs_folders <- base::paste(base::getwd(), base::list.files()[base::grepl("logs", base::list.files())], sep = "/")
+logs_folders <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = "logs"), sep = "/")
 for (i in base::seq_along(logs_folders)){
   base::cat("Remove logs folder:", logs_folders[i], "\n")
   base::unlink(logs_folders[i], force = TRUE, recursive = TRUE)}
 
 # ------------------------------------------------------------------------------
-# Save optimal model in local models repository: 
-optimal_models <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
+# Save optimal models in local models repository: 
+optimal_models <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = ".hdf5"), sep = "/")
 base::file.copy(from = optimal_models,
                 to = base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/"))
 for (i in base::seq_along(optimal_models)){
+  base::cat("Remove model:", optimal_models[i], "\n")
   base::unlink(optimal_models[i])}
 optimal_models_repo_store <- base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/")
 for (i in base::seq_along(optimal_models_repo_store)){
@@ -263,8 +288,7 @@ for (i in base::seq_along(optimal_models_repo_store)){
 
 # ------------------------------------------------------------------------------
 # Cross validation results:
-results <- readr::read_csv(base::list.files()[base::grepl("cross_validation_results", base::list.files())])
-results
+results <- readr::read_csv(base::list.files(base::getwd(), pattern = "CV_results.csv")); results
 
 # ------------------------------------------------------------------------------
 # Display cross validation results:
@@ -293,7 +317,7 @@ results_accuracy %>%
   ggplot2::facet_wrap(.~type) +
   ggplot2::labs(x = "Epoch",
                 y = "Accuracy",
-                title = "Accuracy distribution for cross validation") +
+                title = "Accuracy distribution for Cross Validation") +
   ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
                  axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
                  axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
@@ -312,7 +336,7 @@ results_accuracy %>%
                  legend.position = "right",
                  strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
                  strip.text = element_text(size = text_size, face = "bold")) -> accuracy_plot; accuracy_plot
-ggplot2::ggsave("Plot_accuracy.png", accuracy_plot, units = "cm", width = 20, height = 20)
+ggplot2::ggsave("Plot_accuracy_CV.png", accuracy_plot, units = "cm", width = 20, height = 20)
 
 # Loss:
 results %>%
@@ -355,11 +379,11 @@ results_loss %>%
                  legend.position = "right",
                  strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
                  strip.text = element_text(size = text_size, face = "bold")) -> loss_plot; loss_plot
-ggplot2::ggsave("Plot_loss.png", loss_plot, units = "cm", width = 20, height = 20)
+ggplot2::ggsave("Plot_loss_CV.png", loss_plot, units = "cm", width = 20, height = 20)
 
 # ------------------------------------------------------------------------------
 # Save predictions from all folds models:
-predict_folds_models <- function(data_dir, type, batch_size = 16){
+Predict_Folds_Models <- function(data_dir, type, batch_size = 16){
   
   for (i in base::seq_along(optimal_models_repo_store)){
     print(optimal_models_repo_store[i])
@@ -376,8 +400,7 @@ predict_folds_models <- function(data_dir, type, batch_size = 16){
                                                    batch_size = batch_size,
                                                    class_mode = "categorical",
                                                    shuffle = FALSE)
-    count_files <- Count_Files(path = data_dir)
-    prediction <- keras::predict_generator(model, generator, steps = base::ceiling(base::sum(count_files$category_obs)/generator$batch_size), verbose = 1)
+    prediction <- keras::predict_generator(model, generator, steps = base::ceiling(generator$n/generator$batch_size), verbose = 1)
     prediction <- prediction %>%
       tibble::as_tibble()
     
@@ -389,14 +412,15 @@ predict_folds_models <- function(data_dir, type, batch_size = 16){
     
     base::cat("Save file:", filename, "\n")}}
 
-predict_folds_models(data_dir = cv_data_dir, type = "cv_data")
-predict_folds_models(data_dir = train_dir, type = "train_data")
-predict_folds_models(data_dir = validation_dir, type = "validation_data")
-predict_folds_models(data_dir = test_dir, type = "test_data")
+Predict_Folds_Models(data_dir = cv_data_dir, type = "cv_data")
+Predict_Folds_Models(data_dir = train_dir, type = "train_data")
+Predict_Folds_Models(data_dir = validation_dir, type = "validation_data")
+Predict_Folds_Models(data_dir = test_dir, type = "test_data")
 
 # ------------------------------------------------------------------------------
-# Model verification - default cutoff:
-default_cutoff <- 0.5
+# Model verification:
+labels <- base::list.files(cv_data_dir); labels
+save_option <- FALSE
 
 # Cross validation data:
 cv_results <- base::list()
@@ -406,16 +430,27 @@ for (i in 1:folds){
 cv_results %>%
   base::do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> cv_results
+  tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                      names_to = "predicted_class",
+                      values_to = "prediction") %>%
+  dplyr::group_by(filepath, predicted_class) %>%
+  dplyr::summarise(actual_class = base::mean(actual_class),
+                   prediction = base::mean(prediction)) %>%
+  dplyr::mutate(predicted_class = base::as.integer(stringr::str_sub(predicted_class, 2, -1))) %>%
+  dplyr::arrange(filepath, predicted_class) %>%
+  tidyr::pivot_wider(id_cols = base::c("filepath", "actual_class"),
+                     names_from = "predicted_class",
+                     values_from = "prediction",
+                     names_prefix = "V") %>%
+  dplyr::ungroup() -> cv_results; cv_results
   
-cv_verification <- Binary_Classifier_Verification(actual = cv_results$actual_class,
-                                                  predicted = cv_results$V2,
-                                                  cutoff = default_cutoff,
-                                                  type_info = "Cross validation data default cutoff",
-                                                  save = TRUE,
-                                                  open = FALSE)
+cv_verification <- Categorical_Classifier_Verification(actual = cv_results$actual_class,
+                                                       probabilities = cv_results %>%
+                                                         dplyr::select(dplyr::starts_with("V")),
+                                                       labels = labels,
+                                                       type_info = "CV_data_default_cutoff",
+                                                       save = save_option,
+                                                       open = FALSE)
 
 # Train data:
 train_results <- base::list()
@@ -425,16 +460,27 @@ for (i in 1:folds){
 train_results %>%
   base::do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> train_results
+  tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                      names_to = "predicted_class",
+                      values_to = "prediction") %>%
+  dplyr::group_by(filepath, predicted_class) %>%
+  dplyr::summarise(actual_class = base::mean(actual_class),
+                   prediction = base::mean(prediction)) %>%
+  dplyr::mutate(predicted_class = base::as.integer(stringr::str_sub(predicted_class, 2, -1))) %>%
+  dplyr::arrange(filepath, predicted_class) %>%
+  tidyr::pivot_wider(id_cols = base::c("filepath", "actual_class"),
+                     names_from = "predicted_class",
+                     values_from = "prediction",
+                     names_prefix = "V") %>%
+  dplyr::ungroup() -> train_results; train_results
 
-train_verification <- Binary_Classifier_Verification(actual = train_results$actual_class,
-                                                     predicted = train_results$V2,
-                                                     cutoff = default_cutoff,
-                                                     type_info = "Train data default cutoff",
-                                                     save = TRUE,
-                                                     open = FALSE)
+train_verification <- Categorical_Classifier_Verification(actual = train_results$actual_class,
+                                                          probabilities = train_results %>%
+                                                            dplyr::select(dplyr::starts_with("V")),
+                                                          labels = labels,
+                                                          type_info = "Train_data_default_cutoff",
+                                                          save = save_option,
+                                                          open = FALSE)
 
 # Validation data:
 validation_results <- base::list()
@@ -444,15 +490,26 @@ for (i in 1:folds){
 validation_results %>%
   base::do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> validation_results
+  tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                      names_to = "predicted_class",
+                      values_to = "prediction") %>%
+  dplyr::group_by(filepath, predicted_class) %>%
+  dplyr::summarise(actual_class = base::mean(actual_class),
+                   prediction = base::mean(prediction)) %>%
+  dplyr::mutate(predicted_class = base::as.integer(stringr::str_sub(predicted_class, 2, -1))) %>%
+  dplyr::arrange(filepath, predicted_class) %>%
+  tidyr::pivot_wider(id_cols = base::c("filepath", "actual_class"),
+                     names_from = "predicted_class",
+                     values_from = "prediction",
+                     names_prefix = "V") %>%
+  dplyr::ungroup() -> validation_results; validation_results
 
-validation_verification <- Binary_Classifier_Verification(actual = validation_results$actual_class,
-                                                          predicted = validation_results$V2,
-                                                          cutoff = default_cutoff,
-                                                          type_info = "Validation data default cutoff",
-                                                          save = TRUE,
+validation_verification <- Categorical_Classifier_Verification(actual = validation_results$actual_class,
+                                                          probabilities = validation_results %>%
+                                                            dplyr::select(dplyr::starts_with("V")),
+                                                          labels = labels,
+                                                          type_info = "Validation_data_default_cutoff",
+                                                          save = save_option,
                                                           open = FALSE)
 
 # Test data:
@@ -463,24 +520,27 @@ for (i in 1:folds){
 test_results %>%
   base::do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> test_results
+  tidyr::pivot_longer(cols = dplyr::starts_with("V"),
+                      names_to = "predicted_class",
+                      values_to = "prediction") %>%
+  dplyr::group_by(filepath, predicted_class) %>%
+  dplyr::summarise(actual_class = base::mean(actual_class),
+                   prediction = base::mean(prediction)) %>%
+  dplyr::mutate(predicted_class = base::as.integer(stringr::str_sub(predicted_class, 2, -1))) %>%
+  dplyr::arrange(filepath, predicted_class) %>%
+  tidyr::pivot_wider(id_cols = base::c("filepath", "actual_class"),
+                     names_from = "predicted_class",
+                     values_from = "prediction",
+                     names_prefix = "V") %>%
+  dplyr::ungroup() -> test_results; test_results
 
-test_verification <- Binary_Classifier_Verification(actual = test_results$actual_class,
-                                                    predicted = test_results$V2,
-                                                    cutoff = default_cutoff,
-                                                    type_info = "Test data default cutoff",
-                                                    save = TRUE,
-                                                    open = FALSE)
+test_verification <- Categorical_Classifier_Verification(actual = test_results$actual_class,
+                                                               probabilities = test_results %>%
+                                                                 dplyr::select(dplyr::starts_with("V")),
+                                                               labels = labels,
+                                                               type_info = "Test_data_default_cutoff",
+                                                               save = save_option,
+                                                               open = FALSE)
 
-final_score <- cv_verification$Assessment_of_Classifier_Effectiveness %>%
-  dplyr::select(Metric, Score) %>%
-  dplyr::rename(Score_cv = Score) %>%
-  dplyr::mutate(Score_train = train_verification$Assessment_of_Classifier_Effectiveness$Score,
-                Score_validation = validation_verification$Assessment_of_Classifier_Effectiveness$Score,
-                Score_test = test_verification$Assessment_of_Classifier_Effectiveness$Score,
-                Cutoff = default_cutoff) %>%
-  knitr::kable(.); final_score
-
-
+# ------------------------------------------------------------------------------
+# https://github.com/ForesightAdamNowacki
