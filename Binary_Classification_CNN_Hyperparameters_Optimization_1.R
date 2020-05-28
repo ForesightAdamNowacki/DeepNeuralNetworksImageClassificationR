@@ -26,8 +26,6 @@ base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
-base::library(tfruns)
-base::library(tfestimators)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 
 # Directories:

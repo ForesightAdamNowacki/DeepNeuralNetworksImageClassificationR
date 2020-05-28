@@ -26,14 +26,12 @@ base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
-base::library(tfruns)
-base::library(tfestimators)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
 
 # Directories:
-train_dir <- "D:/GitHub/Datasets/Cifar10_2/train"
-validation_dir <- "D:/GitHub/Datasets/Cifar10_2/validation"
-test_dir <- "D:/GitHub/Datasets/Cifar10_2/test"
+train_dir <- "D:/GitHub/Datasets/Cifar10/train"
+validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"
+test_dir <- "D:/GitHub/Datasets/Cifar10/test"
 models_store_dir <- base::paste(base::getwd(), model_name, model_type, sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 
@@ -49,7 +47,7 @@ keras::k_clear_session()
 # Optimize model's hyperparameters:
 Hyperparametrization_Optimization_Results <- Hyperparametrization_Optimization(hyperparameters_list = base::list(filters_1 = base::c(64),
                                                                                                                  filters_2 = base::c(64, 128),
-                                                                                                                 filters_3 = base::c(128),
+                                                                                                                 filters_3 = base::c(128, 256),
                                                                                                                  filters_4 = base::c(128, 256),
                                                                                                                  dense_units_1 = base::c(256),
                                                                                                                  dense_units_2 = base::c(256)),
