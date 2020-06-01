@@ -146,10 +146,10 @@ base::dir.create(path = callback_tensorboard_path)
 # ------------------------------------------------------------------------------
 # Model optimization:
 history <- model %>% keras::fit_generator(generator = train_generator,
-                                          steps_per_epoch = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), 
+                                          steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size), 
                                           epochs = epochs,
                                           validation_data = validation_generator,
-                                          validation_steps = base::ceiling(base::sum(validation_files$category_obs)/train_generator$batch_size), 
+                                          validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size), 
                                           callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                   monitor = monitor,
                                                                                                   verbose = verbose,
@@ -242,13 +242,13 @@ test_generator <- keras::flow_images_from_directory(directory = test_dir,
                                                     class_mode = class_mode,
                                                     shuffle = FALSE)
 
-train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size)); train_evaluation
-validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size)); validation_evaluation
-test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size)); test_evaluation
+train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size)); train_evaluation
+validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size)); validation_evaluation
+test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size)); test_evaluation 
 
-train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
-validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
-test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
+train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size), verbose = 1)
+validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size), verbose = 1)
+test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size), verbose = 1)
 
 base::setwd(models_store_dir)
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%

@@ -14,10 +14,10 @@ model_type <- "Categorical"
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
-# 2. Create 'K-FOLD_CROSS' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
-# 3. Create 'Categorical' subfolder in 'K-Fold_Cross_Validation' main folder
-base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))
+# 2. Create 'model_name' folder in cwd:
+if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+# 3. Create 'model_type' subfolder in 'model_name' main folder:
+if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -219,10 +219,10 @@ Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_d
                                                               shuffle = shuffle)
     
     history <- model %>% keras::fit_generator(generator = train_generator,
-                                              steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size), 
+                                              steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size),
                                               epochs = epochs,
                                               validation_data = validation_generator,
-                                              validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size), 
+                                              validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size),
                                               callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                       monitor = monitor,
                                                                                                       verbose = verbose,

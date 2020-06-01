@@ -14,10 +14,10 @@ model_type <- "Categorical"
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
-# 2. Create 'CNN' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
-# 3. Create 'Binary' subfolder in 'CNN' main folder
-base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))
+# 2. Create 'model_name' folder in cwd:
+if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+# 3. Create 'model_type' subfolder in 'model_name' main folder:
+if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:

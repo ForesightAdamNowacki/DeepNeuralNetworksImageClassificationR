@@ -210,7 +210,8 @@ Split_Data_Train_Validation_Test <- function(data_dir,
   base::dir.create(base::paste(base::getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
   base::setwd(base::paste(base::getwd(), train_folder_label, sep = "/"))
   train_files %>%
-    dplyr::mutate(final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> train_files
@@ -235,7 +236,8 @@ Split_Data_Train_Validation_Test <- function(data_dir,
   base::dir.create(base::paste(base::getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
   base::setwd(base::paste(base::getwd(), validation_folder_label, sep = "/"))
   validation_files %>%
-    dplyr::mutate(final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> validation_files
@@ -260,7 +262,8 @@ Split_Data_Train_Validation_Test <- function(data_dir,
   base::dir.create(base::paste(base::getwd(), test_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
   base::setwd(base::paste(base::getwd(), test_folder_label, sep = "/"))
   test_files %>%
-    dplyr::mutate(final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> test_files
@@ -354,7 +357,8 @@ Split_Data_Train_Validation <- function(data_dir,
   base::dir.create(base::paste(base::getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
   base::setwd(base::paste(base::getwd(), train_folder_label, sep = "/"))
   train_files %>%
-    dplyr::mutate(final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> train_files
@@ -379,7 +383,8 @@ Split_Data_Train_Validation <- function(data_dir,
   base::dir.create(base::paste(base::getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
   base::setwd(base::paste(base::getwd(), validation_folder_label, sep = "/"))
   validation_files %>%
-    dplyr::mutate(final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> validation_files

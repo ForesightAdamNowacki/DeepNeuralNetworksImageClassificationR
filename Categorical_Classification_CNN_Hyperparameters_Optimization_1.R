@@ -14,10 +14,10 @@ model_type <- "Categorical"
 # Intro:
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
-# 2. Create 'CNN' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
-# 3. Create 'Categorical' subfolder in 'CNN' main folder
-base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))
+# 2. Create 'model_name' folder in cwd:
+if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+# 3. Create 'model_type' subfolder in 'model_name' main folder:
+if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -140,13 +140,13 @@ test_generator <- keras::flow_images_from_directory(directory = test_dir,
                                                     class_mode = class_mode,
                                                     shuffle = FALSE)
 
-train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size)); train_evaluation
-validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size)); validation_evaluation
-test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size)); test_evaluation
+train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size)); train_evaluation
+validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size)); validation_evaluation
+test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size)); test_evaluation 
 
-train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(base::sum(train_files$category_obs)/train_generator$batch_size), verbose = 1)
-validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(base::sum(validation_files$category_obs)/validation_generator$batch_size), verbose = 1)
-test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(base::sum(test_files$category_obs)/test_generator$batch_size), verbose = 1)
+train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size), verbose = 1)
+validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size), verbose = 1)
+test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size), verbose = 1)
 
 base::setwd(models_store_dir)
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%

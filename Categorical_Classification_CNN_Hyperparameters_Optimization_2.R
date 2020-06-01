@@ -135,10 +135,10 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
 # ------------------------------------------------------------------------------
 # Model optimization:
 history_[[i]] <- model %>% keras::fit_generator(generator = train_generator,
-                                                steps_per_epoch = base::ceiling(train_generator$n/batch_size), 
+                                                steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size),
                                                 epochs = epochs,
                                                 validation_data = validation_generator,
-                                                validation_steps = base::ceiling(validation_generator$n/batch_size), 
+                                                validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size),
                                                 callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                         monitor = monitor,
                                                                                                         verbose = verbose,
