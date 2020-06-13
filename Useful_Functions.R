@@ -440,7 +440,7 @@ Split_Data_Train_Validation <- function(data_dir,
     base::return(.)}
 
 # ------------------------------------------------------------------------------
-# Optimize ensemble binary model:
+# Optimize binary ensemble model:
 Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
                                                   predictions,
                                                   cuts,
@@ -955,12 +955,21 @@ Binary_Classifier_Verification <- function(actual,
                vwidth = 900,
                vheight = 1600,
                expand = 5)
+    
+    result_3 %>%
+      dplyr::mutate(Calculation = NULL) %>%
+      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
+    
     if (open == TRUE){
       rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }
   }
+
+  gt_table %>% 
+    base::print()
+  result_3_label %>%
+    base::print()
   
-  gt_table %>% base::print(.)
   
   base::invisible(base::list("Confusion_Matrix_Explanation" = result_1,
                              "Confusion_Matrix_Result" = result_2,
@@ -997,7 +1006,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   if (!require(gt)){utils::install.packages('gt'); require('gt')}  
   if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
   if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
-  
+  if (!require(doSNOW)){utils::install.packages('doSNOW'); require('doSNOW')} 
   
   if (key_metric_as_string == FALSE){
     key_metric <- dplyr::enquo(key_metric) 
@@ -1008,79 +1017,57 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
     key_metric <- dplyr::enquo(key_metric) 
     key_metric_name <- dplyr::quo_name(key_metric)}
   
-  
-  
-  
-  # key_metric <- dplyr::enquo(key_metric) 
-  # key_metric_name <- dplyr::quo_name(key_metric)
-  
   base::set.seed(seed = seed_value)
   cuts_values <- stats::runif(n = cuts, min = 0, max = 1)
   cuts_values <- base::sort(x = cuts_values, decreasing = FALSE)
   
-  df <- tibble::tibble(ID = 1:cuts,
-                       CUTOFF = cuts_values,
-                       RECORDS = base::numeric(cuts),
-                       TN = base::numeric(cuts),
-                       FP = base::numeric(cuts),
-                       FN = base::numeric(cuts),
-                       TP = base::numeric(cuts),
-                       P = base::numeric(cuts),
-                       N = base::numeric(cuts),
-                       ACC = base::numeric(cuts),
-                       BACC = base::numeric(cuts),
-                       AUC = base::numeric(cuts),
-                       BIAS = base::numeric(cuts),
-                       CE = base::numeric(cuts),
-                       TPR = base::numeric(cuts),
-                       TNR = base::numeric(cuts),
-                       PPV = base::numeric(cuts),
-                       NPV = base::numeric(cuts),
-                       FNR = base::numeric(cuts),
-                       FPR = base::numeric(cuts),
-                       FDR = base::numeric(cuts),
-                       FOR = base::numeric(cuts),
-                       TS = base::numeric(cuts),
-                       F1 = base::numeric(cuts),
-                       BM = base::numeric(cuts),
-                       MK = base::numeric(cuts),
-                       GINI = base::numeric(cuts),
-                       COST = base::numeric(cuts))
+  actual <- base::factor(actual, levels = base::c(0, 1))
   
-  actual = base::factor(actual, levels = base::c(0, 1))
+  cores <- parallel::detectCores()
+  cl <- snow::makeSOCKcluster(cores - 1)
+  doSNOW::registerDoSNOW(cl)
   
-  for (i in 1:cuts){
+  pb <- utils::txtProgressBar(min = 1, max = cuts, style = 3)
+  progress <- function(n) utils::setTxtProgressBar(pb, n)
+  opts <- base::list(progress = progress)
+
+  df <- foreach::foreach(i = 1:cuts, .options.snow = opts, .combine = 'rbind') %dopar% {
     
-    predicted_class <- base::factor(base::ifelse(predicted < df$CUTOFF[i], 0, 1), levels = c(0, 1))
+    predicted_class <- base::factor(base::ifelse(predicted < cuts_values[i], 0, 1), levels = c(0, 1))
     confusion_matrix <- base::table(actual, predicted_class)
     
-    df$RECORDS <- base::sum(confusion_matrix)
-    df$TN[i] <- confusion_matrix[1, 1]
-    df$FP[i] <- confusion_matrix[1, 2]
-    df$FN[i] <- confusion_matrix[2, 1]
-    df$TP[i] <- confusion_matrix[2, 2]
-    df$N <- df$TN[i] + df$FP[i]
-    df$P <- df$FN[i] + df$TP[i]
-    df$ACC[i] <- (df$TN[i] + df$TP[i])/(df$TN[i] + df$FN[i] + df$FP[i] + df$TP[i])
-    df$BACC[i] <- (df$TN[i]/(df$TN[i] + df$FP[i]) + df$TP[i]/(df$FN[i] + df$TP[i]))/2
-    df$AUC[i] <- Metrics::auc(actual = actual, predicted = predicted)
-    df$BIAS[i] <- base::mean(base::as.numeric(actual)) - base::mean(base::as.numeric(predicted_class))
-    df$CE[i] <- (df$FN[i] + df$FP[i])/(df$TN[i] + df$FN[i] + df$FP[i] + df$TP[i])
-    df$TPR[i] <- df$TP[i]/(df$TP[i] + df$FN[i])
-    df$TNR[i] <- df$TN[i]/(df$TN[i] + df$FP[i])
-    df$PPV[i] <- df$TP[i]/(df$TP[i] + df$FP[i])
-    df$NPV[i] <- df$TN[i]/(df$TN[i] + df$FN[i])
-    df$FNR[i] <- df$FN[i]/(df$FN[i] + df$TP[i])
-    df$FPR[i] <- df$FP[i]/(df$FP[i] + df$TN[i])
-    df$FDR[i] <- df$FP[i]/(df$FP[i] + df$TP[i])
-    df$FOR[i] <- df$FN[i]/(df$FN[i] + df$TN[i])
-    df$TS[i] <- df$TP[i]/(df$TP[i] + df$FN[i] + df$FP[i])
-    df$F1[i] <- (2 * df$PPV[i] * df$TPR[i])/(df$PPV[i] + df$TPR[i])
-    df$BM[i] <- df$TPR[i] + df$TNR[i] - 1
-    df$MK[i] <- df$PPV[i] + df$NPV[i] - 1
-    df$GINI[i] <- 2 * df$AUC[i] - 1
-    df$COST[i] <- TN_cost * df$TN[i] + FP_cost * df$FP[i] + FN_cost * df$FN[i] + TP_cost * df$TP[i]
+    tibble::tibble(ID = i,
+                   CUTOFF = cuts_values[i],
+                   RECORDS = base::sum(confusion_matrix),
+                   TN = confusion_matrix[1, 1],
+                   FP = confusion_matrix[1, 2],
+                   FN = confusion_matrix[2, 1],
+                   TP = confusion_matrix[2, 2],
+                   N = TN + FP,
+                   P = FN + TP,
+                   ACC = (TN + TP)/(TN + FN + FP + TP),
+                   BACC = (TN/(TN + FP) + TP/(FN + TP))/2,
+                   AUC = Metrics::auc(actual = actual, predicted = predicted),
+                   BIAS = base::mean(base::as.numeric(actual)) - base::mean(base::as.numeric(predicted_class)),
+                   CE = (FN + FP)/(TN + FN + FP + TP),
+                   TPR = TP/(TP + FN),
+                   TNR = TN/(TN + FP),
+                   PPV = TP/(TP + FP),
+                   NPV = TN/(TN + FN),
+                   FNR = FN/(FN + TP),
+                   FPR = FP/(FP + TN),
+                   FDR = FP/(FP + TP),
+                   FOR = FN/(FN + TN),
+                   TS = TP/(TP + FN + FP),
+                   F1 = (2 * PPV * TPR)/(PPV + TPR),
+                   BM = TPR + TNR - 1,
+                   MK = PPV + NPV - 1,
+                   GINI = 2 * AUC - 1,
+                   COST = TN_cost * TN + FP_cost * FP + FN_cost * FN + TP_cost * TP)
   }
+  
+  base::close(pb)
+  snow::stopCluster(cl)
   
   if(ascending == TRUE){
     df %>%
@@ -1092,9 +1079,9 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   
   df %>%
     utils::head(., top) %>%
-    dplyr::mutate(ID = dplyr::row_number()) -> df
+    dplyr::mutate(ID = dplyr::row_number()) -> df_2
   
-  df %>%
+  df_2 %>%
     gt::gt(rowname_col = "ID") %>%
     gt::tab_header(title = gt::md(base::paste("Cut-off value optimization", sys_time)),
                    subtitle = gt::md("Binary classification model")) %>%
@@ -1159,13 +1146,23 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                vwidth = 1600,
                vheight = 900,
                expand = 5)
+    
+    df %>%
+      dplyr::mutate(Calculation = NULL) %>%
+      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.csv", sep = "_"), ":", "-"))
+    
     if (open == TRUE){
       rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"))
     }
   }
   
-  gt_table %>% base::print(.)
-  base::invisible(df)}
+  gt_table %>%
+    base::print(.)
+  
+  base::cat("Total time in seconds:", base::Sys.time() - sys_time)
+  
+  base::invisible(base::list(top_cutoffs = df_2,
+                             all_cutoffs = df))}
 
 # ------------------------------------------------------------------------------
 # Categorical model evaluation:
@@ -1329,6 +1326,11 @@ Categorical_Classifier_Verification <- function(actual,
                vwidth = 900,
                vheight = 600,
                expand = 5)
+    
+    stats_4 %>%
+      dplyr::mutate(Calculation = NULL) %>%
+      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
+    
     if (open == TRUE){
       rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }

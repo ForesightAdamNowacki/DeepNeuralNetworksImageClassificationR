@@ -168,7 +168,7 @@ readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
 default_cutoff <- 0.5
-save_option <- TRUE
+save_option <- FALSE
 
 train_verification_1 <- Binary_Classifier_Verification(actual = train_generator$classes,
                                                        predicted = train_probabilities[,2],
@@ -210,7 +210,7 @@ train_verification_1$Assessment_of_Classifier_Effectiveness %>%
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization:
-save_option <- TRUE
+save_option <- FALSE
 train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_generator$classes,
                                                                    predicted = train_probabilities[,2],
                                                                    type_info = base::paste(model_name, "train", sep = "_"),
@@ -221,7 +221,7 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
                                                                    ascending = FALSE,
                                                                    save = save_option,
                                                                    open = FALSE)
-train_cutoff_optimization %>%
+train_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_optimal_cutoff; train_optimal_cutoff
@@ -236,7 +236,7 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
                                                                         ascending = FALSE,
                                                                         save = save_option,
                                                                         open = FALSE)
-validation_cutoff_optimization %>%
+validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
@@ -252,7 +252,7 @@ train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(ac
                                                                               save = save_option,
                                                                               open = FALSE)
 
-train_validation_cutoff_optimization %>%
+train_validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff
@@ -262,7 +262,7 @@ train_validation_cutoff_optimization %>%
 # * validation_optimal_cutoff
 # * train_validation_optimal_cutoff
 selected_cutoff <- validation_optimal_cutoff
-save_option <- TRUE
+save_option <- FALSE
 
 train_verification_2 <- Binary_Classifier_Verification(actual = train_generator$classes,
                                                        predicted = train_probabilities[,2],

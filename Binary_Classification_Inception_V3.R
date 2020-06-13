@@ -343,7 +343,7 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
                                                                    ascending = FALSE,
                                                                    save = save_option,
                                                                    open = FALSE)
-train_cutoff_optimization %>%
+train_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_optimal_cutoff; train_optimal_cutoff
@@ -358,7 +358,7 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
                                                                         ascending = FALSE,
                                                                         save = save_option,
                                                                         open = FALSE)
-validation_cutoff_optimization %>%
+validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
@@ -374,7 +374,7 @@ train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(ac
                                                                               save = save_option,
                                                                               open = FALSE)
 
-train_validation_cutoff_optimization %>%
+train_validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff

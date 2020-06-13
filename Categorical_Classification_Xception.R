@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data
 # https://www.kaggle.com/c/cifar-10/overview
-utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
+# utils::browseURL(url = "https://www.kaggle.com/c/cifar-10/overview")
 
 # ------------------------------------------------------------------------------
 # Model:
@@ -62,7 +62,7 @@ optimizer <- keras::optimizer_adam()
 metrics <- base::c("acc")
 
 # Training:
-batch_size <- 8
+batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
 epochs <- 1
@@ -152,7 +152,7 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
 # ------------------------------------------------------------------------------
 # Tensorboard:
 base::dir.create(path = callback_tensorboard_path)
-keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
+# keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2

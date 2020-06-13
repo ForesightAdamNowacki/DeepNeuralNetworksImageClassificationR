@@ -1,0 +1,12 @@
+Class;Records;Correct;Incorrect;Accuracy;Inaccuracy;Precision;Recall;F1;Type
+airplane; 1000; 700; 300;0,7000;0,3000;0,8610086;0,7000;0,7722008;Split into categories
+automobile; 1000; 398; 602;0,3980;0,6020;1,0000000;0,3980;0,5693848;Split into categories
+bird; 1000; 769; 231;0,7690;0,2310;0,7830957;0,7690;0,7759839;Split into categories
+cat; 1000; 857; 143;0,8570;0,1430;0,5608639;0,8570;0,6780063;Split into categories
+deer; 1000; 752; 248;0,7520;0,2480;0,8920522;0,7520;0,8160608;Split into categories
+dog; 1000; 805; 195;0,8050;0,1950;0,6353591;0,8050;0,7101897;Split into categories
+frog; 1000; 685; 315;0,6850;0,3150;0,9567039;0,6850;0,7983683;Split into categories
+horse; 1000; 861; 139;0,8610;0,1390;0,8550149;0,8610;0,8579970;Split into categories
+ship; 1000; 923;  77;0,9230;0,0770;0,6578760;0,9230;0,7682064;Split into categories
+truck; 1000; 818; 182;0,8180;0,1820;0,7842761;0,8180;0,8007832;Split into categories
+Overall;10000;7568;2432;0,7568;0,2432;0,7986250;0,7568;0,7547181;All categories

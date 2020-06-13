@@ -3,12 +3,12 @@
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model:
 model_name <- "Xception"
-model_name <- "Binary"
+model_type <- "Binary"
 
 # ------------------------------------------------------------------------------
 # Intro:
@@ -66,7 +66,7 @@ metrics <- base::c("acc")
 batch_size <- 16
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 3
+epochs <- 2
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_acc"
@@ -153,7 +153,7 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
 # ------------------------------------------------------------------------------
 # Tensorboard:
 base::dir.create(path = callback_tensorboard_path)
-keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
+# keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2
@@ -343,7 +343,7 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
                                                                    ascending = FALSE,
                                                                    save = save_option,
                                                                    open = FALSE)
-train_cutoff_optimization %>%
+train_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_optimal_cutoff; train_optimal_cutoff
@@ -358,7 +358,7 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
                                                                         ascending = FALSE,
                                                                         save = save_option,
                                                                         open = FALSE)
-validation_cutoff_optimization %>%
+validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
@@ -374,7 +374,7 @@ train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(ac
                                                                               save = save_option,
                                                                               open = FALSE)
 
-train_validation_cutoff_optimization %>%
+train_validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
   base::mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff
@@ -474,7 +474,7 @@ final_score_1_summary %>%
 labels <- base::sort(base::as.character(train_files$category)); labels
 set <- "train"
 category <- "dogs"  
-id <- 4
+id <- 1
 
 Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, base::list.files(base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, sep = "/")), sep = "/")[id],
               model = model,

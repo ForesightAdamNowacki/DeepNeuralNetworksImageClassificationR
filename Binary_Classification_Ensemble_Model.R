@@ -45,7 +45,7 @@ models_vector <- base::c("ResNet50", "Xception", "MobileNet_V2", "Inception_V3",
 # Build ensembel model with weights and cutoff optimization on train dataset:
 ensemble_1 <- Binary_Ensemble_Model(models_vector = models_vector,
                                     optimization_dataset = "train",
-                                    save_option = TRUE,
+                                    save_option = FALSE,
                                     default_cutoff = 0.5,
                                     cuts = 50,
                                     weights = 50,
@@ -61,7 +61,7 @@ ensemble_1 <- Binary_Ensemble_Model(models_vector = models_vector,
 # Build ensembel model with weights and cutoff optimization on validation dataset:
 ensemble_2 <- Binary_Ensemble_Model(models_vector = models_vector,
                                     optimization_dataset = "validation",
-                                    save_option = TRUE,
+                                    save_option = FALSE,
                                     default_cutoff = 0.5,
                                     cuts = 50,
                                     weights = 50,
@@ -77,7 +77,7 @@ ensemble_2 <- Binary_Ensemble_Model(models_vector = models_vector,
 # Build ensembel model with weights and cutoff optimization on combined train and validation dataset:
 ensemble_3 <- Binary_Ensemble_Model(models_vector = models_vector,
                                     optimization_dataset = "train+validation",
-                                    save_option = TRUE,
+                                    save_option = FALSE,
                                     default_cutoff = 0.5,
                                     cuts = 50,
                                     weights = 50,
@@ -179,12 +179,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = train_dir,
                                                   save_correct_images = save_correct_images,
                                                   save_incorrect_images = save_incorrect_images)
 
-# ------------------------------------------------------------------------------
 # Organize correct and incorrect ensemble model predictions on validation dataset:
-save_summary_files <- TRUE
-save_correct_images <- FALSE
-save_incorrect_images <- FALSE
-
 Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = validation_dir,
                                                   actual_classes = base::rep(base::c(0, 1), validation_files$category_obs),
                                                   predicted = ensemble_3$validation_models_predictions$Ensemble_Model,
@@ -194,12 +189,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = validation_dir,
                                                   save_correct_images = save_correct_images,
                                                   save_incorrect_images = save_incorrect_images)
 
-# ------------------------------------------------------------------------------
 # Organize correct and incorrect ensemble model predictions on test dataset:
-save_summary_files <- TRUE
-save_correct_images <- FALSE
-save_incorrect_images <- FALSE
-
 Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = test_dir,
                                                   actual_classes = base::rep(base::c(0, 1), test_files$category_obs),
                                                   predicted = ensemble_3$test_models_predictions$Ensemble_Model,
@@ -211,7 +201,7 @@ Organize_Correct_Incorrect_Binary_Classifications(dataset_dir = test_dir,
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
-save_plot <- TRUE
+save_plot <- FALSE
 labels <- base::sort(base::as.character(train_files$category)); labels
 
 # Train:
@@ -255,7 +245,7 @@ Display_Target_Class_Predictions_Distribution(actual = test_actual,
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
-save_plot <- TRUE
+save_plot <- FALSE
 
 Display_All_Classes_Predictions_Distribution(actual = train_actual + 1,
                                              predicted = train_probabilities,

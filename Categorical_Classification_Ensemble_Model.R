@@ -27,7 +27,6 @@ base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
 base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
-base::options(scipen = 10000)
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cifar10/train"
@@ -48,7 +47,7 @@ labels <- base::as.character(train_files$category)
 ensemble_1 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "train",
-                                         save_option = TRUE,
+                                         save_option = FALSE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -64,7 +63,7 @@ ensemble_1 <- Categorical_Ensemble_Model(models_vector = models_vector,
 ensemble_2 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "validation",
-                                         save_option = TRUE,
+                                         save_option = FALSE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -80,7 +79,7 @@ ensemble_2 <- Categorical_Ensemble_Model(models_vector = models_vector,
 ensemble_3 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "train+validation",
-                                         save_option = TRUE,
+                                         save_option = FALSE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -163,8 +162,8 @@ base::list(ensemble_1 = ensemble_1$optimal_weights,
 # ------------------------------------------------------------------------------
 # Save correct and incorrect predictions:
 save_summary_files <- TRUE
-save_correct_images <- TRUE
-save_incorrect_images <- TRUE
+save_correct_images <- FALSE
+save_incorrect_images <- FALSE
 
 # Train:
 Train_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Categorical_Classifications(dataset_dir = train_dir,
@@ -198,7 +197,7 @@ Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Cate
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
-save_plot <- TRUE
+save_plot <- FALSE
 
 train_probabilities <- base::as.matrix(ensemble_3$train_ensemble_model_prediction)
 train_classes <- ensemble_3$train_actual_class
@@ -232,7 +231,7 @@ Display_Target_Class_Predictions_Distribution(actual = test_classes,
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
-save_plot <- TRUE
+save_plot <- FALSE
 
 Display_All_Classes_Predictions_Distribution(actual = train_classes,
                                              predicted = train_probabilities,
