@@ -7,7 +7,7 @@ Deep Neural Networks architectures based on convolutional neural networks using 
 ----------
 # Scripts description:
 
-The scripts collected on GitHub are divided into 3 main sections depending on the purpose and the characteristics of the task: 
+The scripts collected on GitHub are divided into 3 main sections depending on the purpose and the characteristics of the main task: 
 * **binary classification**, 
 * **multi-class classification**,
 * **auxiliary files and useful functions**.
@@ -28,12 +28,12 @@ Files intended for implementation and optimization of deep neural networks for b
 * **Binary_Classification_MobileNet_V2.R** - implementation of the MobileNet V2 model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_NASNetMobile_V2.R** - implementation of the NASNetMobile model for binary image classification using pretrained weights on the ImageNet dataset,
 * **Binary_Classification_ResNet50.R** - implementation of the ResNet50 model for binary image classification using pretrained weights on the ImageNet dataset,
-* **Binary_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Binary_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model's weights (1st step),
 * **Binary_Classification_VGG16_2nd_Stage.R** - implementation of the VGG16 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
-* **Binary_Classification_VGG16_Pipe_Runner.R** - executable script sequentially compiling Binary_Classification_VGG16_1st_Stage.R and Binary_Classification_VGG16_2nd_Stage.R files,
-* **Binary_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Binary_Classification_VGG16_Pipe_Runner.R** - script sequentially compiling Binary_Classification_VGG16_1st_Stage.R and Binary_Classification_VGG16_2nd_Stage.R files,
+* **Binary_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model's weights (1st step),
 * **Binary_Classification_VGG19_2nd_Stage.R** - implementation of the VGG19 model for binary image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
-* **Binary_Classification_VGG19_Pipe_Runner.R** - executable script sequentially compiling Binary_Classification_VGG19_1st_Stage.R and Binary_Classification_VGG19_2nd_Stage.R files,
+* **Binary_Classification_VGG19_Pipe_Runner.R** - script sequentially compiling Binary_Classification_VGG19_1st_Stage.R and Binary_Classification_VGG19_2nd_Stage.R files,
 * **Binary_Classification_Xception.R** - implementation of the Xception model for binary image classification using pretrained weights on the ImageNet dataset.
 
 ----------

@@ -68,7 +68,7 @@ metrics <- base::c("acc")
 batch_size <- 64
 class_mode <- "categorical"
 shuffle <- TRUE
-epochs <- 10
+epochs <- 5
 early_stopping_patience <- 10
 reduce_lr_on_plateu_patience <- 5
 monitor <- "val_acc"
@@ -186,7 +186,7 @@ validation_generator <- keras::flow_images_from_directory(directory = validation
 # ------------------------------------------------------------------------------
 # Tensorboard:
 base::dir.create(path = callback_tensorboard_path)
-keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
+# keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
 # 2. conda activate GPU_ML_2
