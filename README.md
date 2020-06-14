@@ -63,6 +63,7 @@ Files intended for implementation and optimization of deep neural networks for c
 ----------
 # Auxiliary files and useful functions:
 * **Data_Augmentation.R** - manual testing and checking all settings and combinations of hyperparameters available in the Keras library used during data augmentation,
+* **Requirements.R** - list of packages used in this repository,
 * **Useful_Functions.R** - collection of useful and accelerating functions for building, optimizing and testing models used in binary and multi-class classification files briefly described above,
 * **Visualisation_Heatmaps.R** - heatmap visualisation script for optimized deep convolutional neural network model,
 * **Visualisation_Convolutional_Activations.R** - visualisation of convolutional layers activations in optimized deep convolutional neural network model,
