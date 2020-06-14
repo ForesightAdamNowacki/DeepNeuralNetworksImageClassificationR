@@ -98,8 +98,10 @@ Pooling_2D_Layers_Activations <- function(model,
 
 # ------------------------------------------------------------------------------
 # Plot Convolutional Layer Activation for choosen layer:
-Pooling_Layers <- model$layers[base::grepl('pooling', base::sapply(model$layers, base::paste))] %>%
-  base::sapply(., base::paste)
+Pooling_Layers <- base::c()
+for (i in 1:base::length(model$layers)){
+  Layer <- model$layers[[i]]$name[base::grepl("pool", model$layers[[i]]$name)]
+  Pooling_Layers <- base::c(Pooling_Layers, Layer)}
 for (i in 1:base::length(Pooling_Layers)){base::cat(i, "Pooling 2D Layer:", Pooling_Layers[i], "\n")}
 
 Pooling_2D_Layers_Activations(model = model,

@@ -14,7 +14,7 @@ model_name <- "Visualisation_Heatmaps"
 # 1. Set currect working directory:
 base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
 # 2. Create 'VGG16' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
+if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -124,7 +124,8 @@ Display_Heatmap <- function(model, image_path){
     magick::image_resize(geometry = geometry, filter = "quadratic") %>%
     magick::image_composite(image = original_image, operator = "blend", compose_args = "50") %>%
     magick::image_write(file_path_2)
-  base::cat("\n", "Plot saved:", file_path_2, "\n")}
+  base::cat("\n", "Plot saved:", file_path_2, "\n")
+}
 
 # ------------------------------------------------------------------------------
 # Display and save heatmaps for uploaded images:

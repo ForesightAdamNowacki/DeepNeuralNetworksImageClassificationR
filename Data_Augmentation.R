@@ -22,7 +22,7 @@ Image_Augmentation <- function(image_path,
                                rotation_range_parameter = 25,
                                width_shift_range_parameter = 0.1,
                                height_shift_range_parameter = 0.1,
-                               brightness_range_parameter = c(0.5, 1.5),
+                               brightness_range_parameter = base::c(0.5, 1.5),
                                shear_range_parameter = 0.1,
                                zoom_range_parameter = 0.1,
                                channel_shift_range_parameter = 0.0,
@@ -98,8 +98,10 @@ Image_Augmentation <- function(image_path,
     }
   }
 }    
+
 # ------------------------------------------------------------------------------
 # Test image augmentation function:
 base::setwd(dir = "D:\\GitHub\\DeepNeuralNetworksRepoR\\Images")
-Image_Augmentation(image_path = "Dog_1.png", n = 9, plot_save = FALSE)
+Image_Augmentation(image_path = "Dog_1.png", n = 25, plot_save = FALSE)
 # ------------------------------------------------------------------------------
+# https://github.com/ForesightAdamNowacki

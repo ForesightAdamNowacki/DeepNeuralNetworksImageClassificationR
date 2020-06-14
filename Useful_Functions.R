@@ -456,10 +456,6 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
                                                   FN_cost = 1,
                                                   TP_cost = 0){
   
-  # Libraries:
-  if (!require(tidyverse)){utils::install.packages('tidyverse'); require('tidyverse')}  
-  
-  
   if (key_metric_as_string == FALSE){
     key_metric <- dplyr::enquo(key_metric) 
     key_metric_name <- dplyr::quo_name(key_metric)}
@@ -778,15 +774,6 @@ Binary_Classifier_Verification <- function(actual,
   
   sys_time <- base::Sys.time()
   
-  # Libraries:
-  if (!base::require(Metrics)){utils::install.packages('Metrics'); base::require('Metrics')}  
-  if (!base::require(tidyverse)){utils::install.packages('tidyverse'); base::require('tidyverse')}  
-  if (!base::require(tibble)){utils::install.packages('tibble'); base::require('tibble')}  
-  if (!base::require(knitr)){utils::install.packages('knitr'); base::require('knitr')}  
-  if (!base::require(gt)){utils::install.packages('gt'); base::require('gt')}  
-  if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
-  if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
-  
   # Confusion matrix explanation:
   result_1 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
                              "Predicted Negative (0)" = base::c("True Negative (TN)", "False Negative (FN)"),
@@ -998,16 +985,6 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   
   sys_time <- base::Sys.time()
   
-  # Libraries:
-  if (!require(Metrics)){utils::install.packages('Metrics'); require('Metrics')}  
-  if (!require(tidyverse)){utils::install.packages('tidyverse'); require('tidyverse')}  
-  if (!require(tibble)){utils::install.packages('tibble'); require('tibble')}  
-  if (!require(gridExtra)){utils::install.packages('gridExtra'); require('gridExtra')}  
-  if (!require(gt)){utils::install.packages('gt'); require('gt')}  
-  if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
-  if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
-  if (!require(doSNOW)){utils::install.packages('doSNOW'); require('doSNOW')} 
-  
   if (key_metric_as_string == FALSE){
     key_metric <- dplyr::enquo(key_metric) 
     key_metric_name <- dplyr::quo_name(key_metric)}
@@ -1027,7 +1004,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   cl <- snow::makeSOCKcluster(cores - 1)
   doSNOW::registerDoSNOW(cl)
   
-  pb <- utils::txtProgressBar(min = 1, max = cuts, style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = cuts, style = 3)
   progress <- function(n) utils::setTxtProgressBar(pb, n)
   opts <- base::list(progress = progress)
 
@@ -1173,17 +1150,8 @@ Categorical_Classifier_Verification <- function(actual,
                                                 save = TRUE,
                                                 open = FALSE){
   
-  sys_time = base::Sys.time()
-  
-  # Libraries:
-  if (!require(Metrics)){utils::install.packages('Metrics'); require('Metrics')}  
-  if (!require(tidyverse)){utils::install.packages('tidyverse'); require('tidyverse')}  
-  if (!require(tibble)){utils::install.packages('tibble'); require('tibble')}  
-  if (!require(gridExtra)){utils::install.packages('gridExtra'); require('gridExtra')}  
-  if (!require(gt)){utils::install.packages('gt'); require('gt')}  
-  if (!require(webshot)){utils::install.packages('webshot'); require('webshot')} 
-  if (!require(stringr)){utils::install.packages('stringr'); require('stringr')} 
-  
+  sys_time <- base::Sys.time()
+
   predicted <- base::max.col(probabilities)
   
   base::table(base::factor(actual, levels = 1:base::length(labels), labels = labels), 

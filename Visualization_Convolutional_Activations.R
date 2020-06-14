@@ -59,7 +59,7 @@ Convolutional_2D_Layers_Activations <- function(model,
   
   img <- keras::image_load(image_path, target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]))
   img_tensor <- keras::image_to_array(img)
-  img_tensor <- keras::array_reshape(img_tensor, c(1, model$input_shape[[2]], model$input_shape[[2]], 3))
+  img_tensor <- keras::array_reshape(img_tensor, base::c(1, model$input_shape[[2]], model$input_shape[[2]], 3))
   img_tensor <- img_tensor/255
   
   layer_outputs <- base::lapply(model$layers[base::grepl('convolutional', base::sapply(model$layers, base::paste))], function(layer) layer$output)
@@ -108,7 +108,7 @@ graphics::par(mfrow = base::c(1, 1))
 Convolutional_2D_Layers_Activations(model = model,
                                     image_path = base::paste(base::getwd(), "Data", "Tank_Rosomak.png", sep = "/"),
                                     layer_id = 1,
-                                    save_plot = FALSE)
+                                    save_plot = TRUE)
 
 # ------------------------------------------------------------------------------
 # Plot Convolutional Layer Activations for all layers:
