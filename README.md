@@ -52,12 +52,12 @@ Files intended for implementation and optimization of deep neural networks for c
 * **Categorical_Classification_MobileNet_V2.R** - implementation of the MobileNet V2 model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_NASNetMobile_V2.R** - implementation of the NASNetMobile model for categorical image classification using pretrained weights on the ImageNet dataset,
 * **Categorical_Classification_ResNet50.R** - implementation of the ResNet50 model for categorical image classification using pretrained weights on the ImageNet dataset,
-* **Categorical_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Categorical_Classification_VGG16_1st_Stage.R** - implementation of the VGG16 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model's weights (1st step),
 * **Categorical_Classification_VGG16_2nd_Stage.R** - implementation of the VGG16 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
-* **Categorical_Classification_VGG16_Pipe_Runner.R** - executable script sequentially compiling Categorical_Classification_VGG16_1st_Stage.R and Categorical_Classification_VGG16_2nd_Stage.R files,
-* **Categorical_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model weights (1st step),
+* **Categorical_Classification_VGG16_Pipe_Runner.R** - script sequentially compiling Categorical_Classification_VGG16_1st_Stage.R and Categorical_Classification_VGG16_2nd_Stage.R files,
+* **Categorical_Classification_VGG19_1st_Stage.R** - implementation of the VGG19 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization with partially frozen model's weights (1st step),
 * **Categorical_Classification_VGG19_2nd_Stage.R** - implementation of the VGG19 model for categorical image classification using pretrained weights on the ImageNet dataset - feature extraction and fine-tunning optimization of model weights with frostbitten layers (2nd step),
-* **Categorical_Classification_VGG19_Pipe_Runner.R** - executable script sequentially compiling Categorical_Classification_VGG19_1st_Stage.R and Categorical_Classification_VGG19_2nd_Stage.R files,
+* **Categorical_Classification_VGG19_Pipe_Runner.R** - script sequentially compiling Categorical_Classification_VGG19_1st_Stage.R and Categorical_Classification_VGG19_2nd_Stage.R files,
 * **Categorical_Classification_Xception.R** - implementation of the Xception model for categorical image classification using pretrained weights on the ImageNet dataset.
 
 ----------
