@@ -13,7 +13,7 @@ model_type <- "Categorical"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
+base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'model_name' folder in cwd:
 if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
 # 3. Create 'model_type' subfolder in 'model_name' main folder:
@@ -24,10 +24,9 @@ if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
 base::library(tensorflow)
 base::library(keras)
-# keras::install_keras(tensorflow = "gpu")
 base::library(tidyverse)
 base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
+base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 train_dir <- "D:/GitHub/Datasets/Cifar10/train"
 validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"

@@ -101,7 +101,7 @@ Image_Augmentation <- function(image_path,
 
 # ------------------------------------------------------------------------------
 # Test image augmentation function:
-base::setwd(dir = "D:\\GitHub\\DeepNeuralNetworksRepoR\\Images")
+base::setwd(dir = "D:/GitHub/DeepNeuralNetworksImageClassificationR/Images")
 Image_Augmentation(image_path = "Dog_1.png", n = 25, plot_save = FALSE)
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

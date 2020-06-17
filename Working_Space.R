@@ -5,7 +5,7 @@ base::library(keras)
 # keras::install_keras(tensorflow = "gpu")
 base::library(tidyverse)
 base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
+base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 
 # Create k folds

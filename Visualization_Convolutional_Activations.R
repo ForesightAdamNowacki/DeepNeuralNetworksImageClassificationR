@@ -12,7 +12,7 @@ model_name <- "Visualisation_Convolutional_Activations"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
+base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'VGG16' folder in cwd
 base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
 
@@ -23,7 +23,7 @@ base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
+base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # ------------------------------------------------------------------------------
 # Clear session:

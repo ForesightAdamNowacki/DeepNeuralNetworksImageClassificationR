@@ -13,7 +13,7 @@ model_type <- "Binary"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksRepoR")
+base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 
 # ------------------------------------------------------------------------------
 # Environment:
@@ -22,7 +22,7 @@ base::library(tensorflow)
 base::library(keras)
 base::library(tidyverse)
 base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksRepoR/Useful_Functions.R")
+base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
