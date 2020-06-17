@@ -1,6 +1,6 @@
 ![alt text](Images//MD_Head.png?raw=true)
 ----------
-# DeepNeuralNetworksRepoR
+# DeepNeuralNetworksImageClassificationR
 
 Deep Neural Networks architectures based on convolutional neural networks using Keras and TensorFlow-GPU in R programming language. The repository is devoted to binary and multi-class image classification.
 
@@ -157,9 +157,3 @@ base::library(keras)
 keras::install_keras(tensorflow = "1.15-gpu")
 ```
 ----------
-
-
-
-
-
-
