@@ -2236,7 +2236,7 @@ T_SNE_Dimensionality_Reduction_Visualisation <- function(data_dir,
     ggplot2::geom_label(data = t_sne %>% 
                           dplyr::group_by(class) %>%
                           dplyr::summarise(V1 = stats::median(V1),
-                                           V2 = stats::median(V2)), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
+                                           V2 = stats::median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
     ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
                    axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
                    axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
@@ -2271,5 +2271,113 @@ T_SNE_Dimensionality_Reduction_Visualisation <- function(data_dir,
   base::print(plot)
 }
 
+# ------------------------------------------------------------------------------
+# UMAP dimensionality reduction:
+UMAP_Dimensionality_Reduction_Visualisation <- function(data_dir,
+                                                        model,
+                                                        type_info,
+                                                        batch_size = 16,
+                                                        text_size = 7,
+                                                        title_size = 9,
+                                                        save_plot = FALSE,
+                                                        plot_size = 20){
+  
+  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  
+  data_generator <- keras::image_data_generator(rescale = 1/255)
+  generator_from_directory <- keras::flow_images_from_directory(directory = data_dir,
+                                                                generator = data_generator, 
+                                                                target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]),
+                                                                batch_size = batch_size,
+                                                                class_mode = "categorical",
+                                                                classes = base::list.files(data_dir),
+                                                                shuffle = FALSE)
+  
+  layer_output <- base::lapply(model$layers[base::length(model$layers) - 1], function(layer) layer$output)
+  embedding_model <- keras::keras_model(inputs = model$input, outputs = layer_output)
+  
+  results <- keras::predict_generator(embedding_model,
+                                      generator_from_directory,
+                                      steps = base::ceiling(length(generator_from_directory$filepaths)/batch_size),
+                                      verbose = 1)
+  
+  umap <- uwot::umap(X = results, n_components = 2, verbose = TRUE) %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(class = generator_from_directory$classes,
+                  class = factor(class, levels = base::unique(generator_from_directory$classes), labels = base::list.files(data_dir)))
+  plot_1 <- umap %>%
+    ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = V1, y = V2, color = class)) +
+    ggplot2::geom_point() +
+    ggplot2::labs(x = "Dimension 1",
+                  y = "Dimension 2",
+                  title = "UMAP points visualisation",
+                  color = "Class:") +
+    ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
+                   axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.title.y = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.title.x = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.ticks = element_line(size = 1, color = "black", linetype = "solid"),
+                   axis.ticks.length = unit(0.1, "cm"),
+                   plot.background = element_rect(fill = "gray80", color = "black", size = 1, linetype = "solid"),
+                   panel.background = element_rect(fill = "gray90", color = "black", size = 0.5, linetype = "solid"),
+                   panel.border = element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),
+                   panel.grid.major.x = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.major.y = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.minor.x = element_line(linetype = "blank"),
+                   panel.grid.minor.y = element_line(linetype = "blank"),
+                   plot.caption = element_text(size = text_size, color = "black", face = "bold", hjust = 1),
+                   strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
+                   strip.text = element_text(size = text_size, face = "bold"),
+                   legend.box.background = ggplot2::element_rect(color = "black", size = 0.5, linetype = "solid"),
+                   legend.background = ggplot2::element_rect(fill = "gray90", size = 0.5, linetype = "solid", color = "black"),
+                   legend.position = "right",
+                   legend.box.spacing = ggplot2::unit(0.25, "cm"),
+                   legend.text = ggplot2::element_text(size = text_size, color = "black", face = "plain"),
+                   legend.title = ggplot2::element_text(size = text_size, color = "black", face = "bold"))
+  
+  plot_2 <- umap %>%
+    ggplot2::ggplot(data = .) +
+    ggplot2::stat_ellipse(mapping = ggplot2::aes(x = V1, y = V2, color = class)) +
+    ggplot2::labs(x = "Dimension 1",
+                  y = "Dimension 2",
+                  title = "UMAP ellipse visualisation") + 
+    ggplot2::geom_label(data = umap %>% 
+                          dplyr::group_by(class) %>%
+                          dplyr::summarise(V1 = stats::median(V1),
+                                           V2 = stats::median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
+    ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
+                   axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
+                   axis.title.y = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.title.x = element_text(size = text_size, color = "black", face = "bold"),
+                   axis.ticks = element_line(size = 1, color = "black", linetype = "solid"),
+                   axis.ticks.length = unit(0.1, "cm"),
+                   plot.background = element_rect(fill = "gray80", color = "black", size = 1, linetype = "solid"),
+                   panel.background = element_rect(fill = "gray90", color = "black", size = 0.5, linetype = "solid"),
+                   panel.border = element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),
+                   panel.grid.major.x = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.major.y = element_line(color = "black", linetype = "dotted"),
+                   panel.grid.minor.x = element_line(linetype = "blank"),
+                   panel.grid.minor.y = element_line(linetype = "blank"),
+                   plot.caption = element_text(size = text_size, color = "black", face = "bold", hjust = 1),
+                   strip.background = element_rect(color = "black", fill = "gray80", size = 0.5, linetype = "solid"),
+                   strip.text = element_text(size = text_size, face = "bold"),
+                   legend.box.background = ggplot2::element_rect(color = "black", size = 0.5, linetype = "solid"),
+                   legend.background = ggplot2::element_rect(fill = "gray90", size = 0.5, linetype = "solid", color = "black"),
+                   legend.position = "none",
+                   legend.box.spacing = ggplot2::unit(0.25, "cm"),
+                   legend.text = ggplot2::element_text(size = text_size, color = "black", face = "plain"),
+                   legend.title = ggplot2::element_text(size = text_size, color = "black", face = "bold"))
+  
+  plot <- gridExtra::grid.arrange(plot_1, plot_2, nrow = 2, ncol = 1)
+  
+  if (save_plot == TRUE){
+    filename <- base::paste(datetime, type_info, "UMAP_Dimensionality_Reduction.png", sep = "_")
+    ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
+    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
+  
+  base::print(plot)
+}
 
 
