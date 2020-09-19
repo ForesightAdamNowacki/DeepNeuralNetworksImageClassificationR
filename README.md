@@ -112,7 +112,7 @@ utils::install.packages("tensorflow")
 utils::install.packages("keras")
 base::library(tensorflow)
 base::library(keras)
-keras::install_keras(tensorflow = "gpu")
+keras::install_keras(tensorflow = "2.0.0-gpu")
 ```
 
 ## 2. Environment for TensorFlow 1.15:
