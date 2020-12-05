@@ -2,18 +2,18 @@
 # REQUIREMENTS
 # ------------------------------------------------------------------------------
 # Libraries installation:
-utils::install.packages("tensorflow")
-utils::install.packages("keras")
-utils::install.packages("tidyverse")
-utils::install.packages("deepviz")
-utils::install.packages("magick")
-utils::install.packages("doSNOW")
-utils::install.packages("Metrics")
-utils::install.packages("tibble")
-utils::install.packages("gridExtra")
-utils::install.packages("gt")
-utils::install.packages("webshot")
-utils::install.packages("stringr")
+install.packages("tensorflow")
+install.packages("keras")
+install.packages("tidyverse")
+install.packages("deepviz")
+install.packages("magick")
+install.packages("doSNOW")
+install.packages("Metrics")
+install.packages("tibble")
+install.packages("gridExtra")
+install.packages("gt")
+install.packages("webshot")
+install.packages("stringr")
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

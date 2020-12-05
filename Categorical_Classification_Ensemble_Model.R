@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model:
@@ -13,26 +13,26 @@ model_type <- "Categorical"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
+setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'model_name' folder in cwd:
-if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, sep = "/"))}
 # 3. Create 'model_type' subfolder in 'model_name' main folder:
-if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, model_type, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-base::library(tensorflow)
-base::library(keras)
-base::library(tidyverse)
-base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
+library(tensorflow)
+library(keras)
+library(tidyverse)
+library(deepviz)
+source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cifar10/train"
 validation_dir <- "D:/GitHub/Datasets/Cifar10/validation"
 test_dir <- "D:/GitHub/Datasets/Cifar10/test"
-models_store_dir <- base::paste(base::getwd(), model_name, model_type, sep = "/")
+models_store_dir <- paste(getwd(), model_name, model_type, sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 
 train_files <- Count_Files(path = train_dir); train_files
@@ -40,14 +40,14 @@ validation_files <- Count_Files(path = validation_dir); validation_files
 test_files <- Count_Files(path = test_dir); test_files
 
 # ------------------------------------------------------------------------------
-models_vector <- base::c("Xception", "Inception_V3", "Inception_ResNet_V2")
-labels <- base::as.character(train_files$category)
+models_vector <- c("Xception", "MobileNet_V2", "Inception_ResNet_V2")
+labels <- as.character(train_files$category)
 
 # Build ensembel model with weights and cutoff optimization on train dataset:
 ensemble_1 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "train",
-                                         save_option = FALSE,
+                                         save_option = TRUE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -63,7 +63,7 @@ ensemble_1 <- Categorical_Ensemble_Model(models_vector = models_vector,
 ensemble_2 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "validation",
-                                         save_option = FALSE,
+                                         save_option = TRUE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -79,7 +79,7 @@ ensemble_2 <- Categorical_Ensemble_Model(models_vector = models_vector,
 ensemble_3 <- Categorical_Ensemble_Model(models_vector = models_vector,
                                          labels = labels,
                                          optimization_dataset = "train+validation",
-                                         save_option = FALSE,
+                                         save_option = TRUE,
                                          weights = 50,
                                          key_metric = "Accuracy", 
                                          key_metric_as_string = TRUE,
@@ -116,22 +116,22 @@ ensemble_1$test_dataset_results %>%
 
 # ------------------------------------------------------------------------------
 # Partial models weights:
-base::list(ensemble_1 = ensemble_1$optimal_weights,
+list(ensemble_1 = ensemble_1$optimal_weights,
            ensemble_2 = ensemble_2$optimal_weights,
            ensemble_3 = ensemble_3$optimal_weights)
 
-base::list(ensemble_1 = ensemble_1$optimal_weights,
+list(ensemble_1 = ensemble_1$optimal_weights,
            ensemble_2 = ensemble_2$optimal_weights,
            ensemble_3 = ensemble_3$optimal_weights) %>%
-  base::lapply(., base::cbind) %>%
-  base::do.call(base::cbind, .) %>%
+  lapply(., cbind) %>%
+  do.call(cbind, .) %>%
   tibble::as_tibble() %>%
   dplyr::mutate(Partial_Model = models_vector) %>%
   tidyr::pivot_longer(cols = dplyr::starts_with("V"),
                       names_to = "Ensemble_Model",
                       values_to = "Weights") %>%
   dplyr::mutate(Ensemble_Model = stringr::str_replace(Ensemble_Model, "V", "Ensemble_Model_"),
-                Partial_Model = base::factor(Partial_Model, levels = models_vector, labels = models_vector, ordered = TRUE)) %>%
+                Partial_Model = factor(Partial_Model, levels = models_vector, labels = models_vector, ordered = TRUE)) %>%
   ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = Partial_Model, y = Weights, fill = Ensemble_Model)) +
   ggplot2::geom_bar(stat = "identity", color = "black", position = ggplot2::position_dodge()) +
   ggplot2::theme(plot.title = ggplot2::element_text(size = 9, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
@@ -197,47 +197,47 @@ Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Cate
 
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
-save_plot <- FALSE
+save_plot <- TRUE
 
-train_probabilities <- base::as.matrix(ensemble_3$train_ensemble_model_prediction)
+train_probabilities <- as.matrix(ensemble_3$train_ensemble_model_prediction)
 train_classes <- ensemble_3$train_actual_class
-train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_classes), byrow = FALSE, ncol = 2)]
+train_predicted_2 <- train_probabilities[matrix(data = c(1:nrow(train_probabilities), train_classes), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = train_classes,
                                               predicted = train_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "train", sep = "_"),
+                                              type_info = paste(model_name, "train", sep = "_"),
                                               save_plot = save_plot)
 
-validation_probabilities <- base::as.matrix(ensemble_3$validation_ensemble_model_prediction)
+validation_probabilities <- as.matrix(ensemble_3$validation_ensemble_model_prediction)
 validation_classes <- ensemble_3$validation_actual_class
-validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_classes), byrow = FALSE, ncol = 2)]
+validation_predicted_2 <- validation_probabilities[matrix(data = c(1:nrow(validation_probabilities), validation_classes), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = validation_classes,
                                               predicted = validation_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "validation", sep = "_"),
+                                              type_info = paste(model_name, "validation", sep = "_"),
                                               save_plot = save_plot)
 
-test_probabilities <- base::as.matrix(ensemble_3$test_ensemble_model_prediction)
+test_probabilities <- as.matrix(ensemble_3$test_ensemble_model_prediction)
 test_classes <- ensemble_3$test_actual_class
-test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_classes), byrow = FALSE, ncol = 2)]
+test_predicted_2 <- test_probabilities[matrix(data = c(1:nrow(test_probabilities), test_classes), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = test_classes,
                                               predicted = test_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "test", sep = "_"),
+                                              type_info = paste(model_name, "test", sep = "_"),
                                               save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
 # Plot predictions distribution in division to all classes:
-save_plot <- FALSE
+save_plot <- TRUE
 
 Display_All_Classes_Predictions_Distribution(actual = train_classes,
                                              predicted = train_probabilities,
                                              labels = labels,
                                              bins = 4,
-                                             type_info = base::paste(model_name, "train", sep = "_"),
+                                             type_info = paste(model_name, "train", sep = "_"),
                                              save_plot = save_plot,
                                              plot_size = 30)
 
@@ -245,7 +245,7 @@ Display_All_Classes_Predictions_Distribution(actual = validation_classes,
                                              predicted = validation_probabilities,
                                              labels = labels,
                                              bins = 4,
-                                             type_info = base::paste(model_name, "validation", sep = "_"),
+                                             type_info = paste(model_name, "validation", sep = "_"),
                                              save_plot = save_plot,
                                              plot_size = 30)
 
@@ -253,7 +253,7 @@ Display_All_Classes_Predictions_Distribution(actual = test_classes,
                                              predicted = test_probabilities,
                                              labels = labels,
                                              bins = 4,
-                                             type_info = base::paste(model_name, "test", sep = "_"),
+                                             type_info = paste(model_name, "test", sep = "_"),
                                              save_plot = save_plot,
                                              plot_size = 30)
 

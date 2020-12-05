@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model:
@@ -13,30 +13,30 @@ model_type <- "Binary"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
+setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'model_name' folder in cwd:
-if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, sep = "/"))}
 # 3. Create 'model_type' subfolder in 'model_name' main folder:
-if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, model_type, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-base::library(tensorflow)
-base::library(keras)
-base::library(tidyverse)
-base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
+library(tensorflow)
+library(keras)
+library(tidyverse)
+library(deepviz)
+source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
-models_store_dir <- base::paste(base::getwd(), model_name, model_type, sep = "/")
+models_store_dir <- paste(getwd(), model_name, model_type, sep = "/")
 models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
-callback_model_checkpoint_path <- base::paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
-callback_tensorboard_path <- base::paste(models_store_dir, "logs", sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "model_optimization_logger.csv", sep = "_"), sep = "/")
+callback_model_checkpoint_path <- paste(models_store_dir, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "/")
+callback_tensorboard_path <- paste(models_store_dir, "logs", sep = "/")
+callback_csv_logger_path <- paste(models_store_dir, paste(stringr::str_replace_all(Sys.time(), ":", "-"), model_name, "model_optimization_logger.csv", sep = "_"), sep = "/")
 
 train_files <- Count_Files(path = train_dir); train_files
 validation_files <- Count_Files(path = validation_dir); validation_files
@@ -62,7 +62,7 @@ dropout_rate <- 0.5
 # Model compilation:
 loss <- "categorical_crossentropy"
 optimizer <- keras::optimizer_adam()
-metrics <- base::c("acc")
+metrics <- c("acc")
 
 # Training:
 batch_size <- 64
@@ -84,32 +84,32 @@ min_delta <- 0
 
 # ------------------------------------------------------------------------------
 # CNN model architecture:
-input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
+input_tensor <- keras::layer_input(shape = c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
   
-  keras::layer_conv_2d(filters = 64, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_conv_2d(filters = 64, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_max_pooling_2d(pool_size = base::c(2, 2), strides = base::c(2, 2), padding = "valid") %>%
+  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
   
-  keras::layer_conv_2d(filters = 128, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_conv_2d(filters = 128, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_max_pooling_2d(pool_size = base::c(2, 2), strides = base::c(2, 2), padding = "valid") %>%
+  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
   
-  keras::layer_conv_2d(filters = 256, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 256, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_conv_2d(filters = 256, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = 256, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_max_pooling_2d(pool_size = base::c(2, 2), strides = base::c(2, 2), padding = "valid") %>%
+  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
   
   keras::layer_flatten() %>%
   
@@ -123,19 +123,19 @@ output_tensor <- input_tensor %>%
   keras::layer_activation(activation = activation_1) %>%
   keras::layer_dropout(rate = dropout_rate) %>%
   
-  keras::layer_dense(units = base::length(base::levels(train_files$category)), activation = activation_3)
+  keras::layer_dense(units = length(levels(train_files$category)), activation = activation_3)
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
 # ------------------------------------------------------------------------------
 # Upload pre-trained model for training:
-# last_model <- base::list.files(path = models_store_dir, pattern = ".hdf5")[base::length(base::list.files(path = models_store_dir, pattern = ".hdf5"))]
+# last_model <- list.files(path = models_store_dir, pattern = ".hdf5")[length(list.files(path = models_store_dir, pattern = ".hdf5"))]
 # model <- keras::load_model_hdf5(filepath = paste(models_store_dir, last_model, sep = "/"), compile = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
-model %>% base::summary()
+model %>% summary()
 
 # ------------------------------------------------------------------------------
 # Model compilation:
@@ -154,7 +154,7 @@ train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
                                              rotation_range = 0,
                                              width_shift_range = 0,
                                              height_shift_range = 0,
-                                             brightness_range = base::c(1, 1),
+                                             brightness_range = c(1, 1),
                                              shear_range = 0,
                                              zoom_range = 0,
                                              channel_shift_range = 0,
@@ -168,24 +168,24 @@ train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
                                              validation_split = 0)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
-                                                     target_size = base::c(image_size, image_size),
+                                                     target_size = c(image_size, image_size),
                                                      batch_size = batch_size,
                                                      class_mode = class_mode,
-                                                     classes = base::levels(validation_files$category),
+                                                     classes = levels(validation_files$category),
                                                      shuffle = shuffle)
 
 validation_datagen <- keras::image_data_generator(rescale = 1/255) 
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
-                                                          target_size = base::c(image_size, image_size),
+                                                          target_size = c(image_size, image_size),
                                                           batch_size = batch_size,
                                                           class_mode = class_mode,
-                                                          classes = base::levels(validation_files$category),
+                                                          classes = levels(validation_files$category),
                                                           shuffle = shuffle)
 
 # ------------------------------------------------------------------------------
 # Tensorboard:
-base::dir.create(path = callback_tensorboard_path)
+dir.create(path = callback_tensorboard_path)
 # keras::tensorboard(log_dir = callback_tensorboard_path, host = "127.0.0.1")
 # If 'ERROR: invalid version specification':
 # 1. Anaconda Prompt
@@ -199,11 +199,11 @@ base::dir.create(path = callback_tensorboard_path)
 # ------------------------------------------------------------------------------
 # Model optimization:
 history <- model %>% keras::fit_generator(generator = train_generator,
-                                          steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size),
+                                          steps_per_epoch = ceiling(train_generator$n/train_generator$batch_size),
                                           epochs = epochs,
                                           validation_data = validation_generator,
-                                          validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size),
-                                          callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                          validation_steps = ceiling(validation_generator$n/validation_generator$batch_size),
+                                          callbacks = list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                   monitor = monitor,
                                                                                                   verbose = verbose,
                                                                                                   save_best_only = save_best_only),
@@ -227,36 +227,36 @@ history <- model %>% keras::fit_generator(generator = train_generator,
 history$metrics %>%
   tibble::as_tibble() %>%
   dplyr::mutate(epoch = dplyr::row_number()) %>%
-  base::as.data.frame() %>%
+  as.data.frame() %>%
   knitr::kable(.)
 
 # ------------------------------------------------------------------------------
 # Remove not optimal models:
-base::setwd(models_store_dir)
-saved_models <- base::sort(base::list.files(pattern = ".hdf5"))
+setwd(models_store_dir)
+saved_models <- sort(list.files(pattern = ".hdf5"))
 if (length(saved_models) > 1){
-  for (j in 1:(base::length(saved_models) - 1)){
-    base::cat("Remove .hdf5 file:", saved_models[j], "\n")
-    base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
+  for (j in 1:(length(saved_models) - 1)){
+    cat("Remove .hdf5 file:", saved_models[j], "\n")
+    unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
 
 # ------------------------------------------------------------------------------
 # Remove logs folder:
-logs_folder <- base::paste(base::getwd(), base::list.files(pattern = "logs"), sep = "/")
-base::unlink(logs_folder, force = TRUE, recursive = TRUE)
+logs_folder <- paste(getwd(), list.files(pattern = "logs"), sep = "/")
+unlink(logs_folder, force = TRUE, recursive = TRUE)
 
 # ------------------------------------------------------------------------------
 # Save optimal model in local models repository: 
-optimal_model <- base::paste(base::getwd(), base::list.files(pattern = ".hdf5"), sep = "/")
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
-base::file.copy(from = optimal_model,
+optimal_model <- paste(getwd(), list.files(pattern = ".hdf5"), sep = "/")
+optimal_model_repo_dir <- paste(models_repo_store_dir, paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
+file.copy(from = optimal_model,
                 to = optimal_model_repo_dir, 
-                overwrite = TRUE); base::cat("Optimal model directory:", optimal_model_repo_dir, "\n")
-base::unlink(optimal_model, recursive = TRUE, force = TRUE)
+                overwrite = TRUE); cat("Optimal model directory:", optimal_model_repo_dir, "\n")
+unlink(optimal_model, recursive = TRUE, force = TRUE)
 
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
+optimal_model_repo_dir <- paste(models_repo_store_dir, paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
 model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
@@ -265,60 +265,60 @@ model %>% keras::compile(loss = loss,
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
-model %>% base::summary()
+model %>% summary()
 
 # ------------------------------------------------------------------------------
 # Model predictions using generators:
 train_datagen <- keras::image_data_generator(rescale = 1/255)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
-                                                     target_size = base::c(image_size, image_size),
+                                                     target_size = c(image_size, image_size),
                                                      batch_size = batch_size,
                                                      class_mode = class_mode,
-                                                     classes = base::levels(validation_files$category),
+                                                     classes = levels(validation_files$category),
                                                      shuffle = FALSE)
 
 validation_datagen <- keras::image_data_generator(rescale = 1/255)
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
-                                                          target_size = base::c(image_size, image_size),
+                                                          target_size = c(image_size, image_size),
                                                           batch_size = batch_size,
                                                           class_mode = class_mode,
-                                                          classes = base::levels(validation_files$category),
+                                                          classes = levels(validation_files$category),
                                                           shuffle = FALSE)
 
 test_datagen <- keras::image_data_generator(rescale = 1/255)
 test_generator <- keras::flow_images_from_directory(directory = test_dir,
                                                     generator = test_datagen,
-                                                    target_size = base::c(image_size, image_size),
+                                                    target_size = c(image_size, image_size),
                                                     batch_size = batch_size,
                                                     class_mode = class_mode,
                                                     shuffle = FALSE)
 
-train_evaluation <- keras::evaluate_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size)); train_evaluation
-validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size)); validation_evaluation
-test_evaluation <- keras::evaluate_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size)); test_evaluation 
+train_evaluation <- keras::evaluate_generator(model, train_generator, steps = ceiling(train_generator$n/train_generator$batch_size)); train_evaluation
+validation_evaluation <- keras::evaluate_generator(model, validation_generator, steps = ceiling(validation_generator$n/validation_generator$batch_size)); validation_evaluation
+test_evaluation <- keras::evaluate_generator(model, test_generator, steps = ceiling(test_generator$n/test_generator$batch_size)); test_evaluation 
 
-train_probabilities <- keras::predict_generator(model, train_generator, steps = base::ceiling(train_generator$n/train_generator$batch_size), verbose = 1)
-validation_probabilities <- keras::predict_generator(model, validation_generator, steps = base::ceiling(validation_generator$n/validation_generator$batch_size), verbose = 1)
-test_probabilities <- keras::predict_generator(model, test_generator, steps = base::ceiling(test_generator$n/test_generator$batch_size), verbose = 1)
+train_probabilities <- keras::predict_generator(model, train_generator, steps = ceiling(train_generator$n/train_generator$batch_size), verbose = 1)
+validation_probabilities <- keras::predict_generator(model, validation_generator, steps = ceiling(validation_generator$n/validation_generator$batch_size), verbose = 1)
+test_probabilities <- keras::predict_generator(model, test_generator, steps = ceiling(test_generator$n/test_generator$batch_size), verbose = 1)
 
-base::setwd(models_store_dir)
+setwd(models_store_dir)
 readr::write_csv2(tibble::as_tibble(train_probabilities) %>%
                     dplyr::mutate(filepath = train_generator$filepaths,
                                   actual_class = train_generator$classes,
                                   model = model_name),
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "train_binary_probabilities.csv", sep = "_"))
+                  paste(stringr::str_replace_all(Sys.time(), ":", "-"), model_name, "train_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(validation_probabilities) %>%
                     dplyr::mutate(filepath = validation_generator$filepaths,
                                   actual_class = validation_generator$classes,
                                   model = model_name),
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "validation_binary_probabilities.csv", sep = "_"))
+                  paste(stringr::str_replace_all(Sys.time(), ":", "-"), model_name, "validation_binary_probabilities.csv", sep = "_"))
 readr::write_csv2(tibble::as_tibble(test_probabilities) %>%
                     dplyr::mutate(filepath = test_generator$filepaths,
                                   actual_class = test_generator$classes,
                                   model = model_name), 
-                  base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), model_name, "test_binary_probabilities.csv", sep = "_"))
+                  paste(stringr::str_replace_all(Sys.time(), ":", "-"), model_name, "test_binary_probabilities.csv", sep = "_"))
 
 # ------------------------------------------------------------------------------
 # Model verification - default cutoff:
@@ -328,21 +328,21 @@ save_option <- TRUE
 train_verification_1 <- Binary_Classifier_Verification(actual = train_generator$classes,
                                                        predicted = train_probabilities[,2],
                                                        cutoff = default_cutoff,
-                                                       type_info = base::paste(model_name, "default_cutoff", "train", sep = "_"),
+                                                       type_info = paste(model_name, "default_cutoff", "train", sep = "_"),
                                                        save = save_option,
                                                        open = FALSE)
 
 validation_verification_1 <- Binary_Classifier_Verification(actual = validation_generator$classes,
                                                             predicted = validation_probabilities[,2],
                                                             cutoff = default_cutoff,
-                                                            type_info = base::paste(model_name, "default_cutoff", "validation", sep = "_"),
+                                                            type_info = paste(model_name, "default_cutoff", "validation", sep = "_"),
                                                             save = save_option,
                                                             open = FALSE)
 
 test_verification_1 <- Binary_Classifier_Verification(actual = test_generator$classes,
                                                       predicted = test_probabilities[,2],
                                                       cutoff = default_cutoff,
-                                                      type_info = base::paste(model_name, "default_cutoff", "test", sep = "_"),
+                                                      type_info = paste(model_name, "default_cutoff", "test", sep = "_"),
                                                       save = save_option,
                                                       open = FALSE)
 
@@ -354,21 +354,21 @@ final_score_1 <- train_verification_1$Assessment_of_Classifier_Effectiveness %>%
                 Cutoff = default_cutoff) %>%
   knitr::kable(.); final_score_1
 
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
 train_verification_1$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_1$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_default_cutoff.csv", sep = "_"), sep = "/"))
+  readr::write_csv2(path = paste(models_store_dir, paste(datetime, model_name, "binary_classification_summary_default_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Model verification - cutoff optimization:
 save_option <- TRUE
 train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = train_generator$classes,
                                                                    predicted = train_probabilities[,2],
-                                                                   type_info = base::paste(model_name, "train", sep = "_"),
+                                                                   type_info = paste(model_name, "train", sep = "_"),
                                                                    seed_value = 42,
                                                                    top = 10,
                                                                    cuts = 100,
@@ -379,11 +379,11 @@ train_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = trai
 train_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
-  base::mean() -> train_optimal_cutoff; train_optimal_cutoff
+  mean() -> train_optimal_cutoff; train_optimal_cutoff
 
 validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = validation_generator$classes,
                                                                         predicted = validation_probabilities[,2],
-                                                                        type_info = base::paste(model_name, "validation", sep = "_"),
+                                                                        type_info = paste(model_name, "validation", sep = "_"),
                                                                         seed_value = 42,
                                                                         top = 10,
                                                                         cuts = 100,
@@ -394,11 +394,11 @@ validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual =
 validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
-  base::mean() -> validation_optimal_cutoff; validation_optimal_cutoff
+  mean() -> validation_optimal_cutoff; validation_optimal_cutoff
 
-train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = base::c(train_generator$classes, validation_generator$classes),
-                                                                              predicted = base::c(train_probabilities[,2], validation_probabilities[,2]),
-                                                                              type_info = base::paste(model_name, "train", "validation", sep = "_"),
+train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(actual = c(train_generator$classes, validation_generator$classes),
+                                                                              predicted = c(train_probabilities[,2], validation_probabilities[,2]),
+                                                                              type_info = paste(model_name, "train", "validation", sep = "_"),
                                                                               seed_value = 42,
                                                                               top = 10,
                                                                               cuts = 100,
@@ -410,7 +410,7 @@ train_validation_cutoff_optimization <- Binary_Classifier_Cutoff_Optimization(ac
 train_validation_cutoff_optimization$top_cutoffs %>%
   dplyr::select(CUTOFF) %>%
   dplyr::pull() %>%
-  base::mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff
+  mean() -> train_validation_optimal_cutoff; train_validation_optimal_cutoff
 
 # Select cutoff:
 # * train_optimal_cutoff
@@ -422,21 +422,21 @@ save_option <- TRUE
 train_verification_2 <- Binary_Classifier_Verification(actual = train_generator$classes,
                                                        predicted = train_probabilities[,2],
                                                        cutoff = selected_cutoff,
-                                                       type_info = base::paste(model_name, "optimized_cutoff", "train", sep = "_"),
+                                                       type_info = paste(model_name, "optimized_cutoff", "train", sep = "_"),
                                                        save = save_option,
                                                        open = FALSE)
 
 validation_verification_2 <- Binary_Classifier_Verification(actual = validation_generator$classes,
                                                             predicted = validation_probabilities[,2],
                                                             cutoff = selected_cutoff,
-                                                            type_info = base::paste(model_name, "optimized_cutoff", "validation", sep = "_"),
+                                                            type_info = paste(model_name, "optimized_cutoff", "validation", sep = "_"),
                                                             save = save_option,
                                                             open = FALSE)
 
 test_verification_2 <- Binary_Classifier_Verification(actual = test_generator$classes,
                                                       predicted = test_probabilities[,2],
                                                       cutoff = selected_cutoff,
-                                                      type_info = base::paste(model_name, "optimized_cutoff", "test", sep = "_"),
+                                                      type_info = paste(model_name, "optimized_cutoff", "test", sep = "_"),
                                                       save = save_option,
                                                       open = FALSE)
 
@@ -448,14 +448,14 @@ final_score_2 <- train_verification_2$Assessment_of_Classifier_Effectiveness %>%
                 Cutoff = selected_cutoff) %>%
   knitr::kable(.); final_score_2
 
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
 train_verification_2$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_train = Score) %>%
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_optimized_cutoff.csv", sep = "_"), sep = "/"))
+  readr::write_csv2(path = paste(models_store_dir, paste(datetime, model_name, "binary_classification_summary_optimized_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Final summary - cutoff summary comparison:
@@ -471,7 +471,7 @@ final_score_2_summary <- train_verification_2$Assessment_of_Classifier_Effective
   dplyr::mutate(Score_validation = validation_verification_2$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification_2$Assessment_of_Classifier_Effectiveness$Score); final_score_2_summary
 
-`%!in%` = base::Negate(`%in%`)
+`%!in%` = Negate(`%in%`)
 
 final_score_1_summary %>%
   dplyr::left_join(final_score_2_summary, by = "Metric") %>%
@@ -487,7 +487,7 @@ final_score_1_summary %>%
                 Cutoff = selected_cutoff) %>%
   knitr::kable(.)
 
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
 final_score_1_summary %>%
   dplyr::left_join(final_score_2_summary, by = "Metric") %>%
   dplyr::rename(Train_default = Score_train.x,
@@ -500,16 +500,16 @@ final_score_1_summary %>%
                 Validation_diff = Validation_optimized - Validation_default,
                 Test_diff = Test_optimized - Test_default,
                 Cutoff = selected_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_cutoff_summary_comparison.csv", sep = "_"), sep = "/"))
+  readr::write_csv2(path = paste(models_store_dir, paste(datetime, model_name, "binary_classification_cutoff_summary_comparison.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Predict indicated image:
-labels <- base::sort(base::as.character(train_files$category)); labels
+labels <- sort(as.character(train_files$category)); labels
 set <- "train"
 category <- "dogs"  
 id <- 1
 
-Predict_Image(image_path = base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, base::list.files(base::paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, sep = "/")), sep = "/")[id],
+Predict_Image(image_path = paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, list.files(paste("D:/GitHub/Datasets/Cats_And_Dogs", set, category, sep = "/")), sep = "/")[id],
               model = model,
               classes = labels,
               plot_image = TRUE)
@@ -556,30 +556,30 @@ Test_Correct_Incorrect_Binary_Classifications <- Organize_Correct_Incorrect_Bina
 # ------------------------------------------------------------------------------
 # Visualize predictions distribution:
 save_plot <- TRUE
-labels <- base::sort(base::as.character(train_files$category)); labels
+labels <- sort(as.character(train_files$category)); labels
 
-train_predicted_2 <- train_probabilities[base::matrix(data = base::c(1:base::nrow(train_probabilities), train_generator$classes + 1), byrow = FALSE, ncol = 2)]
+train_predicted_2 <- train_probabilities[matrix(data = c(1:nrow(train_probabilities), train_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = train_generator$classes,
                                               predicted = train_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "train", sep = "_"),
+                                              type_info = paste(model_name, "train", sep = "_"),
                                               save_plot = save_plot)
 
-validation_predicted_2 <- validation_probabilities[base::matrix(data = base::c(1:base::nrow(validation_probabilities), validation_generator$classes + 1), byrow = FALSE, ncol = 2)]
+validation_predicted_2 <- validation_probabilities[matrix(data = c(1:nrow(validation_probabilities), validation_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = validation_generator$classes,
                                               predicted = validation_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "validation", sep = "_"),
+                                              type_info = paste(model_name, "validation", sep = "_"),
                                               save_plot = save_plot)
 
-test_predicted_2 <- test_probabilities[base::matrix(data = base::c(1:base::nrow(test_probabilities), test_generator$classes + 1), byrow = FALSE, ncol = 2)]
+test_predicted_2 <- test_probabilities[matrix(data = c(1:nrow(test_probabilities), test_generator$classes + 1), byrow = FALSE, ncol = 2)]
 Display_Target_Class_Predictions_Distribution(actual = test_generator$classes,
                                               predicted = test_predicted_2,
                                               labels = labels,
                                               bins = 10,
-                                              type_info = base::paste(model_name, "test", sep = "_"),
+                                              type_info = paste(model_name, "test", sep = "_"),
                                               save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
@@ -590,21 +590,21 @@ Display_All_Classes_Predictions_Distribution(actual = train_generator$classes + 
                                              predicted = train_probabilities,
                                              labels = labels,
                                              bins = 10,
-                                             type_info = base::paste(model_name, "train", sep = "_"),
+                                             type_info = paste(model_name, "train", sep = "_"),
                                              save_plot = save_plot)
 
 Display_All_Classes_Predictions_Distribution(actual = validation_generator$classes + 1,
                                              predicted = validation_probabilities,
                                              labels = labels,
                                              bins = 10,
-                                             type_info = base::paste(model_name, "validation", sep = "_"),
+                                             type_info = paste(model_name, "validation", sep = "_"),
                                              save_plot = save_plot)
 
 Display_All_Classes_Predictions_Distribution(actual = test_generator$classes + 1,
                                              predicted = test_probabilities,
                                              labels = labels,
                                              bins = 10,
-                                             type_info = base::paste(model_name, "test", sep = "_"),
+                                             type_info = paste(model_name, "test", sep = "_"),
                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model name:
@@ -12,18 +12,18 @@ model_name <- "Visualisation_Convolutional_Activations"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
+setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'VGG16' folder in cwd
-base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))
+dir.create(path = paste(getwd(), model_name, sep = "/"))
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-base::library(tensorflow)
-base::library(keras)
-base::library(tidyverse)
-base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
+library(tensorflow)
+library(keras)
+library(tidyverse)
+library(deepviz)
+source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # ------------------------------------------------------------------------------
 # Clear session:
@@ -43,12 +43,12 @@ include_top <- TRUE
 # VGG16 model architecture:
 model <- keras::application_vgg16(include_top = include_top,
                                   weights = weights,
-                                  input_shape = base::c(image_size, image_size, channels))
+                                  input_shape = c(image_size, image_size, channels))
 
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
-model %>% base::summary()
+model %>% summary()
 
 # ------------------------------------------------------------------------------
 # Function Implementation for Visualisation Convolutional 2D Layers Activations:
@@ -57,40 +57,40 @@ Convolutional_2D_Layers_Activations <- function(model,
                                                 layer_id,
                                                 save_plot = FALSE){
   
-  img <- keras::image_load(image_path, target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]))
+  img <- keras::image_load(image_path, target_size = c(model$input_shape[[2]], model$input_shape[[2]]))
   img_tensor <- keras::image_to_array(img)
-  img_tensor <- keras::array_reshape(img_tensor, base::c(1, model$input_shape[[2]], model$input_shape[[2]], 3))
+  img_tensor <- keras::array_reshape(img_tensor, c(1, model$input_shape[[2]], model$input_shape[[2]], 3))
   img_tensor <- img_tensor/255
   
-  layer_outputs <- base::lapply(model$layers[base::grepl('convolutional', base::sapply(model$layers, base::paste))], function(layer) layer$output)
+  layer_outputs <- lapply(model$layers[grepl('convolutional', sapply(model$layers, paste))], function(layer) layer$output)
   activation_model <- keras::keras_model(inputs = model$input, outputs = layer_outputs)
   
   activations <- stats::predict(activation_model, img_tensor)
   layer_activation <- activations[[layer_id]]
   
   plot_channel <- function(channel){
-    rotate <- function(x) base::t(base::apply(x, 2, rev))
+    rotate <- function(x) t(apply(x, 2, rev))
     graphics::image(rotate(channel), axes = FALSE, asp = 1, col = grDevices::gray.colors(n = 12))}
   
   if(save_plot == TRUE){
-    file_name <- base::paste(base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), "Convolutional_2D_Layer_Visualisation", layer_id, sep = "_"), "png", sep = ".")
-    file_path <- base::paste(base::getwd(), model_name, file_name, sep = "/")
+    file_name <- paste(paste(stringr::str_replace_all(Sys.time(), ":", "-"), "Convolutional_2D_Layer_Visualisation", layer_id, sep = "_"), "png", sep = ".")
+    file_path <- paste(getwd(), model_name, file_name, sep = "/")
     grDevices::png(file_path, width = 1000, height = 1000)
-    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(base::dim(layer_activation)[4])),
-                                  base::ceiling(base::sqrt(base::dim(layer_activation)[4]))))
-    graphics::par(mar = base::rep(0.1, 4))
-    pb = utils::txtProgressBar(min = 0, max = base::dim(layer_activation)[4], initial = 0, style = 3)
-    for (i in 1:base::dim(layer_activation)[4]){
+    graphics::par(mfrow = c(ceiling(sqrt(dim(layer_activation)[4])),
+                                  ceiling(sqrt(dim(layer_activation)[4]))))
+    graphics::par(mar = rep(0.1, 4))
+    pb = utils::txtProgressBar(min = 0, max = dim(layer_activation)[4], initial = 0, style = 3)
+    for (i in 1:dim(layer_activation)[4]){
       plot_channel(layer_activation[1,,,i])
       utils::setTxtProgressBar(pb,i)}
     grDevices::dev.off()
-    base::cat("\n", "Plot saved:", file_path, "\n")
+    cat("\n", "Plot saved:", file_path, "\n")
   } else {
-    graphics::par(mfrow = base::c(base::ceiling(base::sqrt(base::dim(layer_activation)[4])), 
-                                  base::ceiling(base::sqrt(base::dim(layer_activation)[4]))))
-    graphics::par(mar = base::rep(0.1, 4))
-    pb = utils::txtProgressBar(min = 0, max = base::dim(layer_activation)[4], initial = 0, style = 3)
-    for (i in 1:base::dim(layer_activation)[4]){
+    graphics::par(mfrow = c(ceiling(sqrt(dim(layer_activation)[4])), 
+                                  ceiling(sqrt(dim(layer_activation)[4]))))
+    graphics::par(mar = rep(0.1, 4))
+    pb = utils::txtProgressBar(min = 0, max = dim(layer_activation)[4], initial = 0, style = 3)
+    for (i in 1:dim(layer_activation)[4]){
       plot_channel(layer_activation[1,,,i])
       utils::setTxtProgressBar(pb,i)}
   }
@@ -98,23 +98,23 @@ Convolutional_2D_Layers_Activations <- function(model,
 
 # ------------------------------------------------------------------------------
 # Plot Convolutional Layer Activation for choosen layer:
-Convolutional_Layers <- base::c()
-for (i in 1:base::length(model$layers)){
-  Layer <- model$layers[[i]]$name[base::grepl("conv", model$layers[[i]]$name)]
-  Convolutional_Layers <- base::c(Convolutional_Layers, Layer)}
-for (i in 1:base::length(Convolutional_Layers)){base::cat(i, "Convolutional 2D Layer:", Convolutional_Layers[i], "\n")}
+Convolutional_Layers <- c()
+for (i in 1:length(model$layers)){
+  Layer <- model$layers[[i]]$name[grepl("conv", model$layers[[i]]$name)]
+  Convolutional_Layers <- c(Convolutional_Layers, Layer)}
+for (i in 1:length(Convolutional_Layers)){cat(i, "Convolutional 2D Layer:", Convolutional_Layers[i], "\n")}
 
-graphics::par(mfrow = base::c(1, 1))
+graphics::par(mfrow = c(1, 1))
 Convolutional_2D_Layers_Activations(model = model,
-                                    image_path = base::paste(base::getwd(), "Data", "Tank_Rosomak.png", sep = "/"),
+                                    image_path = paste(getwd(), "Data", "Tank_Rosomak.png", sep = "/"),
                                     layer_id = 1,
                                     save_plot = TRUE)
 
 # ------------------------------------------------------------------------------
 # Plot Convolutional Layer Activations for all layers:
-for (i in 1:base::length(Convolutional_Layers)){
+for (i in 1:length(Convolutional_Layers)){
   Convolutional_2D_Layers_Activations(model = model,
-                                      image_path = base::paste(base::getwd(), "Data", "Tank_Rosomak.png", sep = "/"),
+                                      image_path = paste(getwd(), "Data", "Tank_Rosomak.png", sep = "/"),
                                       layer_id = i,
                                       save_plot = TRUE)}
 

@@ -6,9 +6,9 @@ keras::k_clear_session()
 
 # ------------------------------------------------------------------------------
 # Directories:
-callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste("logs", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
-callback_tensorboard_path <- base::paste(models_store_dir, base::paste("logs", i, sep = "_"), sep = "/")
-callback_csv_logger_path <- base::paste(models_store_dir, base::paste0(base::paste(stringr::str_replace_all(base::Sys.time(), ":", "-"), "logs", i, model_name, hyperparameter_vector, sep = "_"), ".csv"), sep = "/")
+callback_model_checkpoint_path <- paste(models_store_dir, paste("logs", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
+callback_tensorboard_path <- paste(models_store_dir, paste("logs", i, sep = "_"), sep = "/")
+callback_csv_logger_path <- paste(models_store_dir, paste0(paste(stringr::str_replace_all(Sys.time(), ":", "-"), "logs", i, model_name, hyperparameter_vector, sep = "_"), ".csv"), sep = "/")
 
 # ------------------------------------------------------------------------------
 # Setting pipeline parameters values: 
@@ -25,7 +25,7 @@ dropout_rate <- 0.5
 # Model compilation:
 loss <- "categorical_crossentropy"
 optimizer <- keras::optimizer_adam()
-metrics <- base::c("acc")
+metrics <- c("acc")
 
 # Training:
 batch_size <- 128
@@ -51,24 +51,24 @@ keras::k_clear_session()
 
 # ------------------------------------------------------------------------------
 # CNN model architecture:
-input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
+input_tensor <- keras::layer_input(shape = c(image_size, image_size, channels))
 output_tensor <- input_tensor %>%
   
-  keras::layer_conv_2d(filters = filters_1, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = filters_1, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_conv_2d(filters = filters_2, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = filters_2, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_max_pooling_2d(pool_size = base::c(2, 2), strides = base::c(2, 2), padding = "valid") %>%
+  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
   
-  keras::layer_conv_2d(filters = filters_3, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = filters_3, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_conv_2d(filters = filters_4, kernel_size = base::c(3, 3), strides = base::c(1, 1), padding = "same", activation = activation_2) %>%
+  keras::layer_conv_2d(filters = filters_4, kernel_size = c(3, 3), strides = c(1, 1), padding = "same", activation = activation_2) %>%
   keras::layer_batch_normalization() %>%
   keras::layer_activation(activation = activation_1) %>%
-  keras::layer_max_pooling_2d(pool_size = base::c(2, 2), strides = base::c(2, 2), padding = "valid") %>%
+  keras::layer_max_pooling_2d(pool_size = c(2, 2), strides = c(2, 2), padding = "valid") %>%
   
   keras::layer_flatten() %>%
   
@@ -82,7 +82,7 @@ output_tensor <- input_tensor %>%
   keras::layer_activation(activation = activation_1) %>%
   keras::layer_dropout(rate = dropout_rate) %>%
   
-  keras::layer_dense(units = base::length(base::levels(train_files$category)), activation = activation_3)
+  keras::layer_dense(units = length(levels(train_files$category)), activation = activation_3)
 
 model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
 
@@ -103,7 +103,7 @@ train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
                                              rotation_range = 0,
                                              width_shift_range = 0,
                                              height_shift_range = 0,
-                                             brightness_range = base::c(1, 1),
+                                             brightness_range = c(1, 1),
                                              shear_range = 0,
                                              zoom_range = 0,
                                              channel_shift_range = 0,
@@ -117,29 +117,29 @@ train_datagen <- keras::image_data_generator(featurewise_center = FALSE,
                                              validation_split = 0)
 train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                      generator = train_datagen, 
-                                                     target_size = base::c(image_size, image_size),
+                                                     target_size = c(image_size, image_size),
                                                      batch_size = batch_size,
                                                      class_mode = class_mode,
-                                                     classes = base::levels(validation_files$category),
+                                                     classes = levels(validation_files$category),
                                                      shuffle = shuffle)
 
 validation_datagen <- keras::image_data_generator(rescale = 1/255) 
 validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                           generator = validation_datagen,
-                                                          target_size = base::c(image_size, image_size),
+                                                          target_size = c(image_size, image_size),
                                                           batch_size = batch_size,
                                                           class_mode = class_mode,
-                                                          classes = base::levels(validation_files$category),
+                                                          classes = levels(validation_files$category),
                                                           shuffle = shuffle)
 
 # ------------------------------------------------------------------------------
 # Model optimization:
 history_[[i]] <- model %>% keras::fit_generator(generator = train_generator,
-                                                steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size),
+                                                steps_per_epoch = ceiling(train_generator$n/train_generator$batch_size),
                                                 epochs = epochs,
                                                 validation_data = validation_generator,
-                                                validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size),
-                                                callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                                validation_steps = ceiling(validation_generator$n/validation_generator$batch_size),
+                                                callbacks = list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                         monitor = monitor,
                                                                                                         verbose = verbose,
                                                                                                         save_best_only = save_best_only),

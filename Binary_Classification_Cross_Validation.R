@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data:
 # https://www.kaggle.com/c/dogs-vs-cats
-utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model:
@@ -13,30 +13,30 @@ model_type <- "Binary"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
+setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'model_name' folder in cwd:
-if (base::dir.exists(base::paste(base::getwd(), model_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, sep = "/"))}
 # 3. Create 'model_type' subfolder in 'model_name' main folder:
-if (base::dir.exists(base::paste(base::getwd(), model_name, model_type, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), model_name, model_type, sep = "/"))}
+if (dir.exists(paste(getwd(), model_name, model_type, sep = "/")) == FALSE){dir.create(path = paste(getwd(), model_name, model_type, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-base::library(tensorflow)
-base::library(keras)
-base::library(tidyverse)
-base::library(deepviz)
-base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
+library(tensorflow)
+library(keras)
+library(tidyverse)
+library(deepviz)
+source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
 validation_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/validation"
 test_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/test"
 cv_data_dir <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/data"
-models_store_dir <-  base::paste(base::getwd(), model_name, model_type, sep = "/")
-repo_models_store_dir <- base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/")
-base::dir.create(path = base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, sep = "/"))
-base::dir.create(path = base::paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/"))
+models_store_dir <-  paste(getwd(), model_name, model_type, sep = "/")
+repo_models_store_dir <- paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/")
+dir.create(path = paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, sep = "/"))
+dir.create(path = paste("D:/GitHub/DeepNeuralNetworksRepoR_Models_Store", model_name, model_type, sep = "/"))
 folds_directory <- "D:/GitHub/Datasets/Cats_And_Dogs_Small/folds"
 
 # ------------------------------------------------------------------------------
@@ -48,33 +48,33 @@ Create_KFolds_Directories(data_dir = cv_data_dir,
                           seed = 42)
 
 # Display number of observations per class in each fold:
-folds_dirs <- base::paste(folds_directory, base::list.files(path = folds_directory, pattern = "fold"), sep = "/")
-for (i in base::seq_along(folds_dirs)){
-  base::cat(folds_dirs[i]); base::cat("\n")
-  base::print(Count_Files(path = base::paste(folds_dirs[i], sep = "/")))
-  base::cat("\n")}
+folds_dirs <- paste(folds_directory, list.files(path = folds_directory, pattern = "fold"), sep = "/")
+for (i in seq_along(folds_dirs)){
+  cat(folds_dirs[i]); cat("\n")
+  print(Count_Files(path = paste(folds_dirs[i], sep = "/")))
+  cat("\n")}
 
 # Display number of observations per dataset type (train, validation) and class in each step of cross validation:
-steps_dirs <- base::expand.grid(base::paste(folds_directory, base::list.files(folds_directory)[base::grepl("step", base::list.files(folds_directory))], sep = "/"),
-                                base::c("train", "validation")) %>%
-  dplyr::mutate(steps_dirs = base::paste(Var1, Var2, sep = "/")) %>%
+steps_dirs <- expand.grid(paste(folds_directory, list.files(folds_directory)[grepl("step", list.files(folds_directory))], sep = "/"),
+                                c("train", "validation")) %>%
+  dplyr::mutate(steps_dirs = paste(Var1, Var2, sep = "/")) %>%
   dplyr::select(steps_dirs) %>%
   dplyr::pull() %>%
-  base::sort()
-for (i in base::seq_along(steps_dirs)){
-  base::cat(steps_dirs[i]); base::cat("\n")
-  base::print(Count_Files(path = base::paste(steps_dirs[i], sep = "/")))
-  base::cat("\n")}
+  sort()
+for (i in seq_along(steps_dirs)){
+  cat(steps_dirs[i]); cat("\n")
+  print(Count_Files(path = paste(steps_dirs[i], sep = "/")))
+  cat("\n")}
 
 # Count train files:
-train_steps_dirs <- steps_dirs[base::grepl("train", steps_dirs)]
-train_steps_files <- base::list()
+train_steps_dirs <- steps_dirs[grepl("train", steps_dirs)]
+train_steps_files <- list()
 for (i in 1:folds){train_steps_files[[i]] <- Count_Files(path = train_steps_dirs[i])}
 train_steps_files
 
 # Count validation files:
-validation_steps_dirs <- steps_dirs[base::grepl("validation", steps_dirs)]
-validation_steps_files <- base::list()
+validation_steps_dirs <- steps_dirs[grepl("validation", steps_dirs)]
+validation_steps_files <- list()
 for (i in 1:folds){validation_steps_files[[i]] <- Count_Files(path = validation_steps_dirs[i])}
 validation_steps_files
 
@@ -84,7 +84,7 @@ validation_files <- Count_Files(path = validation_dir); validation_files
 test_files <- Count_Files(path = test_dir); test_files
 
 # Set current working directory:
-base::setwd(models_store_dir)
+setwd(models_store_dir)
 
 # ------------------------------------------------------------------------------
 # Clear session:
@@ -94,30 +94,30 @@ keras::k_clear_session()
 # Model architecture:
 build_model <- function(image_size = 150, channels = 3,
                         activation_1 = "linear", activation_2 = "relu", activation_3 = "softmax",
-                        loss = "categorical_crossentropy", optimizer = keras::optimizer_adam(), metrics = base::c("acc")){
+                        loss = "categorical_crossentropy", optimizer = keras::optimizer_adam(), metrics = c("acc")){
   
-  input_tensor <- keras::layer_input(shape = base::c(image_size, image_size, channels))
+  input_tensor <- keras::layer_input(shape = c(image_size, image_size, channels))
   output_tensor <- input_tensor %>%
-    keras::layer_conv_2d(filters = 32, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_conv_2d(filters = 32, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_batch_normalization() %>%
-    keras::layer_conv_2d(filters = 32, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
-    keras::layer_activation(activation = activation_2) %>%
-    keras::layer_batch_normalization() %>%
-    keras::layer_max_pooling_2d(pool_size = 2) %>%
-    
-    keras::layer_conv_2d(filters = 64, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
-    keras::layer_activation(activation = activation_2) %>%
-    keras::layer_batch_normalization() %>%
-    keras::layer_conv_2d(filters = 64, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_conv_2d(filters = 32, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_batch_normalization() %>%
     keras::layer_max_pooling_2d(pool_size = 2) %>%
     
-    keras::layer_conv_2d(filters = 128, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_batch_normalization() %>%
-    keras::layer_conv_2d(filters = 128, kernel_size = base::c(3, 3), strides = base::c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_conv_2d(filters = 64, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_activation(activation = activation_2) %>%
+    keras::layer_batch_normalization() %>%
+    keras::layer_max_pooling_2d(pool_size = 2) %>%
+    
+    keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
+    keras::layer_activation(activation = activation_2) %>%
+    keras::layer_batch_normalization() %>%
+    keras::layer_conv_2d(filters = 128, kernel_size = c(3, 3), strides = c(1, 1), activation = activation_1, padding = "same") %>%
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_batch_normalization() %>%
     keras::layer_max_pooling_2d(pool_size = 2) %>%
@@ -134,7 +134,7 @@ build_model <- function(image_size = 150, channels = 3,
     keras::layer_activation(activation = activation_2) %>%
     keras::layer_dropout(rate = 0.5) %>%
     
-    keras::layer_dense(units = base::length(base::list.files(path = cv_data_dir)), activation = activation_1) %>%
+    keras::layer_dense(units = length(list.files(path = cv_data_dir)), activation = activation_1) %>%
     keras::layer_activation(activation = activation_3)
   
   model <- keras::keras_model(inputs = input_tensor, outputs = output_tensor)
@@ -142,12 +142,12 @@ build_model <- function(image_size = 150, channels = 3,
   model %>% keras::compile(loss = loss,
                            optimizer = optimizer, 
                            metrics = metrics)
-  base::return(model)}
+  return(model)}
 
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
-model %>% base::summary()
+model %>% summary()
 
 # ------------------------------------------------------------------------------
 # Cross validation algorithm:
@@ -160,23 +160,23 @@ Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_d
                                          write_grads = TRUE, write_images = TRUE, min_delta = 0,
                                          restore_best_weights = FALSE, histogram_freq = 1){
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
   if (monitor == "val_loss"){mode <- "min"} else {mode <- "max"}
-  history_list <- base::list()
+  history_list <- list()
   
   for (i in 1:folds){
     
     keras::k_clear_session()
     
-    train_dir <- base::paste0(folds_directory, "/step_", i, "/train")
-    validation_dir <- base::paste0(folds_directory, "/step_", i, "/validation")
-    callback_model_checkpoint_path <- base::paste(models_store_dir, base::paste("fold", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
-    callback_tensorboard_path <- base::paste(models_store_dir,  base::paste("fold", i, "logs", sep = "_"), sep = "/")
-    callback_csv_logger_path <- base::paste(models_store_dir, base::paste("fold", i, "optimization_logger.csv", sep = "_"), sep = "/")
+    train_dir <- paste0(folds_directory, "/step_", i, "/train")
+    validation_dir <- paste0(folds_directory, "/step_", i, "/validation")
+    callback_model_checkpoint_path <- paste(models_store_dir, paste("fold", i, "keras_model.weights.{epoch:02d}-{val_acc:.4f}-{val_loss:.4f}.hdf5", sep = "_"), sep = "/")
+    callback_tensorboard_path <- paste(models_store_dir,  paste("fold", i, "logs", sep = "_"), sep = "/")
+    callback_csv_logger_path <- paste(models_store_dir, paste("fold", i, "optimization_logger.csv", sep = "_"), sep = "/")
     
-    base::cat(base::paste("Fold:", i, "\n"))
-    base::cat("Train directory:", train_dir, "\n")
-    base::cat("Validation directory:", validation_dir, "\n")
+    cat(paste("Fold:", i, "\n"))
+    cat("Train directory:", train_dir, "\n")
+    cat("Validation directory:", validation_dir, "\n")
     
     model <- build_model(image_size = image_size)
     
@@ -189,7 +189,7 @@ Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_d
                                                  rotation_range = 0,
                                                  width_shift_range = 0,
                                                  height_shift_range = 0,
-                                                 brightness_range = base::c(1, 1),
+                                                 brightness_range = c(1, 1),
                                                  shear_range = 0,
                                                  zoom_range = 0,
                                                  channel_shift_range = 0,
@@ -203,27 +203,27 @@ Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_d
                                                  validation_split = 0)
     train_generator <- keras::flow_images_from_directory(directory = train_dir,
                                                          generator = train_datagen, 
-                                                         target_size = base::c(image_size, image_size),
+                                                         target_size = c(image_size, image_size),
                                                          batch_size = batch_size,
                                                          class_mode = class_mode,
-                                                         classes = base::list.files(path = cv_data_dir),
+                                                         classes = list.files(path = cv_data_dir),
                                                          shuffle = shuffle)
     
     validation_datagen <- keras::image_data_generator(rescale = 1/255) 
     validation_generator <- keras::flow_images_from_directory(directory = validation_dir,
                                                               generator = validation_datagen,
-                                                              target_size = base::c(image_size, image_size),
+                                                              target_size = c(image_size, image_size),
                                                               batch_size = batch_size,
                                                               class_mode = class_mode,
-                                                              classes = base::list.files(path = cv_data_dir),
+                                                              classes = list.files(path = cv_data_dir),
                                                               shuffle = shuffle)
     
     history <- model %>% keras::fit_generator(generator = train_generator,
-                                              steps_per_epoch = base::ceiling(train_generator$n/train_generator$batch_size), 
+                                              steps_per_epoch = ceiling(train_generator$n/train_generator$batch_size), 
                                               epochs = epochs,
                                               validation_data = validation_generator,
-                                              validation_steps = base::ceiling(validation_generator$n/validation_generator$batch_size), 
-                                              callbacks = base::list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
+                                              validation_steps = ceiling(validation_generator$n/validation_generator$batch_size), 
+                                              callbacks = list(keras::callback_model_checkpoint(filepath = callback_model_checkpoint_path,
                                                                                                       monitor = monitor,
                                                                                                       verbose = verbose,
                                                                                                       save_best_only = save_best_only),
@@ -251,16 +251,16 @@ Cross_Validation_Pipe_Runner <- function(epochs, folds_directory, models_store_d
       tibble::as_tibble()
     
     
-    files <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = base::paste("fold", i, sep = "_")), sep = "/")
-    files <- base::sort(files[base::grepl(".hdf5", files)])
-    for (j in 1:(base::length(files) - 1)){
-      base::cat("Remove .hdf5 file:", files[j], "\n")
-      base::unlink(files[j], recursive = TRUE, force = TRUE)}
+    files <- paste(getwd(), list.files(path = getwd(), pattern = paste("fold", i, sep = "_")), sep = "/")
+    files <- sort(files[grepl(".hdf5", files)])
+    for (j in 1:(length(files) - 1)){
+      cat("Remove .hdf5 file:", files[j], "\n")
+      unlink(files[j], recursive = TRUE, force = TRUE)}
   }
   
   history_list %>%
-    base::do.call(dplyr::bind_rows, .) %>%
-    readr::write_csv(base::paste(datetime, "CV_results.csv"))
+    do.call(dplyr::bind_rows, .) %>%
+    readr::write_csv(paste(datetime, "CV_results.csv"))
 }
 
 Cross_Validation_Pipe_Runner(epochs = 5,
@@ -269,26 +269,26 @@ Cross_Validation_Pipe_Runner(epochs = 5,
 
 # ------------------------------------------------------------------------------
 # Remove logs folders if are not important:
-logs_folders <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = "logs"), sep = "/")
-for (i in base::seq_along(logs_folders)){
-  base::cat("Remove logs folder:", logs_folders[i], "\n")
-  base::unlink(logs_folders[i], force = TRUE, recursive = TRUE)}
+logs_folders <- paste(getwd(), list.files(path = getwd(), pattern = "logs"), sep = "/")
+for (i in seq_along(logs_folders)){
+  cat("Remove logs folder:", logs_folders[i], "\n")
+  unlink(logs_folders[i], force = TRUE, recursive = TRUE)}
 
 # ------------------------------------------------------------------------------
 # Save optimal models in local models repository: 
-optimal_models <- base::paste(base::getwd(), base::list.files(path = base::getwd(), pattern = ".hdf5"), sep = "/")
-base::file.copy(from = optimal_models,
-                to = base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/"))
-for (i in base::seq_along(optimal_models)){
-  base::cat("Remove model:", optimal_models[i], "\n")
-  base::unlink(optimal_models[i])}
-optimal_models_repo_store <- base::paste(repo_models_store_dir, base::basename(optimal_models), sep = "/")
-for (i in base::seq_along(optimal_models_repo_store)){
-  base::cat("Fold", i, "optimal model directory:", optimal_models_repo_store[i], "\n")}
+optimal_models <- paste(getwd(), list.files(path = getwd(), pattern = ".hdf5"), sep = "/")
+file.copy(from = optimal_models,
+                to = paste(repo_models_store_dir, basename(optimal_models), sep = "/"))
+for (i in seq_along(optimal_models)){
+  cat("Remove model:", optimal_models[i], "\n")
+  unlink(optimal_models[i])}
+optimal_models_repo_store <- paste(repo_models_store_dir, basename(optimal_models), sep = "/")
+for (i in seq_along(optimal_models_repo_store)){
+  cat("Fold", i, "optimal model directory:", optimal_models_repo_store[i], "\n")}
 
 # ------------------------------------------------------------------------------
 # Cross validation results:
-results <- readr::read_csv(base::list.files(base::getwd(), pattern = "CV_results.csv")); results
+results <- readr::read_csv(list.files(getwd(), pattern = "CV_results.csv")); results
 
 # ------------------------------------------------------------------------------
 # Display cross validation results:
@@ -298,15 +298,15 @@ text_size <- 7
 # Accuracy:
 results %>%
   dplyr::select(dplyr::contains("acc"), epoch, fold) %>%
-  tidyr::pivot_longer(cols = base::c("acc", "val_acc"),
+  tidyr::pivot_longer(cols = c("acc", "val_acc"),
                       names_to = "type",
                       values_to = "value") %>%
   dplyr::mutate(type = dplyr::case_when(type == "acc" ~ "Train accuracy",
                                         type == "val_acc" ~ "Validation accuracy")) %>%
   dplyr::group_by(epoch, type) %>%
   dplyr::mutate(median = stats::median(value),
-                mean = base::mean(value),
-                fold = base::factor(fold)) -> results_accuracy; results_accuracy
+                mean = mean(value),
+                fold = factor(fold)) -> results_accuracy; results_accuracy
 
 results_accuracy %>%
   ggplot2::ggplot(data = .) +
@@ -341,15 +341,15 @@ ggplot2::ggsave("Plot_accuracy_CV.png", accuracy_plot, units = "cm", width = 20,
 # Loss:
 results %>%
   dplyr::select(dplyr::contains("loss"), epoch, fold) %>%
-  tidyr::pivot_longer(cols = base::c("loss", "val_loss"),
+  tidyr::pivot_longer(cols = c("loss", "val_loss"),
                       names_to = "type",
                       values_to = "value") %>%
   dplyr::mutate(type = dplyr::case_when(type == "loss" ~ "Train loss",
                                         type == "val_loss" ~ "Validation loss")) %>%
   dplyr::group_by(epoch, type) %>%
   dplyr::mutate(median = stats::median(value),
-                mean = base::mean(value),
-                fold = base::factor(fold)) -> results_loss; results_loss
+                mean = mean(value),
+                fold = factor(fold)) -> results_loss; results_loss
 
 results_loss %>%
   ggplot2::ggplot(data = .) +
@@ -385,32 +385,32 @@ ggplot2::ggsave("Plot_loss_CV.png", loss_plot, units = "cm", width = 20, height 
 # Save predictions from all folds models:
 Predict_Folds_Models <- function(data_dir, type, batch_size = 16){
   
-  for (i in base::seq_along(optimal_models_repo_store)){
+  for (i in seq_along(optimal_models_repo_store)){
     print(optimal_models_repo_store[i])
     model <- build_model() %>%
       keras::load_model_weights_hdf5(optimal_models_repo_store[i]) %>%
       keras::compile(loss = "categorical_crossentropy",
                      optimizer = keras::optimizer_adam(), 
-                     metrics = base::c("acc"))
+                     metrics = c("acc"))
     
     datagen <- keras::image_data_generator(rescale = 1/255)
     generator <- keras::flow_images_from_directory(directory = data_dir,
                                                    generator = datagen,
-                                                   target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]),
+                                                   target_size = c(model$input_shape[[2]], model$input_shape[[2]]),
                                                    batch_size = batch_size,
                                                    class_mode = "categorical",
                                                    shuffle = FALSE)
-    prediction <- keras::predict_generator(model, generator, steps = base::ceiling(generator$n/generator$batch_size), verbose = 1)
+    prediction <- keras::predict_generator(model, generator, steps = ceiling(generator$n/generator$batch_size), verbose = 1)
     prediction <- prediction %>%
       tibble::as_tibble()
     
-    filename <- base::paste(base::getwd(), base::paste(type, "prediction", i, "model.csv", sep = "_"), sep = "/")
+    filename <- paste(getwd(), paste(type, "prediction", i, "model.csv", sep = "_"), sep = "/")
     prediction %>% 
       dplyr::mutate(filepath = generator$filepaths,
                     actual_class = generator$classes) %>%
       readr::write_csv(filename)
     
-    base::cat("Save file:", filename, "\n")}}
+    cat("Save file:", filename, "\n")}}
 
 Predict_Folds_Models(data_dir = cv_data_dir, type = "cv_data")
 Predict_Folds_Models(data_dir = train_dir, type = "train_data")
@@ -422,16 +422,16 @@ Predict_Folds_Models(data_dir = test_dir, type = "test_data")
 default_cutoff <- 0.5
 
 # Cross validation data:
-cv_results <- base::list()
+cv_results <- list()
 for (i in 1:folds){
-  cv_results[[i]] <- readr::read_csv(base::list.files(pattern = "cv_data")[i])
-  cv_results[[i]]$model <- base::paste("model", i, sep = "_")}
+  cv_results[[i]] <- readr::read_csv(list.files(pattern = "cv_data")[i])
+  cv_results[[i]]$model <- paste("model", i, sep = "_")}
 cv_results %>%
-  base::do.call(dplyr::bind_rows, .) %>%
+  do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> cv_results; cv_results
+  dplyr::summarise(V1 = mean(V1),
+                   V2 = mean(V2),
+                   actual_class = mean(actual_class)) -> cv_results; cv_results
   
 cv_verification <- Binary_Classifier_Verification(actual = cv_results$actual_class,
                                                   predicted = cv_results$V2,
@@ -441,16 +441,16 @@ cv_verification <- Binary_Classifier_Verification(actual = cv_results$actual_cla
                                                   open = FALSE)
 
 # Train data:
-train_results <- base::list()
+train_results <- list()
 for (i in 1:folds){
-  train_results[[i]] <- readr::read_csv(base::list.files(pattern = "train_data")[i])
-  train_results[[i]]$model <- base::paste("model", i, sep = "_")}
+  train_results[[i]] <- readr::read_csv(list.files(pattern = "train_data")[i])
+  train_results[[i]]$model <- paste("model", i, sep = "_")}
 train_results %>%
-  base::do.call(dplyr::bind_rows, .) %>%
+  do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> train_results; train_results
+  dplyr::summarise(V1 = mean(V1),
+                   V2 = mean(V2),
+                   actual_class = mean(actual_class)) -> train_results; train_results
 
 train_verification <- Binary_Classifier_Verification(actual = train_results$actual_class,
                                                      predicted = train_results$V2,
@@ -460,16 +460,16 @@ train_verification <- Binary_Classifier_Verification(actual = train_results$actu
                                                      open = FALSE)
 
 # Validation data:
-validation_results <- base::list()
+validation_results <- list()
 for (i in 1:folds){
-  validation_results[[i]] <- readr::read_csv(base::list.files(pattern = "validation_data")[i])
-  validation_results[[i]]$model <- base::paste("model", i, sep = "_")}
+  validation_results[[i]] <- readr::read_csv(list.files(pattern = "validation_data")[i])
+  validation_results[[i]]$model <- paste("model", i, sep = "_")}
 validation_results %>%
-  base::do.call(dplyr::bind_rows, .) %>%
+  do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> validation_results; validation_results
+  dplyr::summarise(V1 = mean(V1),
+                   V2 = mean(V2),
+                   actual_class = mean(actual_class)) -> validation_results; validation_results
 
 validation_verification <- Binary_Classifier_Verification(actual = validation_results$actual_class,
                                                           predicted = validation_results$V2,
@@ -479,16 +479,16 @@ validation_verification <- Binary_Classifier_Verification(actual = validation_re
                                                           open = FALSE)
 
 # Test data:
-test_results <- base::list()
+test_results <- list()
 for (i in 1:folds){
-  test_results[[i]] <- readr::read_csv(base::list.files(pattern = "test_data")[i])
-  test_results[[i]]$model <- base::paste("model", i, sep = "_")}
+  test_results[[i]] <- readr::read_csv(list.files(pattern = "test_data")[i])
+  test_results[[i]]$model <- paste("model", i, sep = "_")}
 test_results %>%
-  base::do.call(dplyr::bind_rows, .) %>%
+  do.call(dplyr::bind_rows, .) %>%
   dplyr::group_by(filepath) %>%
-  dplyr::summarise(V1 = base::mean(V1),
-                   V2 = base::mean(V2),
-                   actual_class = base::mean(actual_class)) -> test_results; test_results
+  dplyr::summarise(V1 = mean(V1),
+                   V2 = mean(V2),
+                   actual_class = mean(actual_class)) -> test_results; test_results
 
 test_verification <- Binary_Classifier_Verification(actual = test_results$actual_class,
                                                     predicted = test_results$V2,
@@ -508,7 +508,7 @@ cv_verification$Assessment_of_Classifier_Effectiveness %>%
                 Cutoff = default_cutoff) %>%
   knitr::kable(.)
 
-datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
 cv_verification$Assessment_of_Classifier_Effectiveness %>%
   dplyr::select(Metric, Score) %>%
   dplyr::rename(Score_cv = Score) %>%
@@ -516,7 +516,7 @@ cv_verification$Assessment_of_Classifier_Effectiveness %>%
                 Score_validation = validation_verification$Assessment_of_Classifier_Effectiveness$Score,
                 Score_test = test_verification$Assessment_of_Classifier_Effectiveness$Score,
                 Cutoff = default_cutoff) %>%
-  readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, model_name, "binary_classification_summary_default_cutoff.csv", sep = "_"), sep = "/"))
+  readr::write_csv2(path = paste(models_store_dir, paste(datetime, model_name, "binary_classification_summary_default_cutoff.csv", sep = "_"), sep = "/"))
 
 # ------------------------------------------------------------------------------
 # https://github.com/ForesightAdamNowacki

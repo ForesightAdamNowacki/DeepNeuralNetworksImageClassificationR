@@ -4,11 +4,11 @@
 # Show and predict image class:
 Predict_Image <- function(image_path, model, classes, plot_image = TRUE){
   
-  image_size <- base::dim(model$input)[[2]]
+  image_size <- dim(model$input)[[2]]
   
-  image <- keras::image_load(path = image_path, target_size = base::c(image_size, image_size))
+  image <- keras::image_load(path = image_path, target_size = c(image_size, image_size))
   image_array <- keras::image_to_array(img = image)
-  image_array <- keras::array_reshape(x = image_array, dim = base::c(1, image_size, image_size, 3))
+  image_array <- keras::array_reshape(x = image_array, dim = c(1, image_size, image_size, 3))
   
   datagen <- keras::image_data_generator(rescale = 1/255)
   generator <- keras::flow_images_from_data(x = image_array, generator = datagen, batch_size = 1)
@@ -20,9 +20,9 @@ Predict_Image <- function(image_path, model, classes, plot_image = TRUE){
     graphics::plot(grDevices::as.raster(x = batch[1,,,]))
   }
   
-  base::return(base::list(image_path = base::normalizePath(image_path),
-                          predictions = prediction,
-                          predicted_class = labels[base::which.max(prediction)]))}
+  return(list(image_path = normalizePath(image_path),
+              predictions = prediction,
+              predicted_class = labels[which.max(prediction)]))}
 
 # ------------------------------------------------------------------------------
 # Automaticaly organize correct and incorrect binary classifications:
@@ -36,21 +36,21 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
                                                               save_correct_images = TRUE,
                                                               save_incorrect_images = TRUE){
   
-  base::cat("Current working directory:", cwd, "\n")
-  base::setwd(cwd)
+  cat("Current working directory:", cwd, "\n")
+  setwd(cwd)
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-  categories <- base::list.files(path = dataset_dir)
-  dataset_label <- base::basename(dataset_dir)
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
+  categories <- list.files(path = dataset_dir)
+  dataset_label <- basename(dataset_dir)
   
-  category_1 <- base::paste(base::paste(dataset_dir, categories[1], sep = "/"), base::list.files(base::paste(dataset_dir, categories[1], sep = "/")), sep = "/")
-  category_2 <- base::paste(base::paste(dataset_dir, categories[2], sep = "/"), base::list.files(base::paste(dataset_dir, categories[2], sep = "/")), sep = "/")
+  category_1 <- paste(paste(dataset_dir, categories[1], sep = "/"), list.files(paste(dataset_dir, categories[1], sep = "/")), sep = "/")
+  category_2 <- paste(paste(dataset_dir, categories[2], sep = "/"), list.files(paste(dataset_dir, categories[2], sep = "/")), sep = "/")
   
-  summary_data <- tibble::tibble(files = base::c(category_1, category_2),
+  summary_data <- tibble::tibble(files = c(category_1, category_2),
                                  actual_class = actual_classes,
                                  predicted = predicted,
                                  cutoff = cutoff) %>%
-    dplyr::mutate(predicted_class = base::ifelse(predicted < cutoff, 0, 1))
+    dplyr::mutate(predicted_class = ifelse(predicted < cutoff, 0, 1))
   
   summary_data_correct <- summary_data %>%
     dplyr::filter(actual_class == predicted_class) 
@@ -58,40 +58,40 @@ Organize_Correct_Incorrect_Binary_Classifications <- function(dataset_dir,
   summary_data_incorrect <- summary_data %>%
     dplyr::filter(actual_class != predicted_class) 
   
-  if (base::isTRUE(save_summary_files)){
-    readr::write_csv2(summary_data, base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
-    readr::write_csv2(summary_data_correct, base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
-    readr::write_csv2(summary_data_incorrect, base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
-    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"), "\n")
-    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"), "\n")
-    base::cat("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"), "\n")}
+  if (isTRUE(save_summary_files)){
+    readr::write_csv2(summary_data, paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_correct, paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_incorrect, paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
+    cat("File created:", paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"), "\n")
+    cat("File created:", paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"), "\n")
+    cat("File created:", paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"), "\n")}
   
   # correct:
-  if (base::isTRUE(save_correct_images)){
-    correct_classification_folder <- base::paste(datetime, type_info, dataset_label, "correct_classifications", sep = "_")
-    base::unlink(correct_classification_folder, recursive = TRUE)
-    base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat("Folder created:", correct_classification_folder, "\n")
+  if (isTRUE(save_correct_images)){
+    correct_classification_folder <- paste(datetime, type_info, dataset_label, "correct_classifications", sep = "_")
+    unlink(correct_classification_folder, recursive = TRUE)
+    dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    cat("Folder created:", correct_classification_folder, "\n")
     
-    correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
-    base::file.copy(from = summary_data_correct$files,
-                    to = base::paste(correct_classification_dir, base::basename(summary_data_correct$files), sep = "/"))}
+    correct_classification_dir <- paste(getwd(), correct_classification_folder, sep = "/")
+    file.copy(from = summary_data_correct$files,
+              to = paste(correct_classification_dir, basename(summary_data_correct$files), sep = "/"))}
   
   # incorrect:
-  if (base::isTRUE(save_incorrect_images)){
-    incorrect_classification_folder <- base::paste(datetime, type_info, dataset_label, "incorrect_classifications", sep = "_")
-    base::unlink(incorrect_classification_folder, recursive = TRUE)
-    base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat("Folder created:", incorrect_classification_folder, "\n")
+  if (isTRUE(save_incorrect_images)){
+    incorrect_classification_folder <- paste(datetime, type_info, dataset_label, "incorrect_classifications", sep = "_")
+    unlink(incorrect_classification_folder, recursive = TRUE)
+    dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    cat("Folder created:", incorrect_classification_folder, "\n")
     
-    incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
-    base::file.copy(from = summary_data_incorrect$files,
-                    to = base::paste(incorrect_classification_dir, base::basename(summary_data_incorrect$files), sep = "/"))}
+    incorrect_classification_dir <- paste(getwd(), incorrect_classification_folder, sep = "/")
+    file.copy(from = summary_data_incorrect$files,
+              to = paste(incorrect_classification_dir, basename(summary_data_incorrect$files), sep = "/"))}
   
-  if (base::isTRUE(save_summary_files)){
-    base::invisible(base::list(all_files = summary_data,
-                               correct_classification = summary_data_correct,
-                               incorrect_classification = summary_data_incorrect))}}
+  if (isTRUE(save_summary_files)){
+    invisible(list(all_files = summary_data,
+                   correct_classification = summary_data_correct,
+                   incorrect_classification = summary_data_incorrect))}}
 
 # ------------------------------------------------------------------------------
 # Automaticaly organize correct and incorrect catogorical classifications:
@@ -104,20 +104,20 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
                                                                    save_correct_images = TRUE,
                                                                    save_incorrect_images = TRUE){
   
-  base::cat("Current working directory:", cwd, "\n")
-  base::setwd(cwd)
+  cat("Current working directory:", cwd, "\n")
+  setwd(cwd)
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-  categories <- base::list.files(path = dataset_dir)
-  dataset_label <- base::basename(dataset_dir)
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
+  categories <- list.files(path = dataset_dir)
+  dataset_label <- basename(dataset_dir)
   
-  lista <- base::list()
-  for (i in 1:base::length(categories)){
-    lista[[i]] <- tibble::tibble(files = base::paste(base::paste(dataset_dir, categories[i], sep = "/"), base::list.files(base::paste(dataset_dir, categories[i], sep = "/")), sep = "/"))
+  lista <- list()
+  for (i in 1:length(categories)){
+    lista[[i]] <- tibble::tibble(files = paste(paste(dataset_dir, categories[i], sep = "/"), list.files(paste(dataset_dir, categories[i], sep = "/")), sep = "/"))
   }
-  summary_data <- base::do.call("bind_rows", lista) %>%
+  summary_data <- do.call("bind_rows", lista) %>%
     dplyr::mutate(actual_class = actual_classes,
-                  predicted_class = base::max.col(predicted))
+                  predicted_class = max.col(predicted))
   
   summary_data_correct <- summary_data %>%
     dplyr::filter(actual_class == predicted_class) 
@@ -125,319 +125,319 @@ Organize_Correct_Incorrect_Categorical_Classifications <- function(dataset_dir,
   summary_data_incorrect <- summary_data %>%
     dplyr::filter(actual_class != predicted_class) 
   
-  if (base::isTRUE(save_summary_files)){
-    readr::write_csv2(summary_data, base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
-    readr::write_csv2(summary_data_correct, base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
-    readr::write_csv2(summary_data_incorrect, base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
-    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_")), "\n")
-    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_")), "\n")
-    base::cat(base::paste("File created:", base::paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_")), "\n")}
+  if (isTRUE(save_summary_files)){
+    readr::write_csv2(summary_data, paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_correct, paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_"))
+    readr::write_csv2(summary_data_incorrect, paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_"))
+    cat(paste("File created:", paste(datetime, type_info, dataset_label, "all_classifications.csv", sep = "_")), "\n")
+    cat(paste("File created:", paste(datetime, type_info, dataset_label, "correct_classifications.csv", sep = "_")), "\n")
+    cat(paste("File created:", paste(datetime, type_info, dataset_label, "incorrect_classifications.csv", sep = "_")), "\n")}
   
   # correct:
-  if (base::isTRUE(save_correct_images)){
-    correct_classification_folder <- base::paste(datetime, type_info, dataset_label, "correct_classification", sep = "_")
-    base::unlink(correct_classification_folder, recursive = TRUE)
-    base::dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat("Folder created:", correct_classification_folder, "\n")
+  if (isTRUE(save_correct_images)){
+    correct_classification_folder <- paste(datetime, type_info, dataset_label, "correct_classification", sep = "_")
+    unlink(correct_classification_folder, recursive = TRUE)
+    dir.create(correct_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    cat("Folder created:", correct_classification_folder, "\n")
     
-    correct_classification_dir <- base::paste(base::getwd(), correct_classification_folder, sep = "/")
-    base::file.copy(from = summary_data_correct$files,
-                    to = base::paste(correct_classification_dir, base::basename(summary_data_correct$files), sep = "/"))}
+    correct_classification_dir <- paste(getwd(), correct_classification_folder, sep = "/")
+    file.copy(from = summary_data_correct$files,
+              to = paste(correct_classification_dir, basename(summary_data_correct$files), sep = "/"))}
   
   # incorrect:
-  if (base::isTRUE(save_incorrect_images)){
-    incorrect_classification_folder <- base::paste(datetime, type_info, dataset_label, "incorrect_classification", sep = "_")
-    base::unlink(incorrect_classification_folder, recursive = TRUE)
-    base::dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
-    base::cat("Folder created:", incorrect_classification_folder, "\n")
+  if (isTRUE(save_incorrect_images)){
+    incorrect_classification_folder <- paste(datetime, type_info, dataset_label, "incorrect_classification", sep = "_")
+    unlink(incorrect_classification_folder, recursive = TRUE)
+    dir.create(incorrect_classification_folder, recursive  = TRUE, showWarnings = FALSE)
+    cat("Folder created:", incorrect_classification_folder, "\n")
     
-    incorrect_classification_dir <- base::paste(base::getwd(), incorrect_classification_folder, sep = "/")
-    base::file.copy(from = summary_data_incorrect$files,
-                    to = base::paste(incorrect_classification_dir, base::basename(summary_data_incorrect$files), sep = "/"))}
+    incorrect_classification_dir <- paste(getwd(), incorrect_classification_folder, sep = "/")
+    file.copy(from = summary_data_incorrect$files,
+              to = paste(incorrect_classification_dir, basename(summary_data_incorrect$files), sep = "/"))}
   
-  if (base::isTRUE(save_summary_files)){
-    base::invisible(base::list(all_files = summary_data,
-                               correct_classification = summary_data_correct,
-                               incorrect_classification = summary_data_incorrect))}}
+  if (isTRUE(save_summary_files)){
+    invisible(list(all_files = summary_data,
+                   correct_classification = summary_data_correct,
+                   incorrect_classification = summary_data_incorrect))}}
 
 # ------------------------------------------------------------------------------
 # Count files in train/validation/test directory per class:
 Count_Files = function(path){
-  dirs <- base::list.dirs(path = path)
-  dirs <- dirs[2:base::length(dirs)]
-  files <- base::integer(base::length(dirs))
-  folder <- base::character(base::length(dirs))
-  for (i in base::seq_along(dirs)){
-    files[i] <- base::length(base::list.files(path = dirs[i]))
-    folder[i] <- base::basename(path = dirs[i])}
-  result <- base::data.frame(category = folder, category_obs = files) %>%
-    dplyr::mutate(category_freq = category_obs/base::sum(category_obs))
-  base::return(result)}
+  dirs <- list.dirs(path = path)
+  dirs <- dirs[2:length(dirs)]
+  files <- integer(length(dirs))
+  folder <- character(length(dirs))
+  for (i in seq_along(dirs)){
+    files[i] <- length(list.files(path = dirs[i]))
+    folder[i] <- basename(path = dirs[i])}
+  result <- data.frame(category = folder, category_obs = files) %>%
+    dplyr::mutate(category_freq = category_obs/sum(category_obs))
+  return(result)}
 
 # ------------------------------------------------------------------------------
 # Automaticaly split data folder with classes into train, validation and test 
 # datasets with similar target variable distribution
 Split_Data_Train_Validation_Test <- function(data_dir,
-                                             target_dir = base::getwd(),
-                                             proportions = base::c(3, 1, 1),
+                                             target_dir = getwd(),
+                                             proportions = c(3, 1, 1),
                                              train_folder_label = "train_dataset",
                                              validation_folder_label = "validation_dataset",
                                              test_folder_label = "test_dataset",
                                              info_folder_label = "info_dataset",
                                              seed = 42){
-  base::setwd(target_dir)
-  base::set.seed(seed = seed)
-  sys_time <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-  class_dirs <- base::list.dirs(data_dir)[2:base::length(base::list.dirs(data_dir))]
+  setwd(target_dir)
+  set.seed(seed = seed)
+  sys_time <- stringr::str_replace_all(Sys.time(), ":", "-")
+  class_dirs <- list.dirs(data_dir)[2:length(list.dirs(data_dir))]
   
-  files <- base::list()
-  for (i in base::seq_along(class_dirs)){
-    files[[i]] <- base::list.files(class_dirs[i])}
-  names(files) <- base::basename(class_dirs)
+  files <- list()
+  for (i in seq_along(class_dirs)){
+    files[[i]] <- list.files(class_dirs[i])}
+  names(files) <- basename(class_dirs)
   
-  files <- tibble::tibble(file = base::do.call(c, files),
-                          class = base::rep(names(base::sapply(files, length)), times = base::sapply(files, length))) %>%
-    dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
-                  fold = caret::createFolds(class, k = base::sum(proportions), list = FALSE))
+  files <- tibble::tibble(file = do.call(c, files),
+                          class = rep(names(sapply(files, length)), times = sapply(files, length))) %>%
+    dplyr::mutate(original_file_path = paste(data_dir, class, file, sep = "/"),
+                  fold = caret::createFolds(class, k = sum(proportions), list = FALSE))
   
   # Split data:
   train_files <- files %>% dplyr::filter(fold %in% 1:proportions[1])
   validation_files <- files %>% dplyr::filter(fold %in% (proportions[1] + 1):(proportions[1] + proportions[2]))
-  test_files <- files %>% dplyr::filter(fold %in% (proportions[1] + proportions[2] + 1):base::sum(proportions))
+  test_files <- files %>% dplyr::filter(fold %in% (proportions[1] + proportions[2] + 1):sum(proportions))
   
   # Train:
-  base::unlink(base::paste(base::getwd(), train_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), train_folder_label, sep = "/"))
+  unlink(paste(getwd(), train_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), train_folder_label, sep = "/"))
   train_files %>%
-    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
-                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = paste(getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> train_files
   
-  for (i in base::seq_along(base::basename(class_dirs))){
-    base::dir.create(base::paste(base::getwd(), base::basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  for (i in seq_along(basename(class_dirs))){
+    dir.create(paste(getwd(), basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
     files_from <- train_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(original_file_path) %>%
       dplyr::pull()
     files_to <- train_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(file) %>%
       dplyr::pull()
-    files_to <- base::paste(base::getwd(), base::basename(class_dirs)[i], files_to, sep = "/")
-    base::file.copy(from = files_from, to = files_to)}
-  base::print(base::paste("Train data generated successfully -", base::getwd()))
-  base::setwd("..")
+    files_to <- paste(getwd(), basename(class_dirs)[i], files_to, sep = "/")
+    file.copy(from = files_from, to = files_to)}
+  print(paste("Train data generated successfully -", getwd()))
+  setwd("..")
   
   # Validation:
-  base::unlink(base::paste(base::getwd(), validation_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), validation_folder_label, sep = "/"))
+  unlink(paste(getwd(), validation_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), validation_folder_label, sep = "/"))
   validation_files %>%
-    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
-                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = paste(getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> validation_files
   
-  for (i in base::seq_along(base::basename(class_dirs))){
-    base::dir.create(base::paste(base::getwd(), base::basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  for (i in seq_along(basename(class_dirs))){
+    dir.create(paste(getwd(), basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
     files_from <- validation_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(original_file_path) %>%
       dplyr::pull()
     files_to <- validation_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(file) %>%
       dplyr::pull()
-    files_to <- base::paste(base::getwd(), base::basename(class_dirs)[i], files_to, sep = "/")
-    base::file.copy(from = files_from, to = files_to)}
-  base::print(base::paste("Validation data generated successfully -", base::getwd()))
-  base::setwd("..")
+    files_to <- paste(getwd(), basename(class_dirs)[i], files_to, sep = "/")
+    file.copy(from = files_from, to = files_to)}
+  print(paste("Validation data generated successfully -", getwd()))
+  setwd("..")
   
   # Test:
-  base::unlink(base::paste(base::getwd(), test_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), test_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), test_folder_label, sep = "/"))
+  unlink(paste(getwd(), test_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), test_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), test_folder_label, sep = "/"))
   test_files %>%
-    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
-                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = paste(getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> test_files
   
-  for (i in base::seq_along(base::basename(class_dirs))){
-    base::dir.create(base::paste(base::getwd(), base::basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  for (i in seq_along(basename(class_dirs))){
+    dir.create(paste(getwd(), basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
     files_from <- test_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(original_file_path) %>%
       dplyr::pull()
     files_to <- test_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(file) %>%
       dplyr::pull()
-    files_to <- base::paste(base::getwd(), base::basename(class_dirs)[i], files_to, sep = "/")
-    base::file.copy(from = files_from, to = files_to)}
-  base::print(base::paste("Test data generated successfully -", base::getwd()))
-  base::setwd("..")
+    files_to <- paste(getwd(), basename(class_dirs)[i], files_to, sep = "/")
+    file.copy(from = files_from, to = files_to)}
+  print(paste("Test data generated successfully -", getwd()))
+  setwd("..")
   
   # Info:
-  base::unlink(base::paste(base::getwd(), info_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), info_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), info_folder_label, sep = "/"))
-  readr::write_csv(train_files, base::paste(sys_time, "train_split_info.csv"))
-  readr::write_csv(validation_files, base::paste(sys_time, "validation_split_info.csv"))
-  readr::write_csv(test_files, base::paste(sys_time, "test_split_info.csv"))
-  base::print(base::paste("Info data generated successfully -", base::getwd()))
-  base::setwd("..")
+  unlink(paste(getwd(), info_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), info_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), info_folder_label, sep = "/"))
+  readr::write_csv(train_files, paste(sys_time, "train_split_info.csv"))
+  readr::write_csv(validation_files, paste(sys_time, "validation_split_info.csv"))
+  readr::write_csv(test_files, paste(sys_time, "test_split_info.csv"))
+  print(paste("Info data generated successfully -", getwd()))
+  setwd("..")
   
-  base::list(Counts = base::list(train = train_files %>%
-                                   dplyr::mutate(dataset = train_folder_label),
-                                 validation = validation_files %>%
-                                   dplyr::mutate(dataset = validation_folder_label),
-                                 test = test_files %>%
-                                   dplyr::mutate(dataset = test_folder_label)) %>%
-               dplyr::bind_rows(.) %>%
-               dplyr::group_by(dataset, class) %>%
-               dplyr::summarise(count = dplyr::n()) %>%
-               tidyr::pivot_wider(id_col = "class",
-                                  names_from = "dataset",
-                                  values_from = "count") %>%
-               dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label),
-             Proportions = base::list(train = train_files %>%
-                                        dplyr::mutate(dataset = train_folder_label),
-                                      validation = validation_files %>%
-                                        dplyr::mutate(dataset = validation_folder_label),
-                                      test = test_files %>%
-                                        dplyr::mutate(dataset = test_folder_label)) %>%
-               dplyr::bind_rows(.) %>%
-               dplyr::group_by(dataset, class) %>%
-               dplyr::summarise(count = dplyr::n()) %>%
-               dplyr::group_by(dataset) %>%
-               dplyr::mutate(proportion = count/base::sum(count)) %>%
-               tidyr::pivot_wider(id_cols = "class",
-                                  names_from = "dataset",
-                                  values_from = "proportion") %>%
-               dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label)) %>%
-    base::return(.)}
+  list(Counts = list(train = train_files %>%
+                       dplyr::mutate(dataset = train_folder_label),
+                     validation = validation_files %>%
+                       dplyr::mutate(dataset = validation_folder_label),
+                     test = test_files %>%
+                       dplyr::mutate(dataset = test_folder_label)) %>%
+         dplyr::bind_rows(.) %>%
+         dplyr::group_by(dataset, class) %>%
+         dplyr::summarise(count = dplyr::n()) %>%
+         tidyr::pivot_wider(id_col = "class",
+                            names_from = "dataset",
+                            values_from = "count") %>%
+         dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label),
+       Proportions = list(train = train_files %>%
+                            dplyr::mutate(dataset = train_folder_label),
+                          validation = validation_files %>%
+                            dplyr::mutate(dataset = validation_folder_label),
+                          test = test_files %>%
+                            dplyr::mutate(dataset = test_folder_label)) %>%
+         dplyr::bind_rows(.) %>%
+         dplyr::group_by(dataset, class) %>%
+         dplyr::summarise(count = dplyr::n()) %>%
+         dplyr::group_by(dataset) %>%
+         dplyr::mutate(proportion = count/sum(count)) %>%
+         tidyr::pivot_wider(id_cols = "class",
+                            names_from = "dataset",
+                            values_from = "proportion") %>%
+         dplyr::select(class, train_folder_label, validation_folder_label, test_folder_label)) %>%
+    return(.)}
 
 # ------------------------------------------------------------------------------
 # Automaticaly split data folder with classes into train and validation
 # datasets with similar target variable distribution
 Split_Data_Train_Validation <- function(data_dir,
-                                        target_dir = base::getwd(),
-                                        proportions = base::c(3, 1),
+                                        target_dir = getwd(),
+                                        proportions = c(3, 1),
                                         train_folder_label = "train_dataset",
                                         validation_folder_label = "validation_dataset",
                                         info_folder_label = "info_dataset",
                                         seed = 42){
-  base::setwd(target_dir)
-  base::set.seed(seed = seed)
-  sys_time <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-  class_dirs <- base::list.dirs(data_dir)[2:base::length(base::list.dirs(data_dir))]
+  setwd(target_dir)
+  set.seed(seed = seed)
+  sys_time <- stringr::str_replace_all(Sys.time(), ":", "-")
+  class_dirs <- list.dirs(data_dir)[2:length(list.dirs(data_dir))]
   
-  files <- base::list()
-  for (i in base::seq_along(class_dirs)){
-    files[[i]] <- base::list.files(class_dirs[i])}
-  names(files) <- base::basename(class_dirs)
+  files <- list()
+  for (i in seq_along(class_dirs)){
+    files[[i]] <- list.files(class_dirs[i])}
+  names(files) <- basename(class_dirs)
   
-  files <- tibble::tibble(file = base::do.call(c, files),
-                          class = base::rep(names(base::sapply(files, length)), times = base::sapply(files, length))) %>%
-    dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
-                  fold = caret::createFolds(class, k = base::sum(proportions), list = FALSE))
+  files <- tibble::tibble(file = do.call(c, files),
+                          class = rep(names(sapply(files, length)), times = sapply(files, length))) %>%
+    dplyr::mutate(original_file_path = paste(data_dir, class, file, sep = "/"),
+                  fold = caret::createFolds(class, k = sum(proportions), list = FALSE))
   
   # Split data:
   train_files <- files %>% dplyr::filter(fold %in% 1:proportions[1])
-  validation_files <- files %>% dplyr::filter(fold %in% (proportions[1] + 1):(base::sum(proportions)))
+  validation_files <- files %>% dplyr::filter(fold %in% (proportions[1] + 1):(sum(proportions)))
   
   # Train:
-  base::unlink(base::paste(base::getwd(), train_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), train_folder_label, sep = "/"))
+  unlink(paste(getwd(), train_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), train_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), train_folder_label, sep = "/"))
   train_files %>%
-    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
-                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = paste(getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> train_files
   
-  for (i in base::seq_along(base::basename(class_dirs))){
-    base::dir.create(base::paste(base::getwd(), base::basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  for (i in seq_along(basename(class_dirs))){
+    dir.create(paste(getwd(), basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
     files_from <- train_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(original_file_path) %>%
       dplyr::pull()
     files_to <- train_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(file) %>%
       dplyr::pull()
-    files_to <- base::paste(base::getwd(), base::basename(class_dirs)[i], files_to, sep = "/")
-    base::file.copy(from = files_from, to = files_to)}
-  base::print(base::paste("Train data generated successfully -", base::getwd()))
-  base::setwd("..")
+    files_to <- paste(getwd(), basename(class_dirs)[i], files_to, sep = "/")
+    file.copy(from = files_from, to = files_to)}
+  print(paste("Train data generated successfully -", getwd()))
+  setwd("..")
   
   # Validation:
-  base::unlink(base::paste(base::getwd(), validation_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), validation_folder_label, sep = "/"))
+  unlink(paste(getwd(), validation_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), validation_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), validation_folder_label, sep = "/"))
   validation_files %>%
-    dplyr::mutate(original_file_path = base::paste(target_dir, original_file_path, sep = "/"),
-                  final_file_path = base::paste(base::getwd(), class, file, sep = "/"),
+    dplyr::mutate(original_file_path = paste(target_dir, original_file_path, sep = "/"),
+                  final_file_path = paste(getwd(), class, file, sep = "/"),
                   fold = NULL) %>%
     dplyr::select(file, class, original_file_path, final_file_path) %>%
     dplyr::arrange(class, file) -> validation_files
   
-  for (i in base::seq_along(base::basename(class_dirs))){
-    base::dir.create(base::paste(base::getwd(), base::basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  for (i in seq_along(basename(class_dirs))){
+    dir.create(paste(getwd(), basename(class_dirs)[i], sep = "/"), showWarnings = FALSE, recursive = TRUE)
     files_from <- validation_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(original_file_path) %>%
       dplyr::pull()
     files_to <- validation_files %>%
-      dplyr::filter(class == base::basename(class_dirs)[i]) %>%
+      dplyr::filter(class == basename(class_dirs)[i]) %>%
       dplyr::select(file) %>%
       dplyr::pull()
-    files_to <- base::paste(base::getwd(), base::basename(class_dirs)[i], files_to, sep = "/")
-    base::file.copy(from = files_from, to = files_to)}
-  base::print(base::paste("Validation data generated successfully -", base::getwd()))
-  base::setwd("..")
+    files_to <- paste(getwd(), basename(class_dirs)[i], files_to, sep = "/")
+    file.copy(from = files_from, to = files_to)}
+  print(paste("Validation data generated successfully -", getwd()))
+  setwd("..")
   
   # Info:
-  base::unlink(base::paste(base::getwd(), info_folder_label, sep = "/"), recursive = TRUE)
-  base::dir.create(base::paste(base::getwd(), info_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
-  base::setwd(base::paste(base::getwd(), info_folder_label, sep = "/"))
-  readr::write_csv(train_files, base::paste(sys_time, "train_split_info.csv"))
-  readr::write_csv(validation_files, base::paste(sys_time, "validation_split_info.csv"))
-  base::print(base::paste("Info data generated successfully -", base::getwd()))
-  base::setwd("..")
+  unlink(paste(getwd(), info_folder_label, sep = "/"), recursive = TRUE)
+  dir.create(paste(getwd(), info_folder_label, sep = "/"), showWarnings = FALSE, recursive = TRUE)
+  setwd(paste(getwd(), info_folder_label, sep = "/"))
+  readr::write_csv(train_files, paste(sys_time, "train_split_info.csv"))
+  readr::write_csv(validation_files, paste(sys_time, "validation_split_info.csv"))
+  print(paste("Info data generated successfully -", getwd()))
+  setwd("..")
   
-  base::list(Counts = base::list(train = train_files %>%
-                                   dplyr::mutate(dataset = train_folder_label),
-                                 validation = validation_files %>%
-                                   dplyr::mutate(dataset = validation_folder_label)) %>%
-               dplyr::bind_rows(.) %>%
-               dplyr::group_by(dataset, class) %>%
-               dplyr::summarise(count = dplyr::n()) %>%
-               tidyr::pivot_wider(id_col = "class",
-                                  names_from = "dataset",
-                                  values_from = "count") %>%
-               dplyr::select(class, train_folder_label, validation_folder_label),
-             Proportions = base::list(train = train_files %>%
-                                        dplyr::mutate(dataset = train_folder_label),
-                                      validation = validation_files %>%
-                                        dplyr::mutate(dataset = validation_folder_label)) %>%
-               dplyr::bind_rows(.) %>%
-               dplyr::group_by(dataset, class) %>%
-               dplyr::summarise(count = dplyr::n()) %>%
-               dplyr::group_by(dataset) %>%
-               dplyr::mutate(proportion = count/base::sum(count)) %>%
-               tidyr::pivot_wider(id_cols = "class",
-                                  names_from = "dataset",
-                                  values_from = "proportion") %>%
-               dplyr::select(class, train_folder_label, validation_folder_label)) %>%
-    base::return(.)}
+  list(Counts = list(train = train_files %>%
+                       dplyr::mutate(dataset = train_folder_label),
+                     validation = validation_files %>%
+                       dplyr::mutate(dataset = validation_folder_label)) %>%
+         dplyr::bind_rows(.) %>%
+         dplyr::group_by(dataset, class) %>%
+         dplyr::summarise(count = dplyr::n()) %>%
+         tidyr::pivot_wider(id_col = "class",
+                            names_from = "dataset",
+                            values_from = "count") %>%
+         dplyr::select(class, train_folder_label, validation_folder_label),
+       Proportions = list(train = train_files %>%
+                            dplyr::mutate(dataset = train_folder_label),
+                          validation = validation_files %>%
+                            dplyr::mutate(dataset = validation_folder_label)) %>%
+         dplyr::bind_rows(.) %>%
+         dplyr::group_by(dataset, class) %>%
+         dplyr::summarise(count = dplyr::n()) %>%
+         dplyr::group_by(dataset) %>%
+         dplyr::mutate(proportion = count/sum(count)) %>%
+         tidyr::pivot_wider(id_cols = "class",
+                            names_from = "dataset",
+                            values_from = "proportion") %>%
+         dplyr::select(class, train_folder_label, validation_folder_label)) %>%
+    return(.)}
 
 # ------------------------------------------------------------------------------
 # Optimize binary ensemble model:
@@ -466,61 +466,61 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
     key_metric_name <- dplyr::quo_name(key_metric)}
   
   # Generate cuts:
-  base::set.seed(seed = seed)
-  cuts_ <- stats::runif(n = cuts, min = 0, max = 1)
-  cuts_ <- base::sort(x = cuts_, decreasing = FALSE)
+  set.seed(seed = seed)
+  cuts_ <- runif(n = cuts, min = 0, max = 1)
+  cuts_ <- sort(x = cuts_, decreasing = FALSE)
   
   # Generate waights:
-  base::set.seed(seed = seed)
-  weights_ <- base::matrix(data = stats::runif(base::ncol(predictions) * weights, min = 0, max = 1),
-                           nrow = weights,
-                           ncol = base::ncol(predictions))
+  set.seed(seed = seed)
+  weights_ <- matrix(data = runif(ncol(predictions) * weights, min = 0, max = 1),
+                     nrow = weights,
+                     ncol = ncol(predictions))
   
   # Cutoff and weights optimization:
-  results <- base::list()
-  base::cat("\n", "Ensemble model optimization:", "\n")
-  pb = utils::txtProgressBar(min = 0, max = cuts, initial = 0, style = 3) 
+  results <- list()
+  cat("\n", "Ensemble model optimization:", "\n")
+  pb = txtProgressBar(min = 0, max = cuts, initial = 0, style = 3) 
   
   for (i in 1:cuts){
     cut_value <- cuts_[i]
-    df <- tibble::tibble(CUTOFF = base::numeric(weights),
-                         WEIGHTS = base::character(weights),
-                         TN = base::numeric(weights),
-                         FP = base::numeric(weights),
-                         FN = base::numeric(weights),
-                         TP = base::numeric(weights),
-                         P = base::numeric(weights),
-                         N = base::numeric(weights),
-                         ACC = base::numeric(weights),
-                         BACC = base::numeric(weights),
-                         BIAS = base::numeric(weights),
-                         CE = base::numeric(weights),
-                         TPR = base::numeric(weights),
-                         TNR = base::numeric(weights),
-                         PPV = base::numeric(weights),
-                         NPV = base::numeric(weights),
-                         FNR = base::numeric(weights),
-                         FPR = base::numeric(weights),
-                         FDR = base::numeric(weights),
-                         FOR = base::numeric(weights),
-                         TS = base::numeric(weights),
-                         F1 = base::numeric(weights),
-                         BM = base::numeric(weights),
-                         MK = base::numeric(weights),
-                         COST = base::numeric(weights))
+    df <- tibble::tibble(CUTOFF = numeric(weights),
+                         WEIGHTS = character(weights),
+                         TN = numeric(weights),
+                         FP = numeric(weights),
+                         FN = numeric(weights),
+                         TP = numeric(weights),
+                         P = numeric(weights),
+                         N = numeric(weights),
+                         ACC = numeric(weights),
+                         BACC = numeric(weights),
+                         BIAS = numeric(weights),
+                         CE = numeric(weights),
+                         TPR = numeric(weights),
+                         TNR = numeric(weights),
+                         PPV = numeric(weights),
+                         NPV = numeric(weights),
+                         FNR = numeric(weights),
+                         FPR = numeric(weights),
+                         FDR = numeric(weights),
+                         FOR = numeric(weights),
+                         TS = numeric(weights),
+                         F1 = numeric(weights),
+                         BM = numeric(weights),
+                         MK = numeric(weights),
+                         COST = numeric(weights))
     
-    for (j in 1:base::nrow(weights_)){
-      weight_value <- weights_[j,]/base::sum(weights_[j,])
-      predictions_table <- mapply("*", base::as.data.frame(predictions), weight_value) %>%
+    for (j in 1:nrow(weights_)){
+      weight_value <- weights_[j,]/sum(weights_[j,])
+      predictions_table <- mapply("*", as.data.frame(predictions), weight_value) %>%
         tibble::as_tibble() %>%
-        dplyr::mutate(prediction = base::rowSums(.),
+        dplyr::mutate(prediction = rowSums(.),
                       cutoff = cut_value,
-                      predicted_class = base::ifelse(prediction < cutoff, 0, 1))
-      predicted_class <- base::factor(predictions_table$predicted_class, levels = base::c(0, 1), labels = base::c(0, 1))
-      confusion_matrix <- base::table(actual_class, predicted_class)
+                      predicted_class = ifelse(prediction < cutoff, 0, 1))
+      predicted_class <- factor(predictions_table$predicted_class, levels = c(0, 1), labels = c(0, 1))
+      confusion_matrix <- table(actual_class, predicted_class)
       
       df$CUTOFF[j] <- cut_value
-      df$WEIGHTS[j] <- base::paste(weight_value, collapse = ", ")
+      df$WEIGHTS[j] <- paste(weight_value, collapse = ", ")
       df$TN[j] <- confusion_matrix[1, 1]
       df$FP[j] <- confusion_matrix[1, 2]
       df$FN[j] <- confusion_matrix[2, 1]
@@ -529,7 +529,7 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
       df$P <- df$FN[j] + df$TP[j]
       df$ACC[j] <- (df$TN[j] + df$TP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
       df$BACC[j] <- (df$TN[j]/(df$TN[j] + df$FP[j]) + df$TP[j]/(df$FN[j] + df$TP[j]))/2
-      df$BIAS[j] <- base::mean(base::as.numeric(actual_class)) - base::mean(base::as.numeric(predicted_class))
+      df$BIAS[j] <- mean(as.numeric(actual_class)) - mean(as.numeric(predicted_class))
       df$CE[j] <- (df$FN[j] + df$FP[j])/(df$TN[j] + df$FN[j] + df$FP[j] + df$TP[j])
       df$TPR[j] <- df$TP[j]/(df$TP[j] + df$FN[j])
       df$TNR[j] <- df$TN[j]/(df$TN[j] + df$FP[j])
@@ -545,13 +545,13 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
       df$MK[j] <- df$PPV[j] + df$NPV[j] - 1
       df$COST[j] <- TN_cost * df$TN[j] + FP_cost * df$FP[j] + FN_cost * df$FN[j] + TP_cost * df$TP[j]}
     results[[i]] <- df
-    utils::setTxtProgressBar(pb,i)}
+    setTxtProgressBar(pb,i)}
   
-  base::cat("\n")
+  cat("\n")
   
   # Convert list results do tibble data frame:
-  final_results <- base::do.call(bind_rows, results) %>%
-    tidyr::separate(col = WEIGHTS, sep = ", ", into = base::paste("model", 1:base::ncol(predictions), sep = "_"), convert = TRUE)
+  final_results <- do.call(bind_rows, results) %>%
+    tidyr::separate(col = WEIGHTS, sep = ", ", into = paste("model", 1:ncol(predictions), sep = "_"), convert = TRUE)
   
   # Arrange according to selected metric:
   if(ascending == TRUE){
@@ -565,28 +565,28 @@ Optimize_Binary_Ensemble_Cutoff_Model <- function(actual_class,
   
   # Return results:
   if (summary_type == "mean"){
-    base::return(base::list(all_results = final_results,
-                            top_results = final_results %>% utils::head(top),
-                            optimized_cutoff = final_results %>%
-                              utils::head(top) %>%
-                              dplyr::select(CUTOFF) %>%
-                              dplyr::summarise_all(base::mean),
-                            optimized_weights = final_results %>%
-                              utils::head(top) %>%
-                              dplyr::select(dplyr::starts_with("model_")) %>%
-                              dplyr::summarise_all(base::mean)))}
+    return(list(all_results = final_results,
+                top_results = final_results %>% head(top),
+                optimized_cutoff = final_results %>%
+                  head(top) %>%
+                  dplyr::select(CUTOFF) %>%
+                  dplyr::summarise_all(mean),
+                optimized_weights = final_results %>%
+                  head(top) %>%
+                  dplyr::select(dplyr::starts_with("model_")) %>%
+                  dplyr::summarise_all(mean)))}
   
   if (summary_type == "median"){
-    base::return(base::list(all_results = final_results,
-                            top_results = final_results %>% utils::head(top),
-                            optimized_cutoff = final_results %>%
-                              utils::head(top) %>%
-                              dplyr::select(CUTOFF) %>%
-                              dplyr::summarise_all(stats::median),
-                            optimized_weights = final_results %>%
-                              utils::head(top) %>%
-                              dplyr::select(dplyr::starts_with("model_")) %>%
-                              dplyr::summarise_all(stats::median)))}
+    return(list(all_results = final_results,
+                top_results = final_results %>% head(top),
+                optimized_cutoff = final_results %>%
+                  head(top) %>%
+                  dplyr::select(CUTOFF) %>%
+                  dplyr::summarise_all(median),
+                optimized_weights = final_results %>%
+                  head(top) %>%
+                  dplyr::select(dplyr::starts_with("model_")) %>%
+                  dplyr::summarise_all(median)))}
 }
 
 # ------------------------------------------------------------------------------
@@ -601,16 +601,16 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
                                                           save_plot = FALSE,
                                                           plot_size = 20){
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
   
-  tibble::tibble(actual = base::factor(actual),
+  tibble::tibble(actual = factor(actual),
                  predicted = predicted) %>%
     dplyr::mutate(cut = ggplot2::cut_interval(predicted, length = 1/bins)) %>%
     dplyr::group_by(cut, actual) %>%
     dplyr::summarise(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
-    tidyr::complete(cut, actual, fill = base::list(n = 0)) %>%
-    dplyr::mutate(actual = base::factor(actual, labels = labels, ordered = TRUE)) %>%
+    tidyr::complete(cut, actual, fill = list(n = 0)) %>%
+    dplyr::mutate(actual = factor(actual, labels = labels, ordered = TRUE)) %>%
     ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = cut, y = n, label = n)) +
     ggplot2::geom_bar(stat = "identity", col = "black") +
     ggplot2::geom_label() +
@@ -640,29 +640,29 @@ Display_Target_Class_Predictions_Distribution <- function(actual,
   bars <- plot$data %>%
     dplyr::select(cut) %>%
     dplyr::distinct() %>%
-    base::nrow()
+    nrow()
   
-  tibble::tibble(actual = base::factor(actual),
+  tibble::tibble(actual = factor(actual),
                  predicted = predicted) %>%
     dplyr::mutate(cut = ggplot2::cut_interval(predicted, length = 1/bins)) %>%
     dplyr::group_by(cut, actual) %>%
     dplyr::summarise(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
-    tidyr::complete(cut, actual, fill = base::list(n = 0)) %>%
-    dplyr::mutate(actual = base::factor(actual, labels = labels, ordered = TRUE)) %>%
+    tidyr::complete(cut, actual, fill = list(n = 0)) %>%
+    dplyr::mutate(actual = factor(actual, labels = labels, ordered = TRUE)) %>%
     tidyr::pivot_wider(id_cols = "actual",
                        names_from = "cut",
                        values_from = "n") %>%
     mutate(Observations = rowSums(.[2:(bars + 1)])) -> results
   
   if (save_plot == TRUE){
-    filename <- base::paste(datetime, type_info, "probability_distribution_per_target_class.png", sep = "_")
+    filename <- paste(datetime, type_info, "probability_distribution_per_target_class.png", sep = "_")
     ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
-    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
+    cat("Plot saved:", paste(getwd(), filename, sep = "/"), "\n")}
   
-  base::invisible(results)
+  invisible(results)
   plot %>%
-    base::print(.)
+    print(.)
   results %>%
     knitr::kable(.)}
 
@@ -678,24 +678,24 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
                                                          save_plot = FALSE,
                                                          plot_size = 20){
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
   
   predicted %>%
     tibble::as_tibble() %>%
     dplyr::mutate(actual = actual,
-                  predicted = base::max.col(predicted)) %>%
+                  predicted = max.col(predicted)) %>%
     tidyr::pivot_longer(cols = dplyr::starts_with("V"),
                         names_to = "class",
                         values_to = "probability") %>%
     dplyr::mutate(cut = ggplot2::cut_interval(probability, length = 1/bins),
-                  cut = forcats::fct_rev(base::factor(cut, ordered = TRUE)),
-                  class = base::as.numeric(stringr::str_sub(class, 2, -1)),
-                  class = base::factor(class, labels = base::paste0("predicted_", labels), levels = 1:base::length(labels), ordered = TRUE),
-                  actual = base::factor(actual, labels = base::paste0("actual_", labels), levels = 1:base::length(labels), ordered = TRUE)) %>%
+                  cut = forcats::fct_rev(factor(cut, ordered = TRUE)),
+                  class = as.numeric(stringr::str_sub(class, 2, -1)),
+                  class = factor(class, labels = paste0("predicted_", labels), levels = 1:length(labels), ordered = TRUE),
+                  actual = factor(actual, labels = paste0("actual_", labels), levels = 1:length(labels), ordered = TRUE)) %>%
     dplyr::group_by(actual, class, cut) %>%
     dplyr::summarise(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
-    tidyr::complete(actual, class, cut, fill = base::list(n = 0)) %>%
+    tidyr::complete(actual, class, cut, fill = list(n = 0)) %>%
     ggplot2::ggplot(data = ., mapping = ggplot2::aes(y = cut, x = n, label = n)) +
     ggplot2::geom_bar(stat = "identity", col = "black") +
     ggplot2::geom_label(color = "black", size = 3, label.size = 0.5, fontface = 1, fill = "white",label.padding = unit(0.15, "lines"), label.r = unit(0, "lines")) +
@@ -726,35 +726,35 @@ Display_All_Classes_Predictions_Distribution <- function(actual,
   predicted %>%
     tibble::as_tibble() %>%
     dplyr::mutate(actual = actual,
-                  predicted = base::max.col(predicted)) %>%
+                  predicted = max.col(predicted)) %>%
     tidyr::pivot_longer(cols = dplyr::starts_with("V"),
                         names_to = "class",
                         values_to = "probability") %>%
     dplyr::mutate(cut = ggplot2::cut_interval(probability, length = 1/bins),
-                  class = base::as.numeric(stringr::str_sub(class, 2, -1)),
-                  class = base::factor(class, labels = labels, levels = 1:base::length(labels), ordered = TRUE),
-                  actual = base::factor(actual, labels = labels, levels = 1:base::length(labels), ordered = TRUE)) %>%
+                  class = as.numeric(stringr::str_sub(class, 2, -1)),
+                  class = factor(class, labels = labels, levels = 1:length(labels), ordered = TRUE),
+                  actual = factor(actual, labels = labels, levels = 1:length(labels), ordered = TRUE)) %>%
     dplyr::group_by(actual, class, cut) %>%
     dplyr::summarise(n = dplyr::n()) %>%
     dplyr::ungroup() %>%
-    tidyr::complete(actual, class, cut, fill = base::list(n = 0)) %>%
-    dplyr::mutate(actual = base::as.character(actual),
-                  class = base::as.character(class),
-                  cut = base::as.character(cut)) %>%
-    tidyr::pivot_wider(id_cols = base::c("actual", "cut"),
+    tidyr::complete(actual, class, cut, fill = list(n = 0)) %>%
+    dplyr::mutate(actual = as.character(actual),
+                  class = as.character(class),
+                  cut = as.character(cut)) %>%
+    tidyr::pivot_wider(id_cols = c("actual", "cut"),
                        names_from = "class",
                        values_from = "n",
                        names_prefix = "predicted_") %>%
-    dplyr::mutate(actual = base::paste0("actual_", actual)) -> results
+    dplyr::mutate(actual = paste0("actual_", actual)) -> results
   
   if (save_plot == TRUE){
-    filename <- base::paste(datetime, type_info, "probability_distribution_all_classes.png", sep = "_")
+    filename <- paste(datetime, type_info, "probability_distribution_all_classes.png", sep = "_")
     ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
-    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
+    cat("Plot saved:", paste(getwd(), filename, sep = "/"), "\n")}
   
-  base::invisible(results)
+  invisible(results)
   plot %>%
-    base::print(.)
+    print(.)
   results %>%
     knitr::kable(.)}
 
@@ -772,25 +772,25 @@ Binary_Classifier_Verification <- function(actual,
                                            save = FALSE,
                                            open = TRUE){
   
-  sys_time <- base::Sys.time()
+  sys_time <- Sys.time()
   
   # Confusion matrix explanation:
-  result_1 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
-                             "Predicted Negative (0)" = base::c("True Negative (TN)", "False Negative (FN)"),
-                             "Predicted Positive (1)" = base::c("False Positive (FP)", "True Positive (TP)"))
+  result_1 <- tibble::tibble("Confusion Matrix" = c("Actual Negative (0)", "Actual Positive (1)"),
+                             "Predicted Negative (0)" = c("True Negative (TN)", "False Negative (FN)"),
+                             "Predicted Positive (1)" = c("False Positive (FP)", "True Positive (TP)"))
   
   probability <- predicted
-  if(base::length(base::unique(predicted)) > 2){predicted <- base::ifelse(predicted < cutoff, 0, 1)}
-  predicted <- base::factor(predicted, levels = base::c(0, 1), labels = base::c(0, 1))
+  if(length(unique(predicted)) > 2){predicted <- ifelse(predicted < cutoff, 0, 1)}
+  predicted <- factor(predicted, levels = c(0, 1), labels = c(0, 1))
   
   # Confusion matrix result:
-  confusion_matrix <- base::table(actual, predicted)
-  result_2 <- tibble::tibble("Confusion Matrix" = base::c("Actual Negative (0)", "Actual Positive (1)"),
-                             "Predicted Negative (0)" = base::c(confusion_matrix[1, 1], confusion_matrix[2, 1]),
-                             "Predicted Positive (1)" = base::c(confusion_matrix[1, 2], confusion_matrix[2, 2])) 
+  confusion_matrix <- table(actual, predicted)
+  result_2 <- tibble::tibble("Confusion Matrix" = c("Actual Negative (0)", "Actual Positive (1)"),
+                             "Predicted Negative (0)" = c(confusion_matrix[1, 1], confusion_matrix[2, 1]),
+                             "Predicted Positive (1)" = c(confusion_matrix[1, 2], confusion_matrix[2, 2])) 
   
   # Assessment of classifier effectiveness:
-  OBS <- base::sum(confusion_matrix); OBS_label <- "= TN + FP + FN + TP"
+  OBS <- sum(confusion_matrix); OBS_label <- "= TN + FP + FN + TP"
   TN <- confusion_matrix[1, 1]; TN_label <- "= TN"
   FP <- confusion_matrix[1, 2]; FP_label <- "= FP"
   FN <- confusion_matrix[2, 1]; FN_label <- "= FN"
@@ -810,7 +810,7 @@ Binary_Classifier_Verification <- function(actual,
   AUC <- Metrics::auc(actual = actual, predicted = probability)
   AUC_label <- "= Area Under ROC Curve"
   # Bias:
-  BIAS <- base::mean(base::as.numeric(actual)) - base::mean(base::as.numeric(predicted))
+  BIAS <- mean(as.numeric(actual)) - mean(as.numeric(predicted))
   BIAS_label <- "= mean(actual) - mean(predicted)"
   # Classification Error (CE):
   CE <- (FN + FP)/(TN + FN + FP + TP)
@@ -858,56 +858,56 @@ Binary_Classifier_Verification <- function(actual,
   COST <- FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost
   COST_label <- "= FN * FN_cost + FP * FP_cost + TN * TN_cost + TP * TP_cost"
   
-  result_3 <- tibble::tibble(Metric = base::c("Number of Observations", "True Negative", "False Positive", "False Negative", "True Positive",
-                                              "Condition Negative", "Condition Positive", "Accuracy", "Balanced Accuracy", "Area Under ROC Curve",
-                                              "Bias", "Classification Error", "True Positive Rate", "True Negative Rate",
-                                              "Positive Prediction Value", "Negative Predictive Value", "False Negative Rate", "False Positive Rate",
-                                              "False Discovery Rate", "False Omission Rate", "Threat Score", "F1 Score",
-                                              "Bookmaker Informedness", "Markedness", "Gini Index", "Cost"),
-                             `Metric Abb` = base::c("RECORDS", "TN", "FP", "FN", "TP",
-                                                    "N", "P", "ACC", "BACC", "AUC",
-                                                    "BIAS", "CE", "TPR", "TNR", 
-                                                    "PPV", "NPV", "FNR", "FPR",
-                                                    "FDR", "FOR", "TS", "F1",
-                                                    "BM", "MK", "GINI", "COST"),
-                             `Metric Name` = base::c("-", "-", "Type I Error", "Type II Error", "-",
-                                                     "-", "-", "-", "-", "-",
-                                                     "-", "-", "Sensitivity, Recall, Hit Rate", "Specifity, Selectivity",
-                                                     "Precision", "-", "Miss Rate", "Fall-Out",
-                                                     "-", "-", "Critical Success Index", "-",
-                                                     "-", "-", "-", "-"),
-                             Score = base::round(base::c(OBS, TN, FP, FN, TP,
-                                                         N, P, ACC, BACC, AUC,
-                                                         BIAS, CE, TPR, TNR,
-                                                         PPV, NPV, FNR, FPR,
-                                                         FDR, FOR, TS, F1,
-                                                         BM, MK, GINI, COST), digits = 6),
-                             Calculation = base::c(OBS_label, TN_label, FP_label, FN_label, TP_label,
-                                                   N_label, P_label, ACC_label, BACC_label, AUC_label,
-                                                   BIAS_label, CE_label, TPR_label, TNR_label,
-                                                   PPV_label, NPV_label, FNR_label, FPR_label,
-                                                   FDR_label, FOR_label, TS_label, F1_label,
-                                                   BM_label, MK_label, GINI_label, COST_label),
-                             ID = base::c(1:7, 1:19)) %>%
+  result_3 <- tibble::tibble(Metric = c("Number of Observations", "True Negative", "False Positive", "False Negative", "True Positive",
+                                        "Condition Negative", "Condition Positive", "Accuracy", "Balanced Accuracy", "Area Under ROC Curve",
+                                        "Bias", "Classification Error", "True Positive Rate", "True Negative Rate",
+                                        "Positive Prediction Value", "Negative Predictive Value", "False Negative Rate", "False Positive Rate",
+                                        "False Discovery Rate", "False Omission Rate", "Threat Score", "F1 Score",
+                                        "Bookmaker Informedness", "Markedness", "Gini Index", "Cost"),
+                             `Metric Abb` = c("RECORDS", "TN", "FP", "FN", "TP",
+                                              "N", "P", "ACC", "BACC", "AUC",
+                                              "BIAS", "CE", "TPR", "TNR", 
+                                              "PPV", "NPV", "FNR", "FPR",
+                                              "FDR", "FOR", "TS", "F1",
+                                              "BM", "MK", "GINI", "COST"),
+                             `Metric Name` = c("-", "-", "Type I Error", "Type II Error", "-",
+                                               "-", "-", "-", "-", "-",
+                                               "-", "-", "Sensitivity, Recall, Hit Rate", "Specifity, Selectivity",
+                                               "Precision", "-", "Miss Rate", "Fall-Out",
+                                               "-", "-", "Critical Success Index", "-",
+                                               "-", "-", "-", "-"),
+                             Score = round(c(OBS, TN, FP, FN, TP,
+                                             N, P, ACC, BACC, AUC,
+                                             BIAS, CE, TPR, TNR,
+                                             PPV, NPV, FNR, FPR,
+                                             FDR, FOR, TS, F1,
+                                             BM, MK, GINI, COST), digits = 6),
+                             Calculation = c(OBS_label, TN_label, FP_label, FN_label, TP_label,
+                                             N_label, P_label, ACC_label, BACC_label, AUC_label,
+                                             BIAS_label, CE_label, TPR_label, TNR_label,
+                                             PPV_label, NPV_label, FNR_label, FPR_label,
+                                             FDR_label, FOR_label, TS_label, F1_label,
+                                             BM_label, MK_label, GINI_label, COST_label),
+                             ID = c(1:7, 1:19)) %>%
     dplyr::select(ID, Metric, `Metric Abb`, `Metric Name`, Score, Calculation)
   
   result_3_label <- result_3 %>% knitr::kable(.)
   
   result_3 %>%
-    dplyr::mutate(Group = base::ifelse(Metric %in% base::c("Number of Observations", "True Negative",
-                                                           "False Positive", "False Negative",
-                                                           "True Positive", "Condition Positive",
-                                                           "Condition Negative"), 
-                                       "Confusion Matrix Result", "Assessment of Classifier Effectiveness")) %>%
+    dplyr::mutate(Group = ifelse(Metric %in% c("Number of Observations", "True Negative",
+                                               "False Positive", "False Negative",
+                                               "True Positive", "Condition Positive",
+                                               "Condition Negative"), 
+                                 "Confusion Matrix Result", "Assessment of Classifier Effectiveness")) %>%
     gt::gt(rowname_col = "ID", groupname_col = "Group") %>%
-    gt::tab_header(title = gt::md(base::paste("Model's evaluation metrics", sys_time)),
+    gt::tab_header(title = gt::md(paste("Model's evaluation metrics", sys_time)),
                    subtitle = gt::md("Binary classification model")) %>%
-    gt::tab_source_note(gt::md(base::paste0("**Options**: ",
-                                            "**cutoff** = ", cutoff,
-                                            ", **TN_cost** = ", TN_cost,
-                                            ", **FP_cost** = ", FP_cost,
-                                            ", **FN_cost** = ", FN_cost,
-                                            ", **TP_cost** = ", TP_cost))) %>%
+    gt::tab_source_note(gt::md(paste0("**Options**: ",
+                                      "**cutoff** = ", cutoff,
+                                      ", **TN_cost** = ", TN_cost,
+                                      ", **FP_cost** = ", FP_cost,
+                                      ", **FN_cost** = ", FN_cost,
+                                      ", **TP_cost** = ", TP_cost))) %>%
     gt::tab_source_note(gt::md("More information available at: **https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR**.")) %>%
     gt::tab_spanner(label = "Metrics section",
                     columns = dplyr::vars(Metric, `Metric Abb`, `Metric Name`)) %>%
@@ -938,29 +938,29 @@ Binary_Classifier_Verification <- function(actual,
   
   if (save == TRUE){
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"),
+               filename = stringr::str_replace_all(paste(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                vwidth = 900,
                vheight = 1600,
                expand = 5)
     
     result_3 %>%
       dplyr::mutate(Calculation = NULL) %>%
-      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
+      readr::write_csv2(stringr::str_replace_all(paste(sys_time, type_info, "binary_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
     
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste0(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(paste0(sys_time, type_info, "binary_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }
   }
-
+  
   gt_table %>% 
-    base::print()
+    print()
   result_3_label %>%
-    base::print()
+    print()
   
   
-  base::invisible(base::list("Confusion_Matrix_Explanation" = result_1,
-                             "Confusion_Matrix_Result" = result_2,
-                             "Assessment_of_Classifier_Effectiveness" = result_3))}
+  invisible(list("Confusion_Matrix_Explanation" = result_1,
+                 "Confusion_Matrix_Result" = result_2,
+                 "Assessment_of_Classifier_Effectiveness" = result_3))}
 
 # ------------------------------------------------------------------------------
 # CUT-OFF OPTIMIZATION
@@ -983,7 +983,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                                                   save = FALSE,
                                                   open = TRUE){
   
-  sys_time <- base::Sys.time()
+  sys_time <- Sys.time()
   
   if (key_metric_as_string == FALSE){
     key_metric <- dplyr::enquo(key_metric) 
@@ -994,28 +994,28 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
     key_metric <- dplyr::enquo(key_metric) 
     key_metric_name <- dplyr::quo_name(key_metric)}
   
-  base::set.seed(seed = seed_value)
-  cuts_values <- stats::runif(n = cuts, min = 0, max = 1)
-  cuts_values <- base::sort(x = cuts_values, decreasing = FALSE)
+  set.seed(seed = seed_value)
+  cuts_values <- runif(n = cuts, min = 0, max = 1)
+  cuts_values <- sort(x = cuts_values, decreasing = FALSE)
   
-  actual <- base::factor(actual, levels = base::c(0, 1))
+  actual <- factor(actual, levels = c(0, 1))
   
   cores <- parallel::detectCores()
   cl <- snow::makeSOCKcluster(cores - 1)
   doSNOW::registerDoSNOW(cl)
   
-  pb <- utils::txtProgressBar(min = 0, max = cuts, style = 3)
-  progress <- function(n) utils::setTxtProgressBar(pb, n)
-  opts <- base::list(progress = progress)
-
+  pb <- txtProgressBar(min = 0, max = cuts, style = 3)
+  progress <- function(n) setTxtProgressBar(pb, n)
+  opts <- list(progress = progress)
+  
   df <- foreach::foreach(i = 1:cuts, .options.snow = opts, .combine = 'rbind') %dopar% {
     
-    predicted_class <- base::factor(base::ifelse(predicted < cuts_values[i], 0, 1), levels = c(0, 1))
-    confusion_matrix <- base::table(actual, predicted_class)
+    predicted_class <- factor(ifelse(predicted < cuts_values[i], 0, 1), levels = c(0, 1))
+    confusion_matrix <- table(actual, predicted_class)
     
     tibble::tibble(ID = i,
                    CUTOFF = cuts_values[i],
-                   RECORDS = base::sum(confusion_matrix),
+                   RECORDS = sum(confusion_matrix),
                    TN = confusion_matrix[1, 1],
                    FP = confusion_matrix[1, 2],
                    FN = confusion_matrix[2, 1],
@@ -1025,7 +1025,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                    ACC = (TN + TP)/(TN + FN + FP + TP),
                    BACC = (TN/(TN + FP) + TP/(FN + TP))/2,
                    AUC = Metrics::auc(actual = actual, predicted = predicted),
-                   BIAS = base::mean(base::as.numeric(actual)) - base::mean(base::as.numeric(predicted_class)),
+                   BIAS = mean(as.numeric(actual)) - mean(as.numeric(predicted_class)),
                    CE = (FN + FP)/(TN + FN + FP + TP),
                    TPR = TP/(TP + FN),
                    TNR = TN/(TN + FP),
@@ -1043,7 +1043,7 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                    COST = TN_cost * TN + FP_cost * FP + FN_cost * FN + TP_cost * TP)
   }
   
-  base::close(pb)
+  close(pb)
   snow::stopCluster(cl)
   
   if(ascending == TRUE){
@@ -1055,12 +1055,12 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
   }
   
   df %>%
-    utils::head(., top) %>%
+    head(., top) %>%
     dplyr::mutate(ID = dplyr::row_number()) -> df_2
   
   df_2 %>%
     gt::gt(rowname_col = "ID") %>%
-    gt::tab_header(title = gt::md(base::paste("Cut-off value optimization", sys_time)),
+    gt::tab_header(title = gt::md(paste("Cut-off value optimization", sys_time)),
                    subtitle = gt::md("Binary classification model")) %>%
     gt::fmt_number(columns = dplyr::vars(CUTOFF, ACC, BACC, AUC, BIAS, CE, TPR, TNR, PPV, NPV, FNR, FPR, FDR, FOR, TS, F1, BM, MK, GINI),
                    decimals = 4,
@@ -1104,42 +1104,42 @@ Binary_Classifier_Cutoff_Optimization <- function(actual,
                            columns = dplyr::vars(RECORDS, TN, FP, FN, TP, N, P, COST),
                            decimals = 0,
                            use_seps = FALSE) %>%
-    gt::tab_source_note(gt::md(base::paste0("**Options**: ",
-                                            "**cuts** = ", cuts,
-                                            ", **TN_cost** = ", TN_cost,
-                                            ", **FP_cost** = ", FP_cost,
-                                            ", **FN_cost** = ", FN_cost,
-                                            ", **TP_cost** = ", TP_cost,
-                                            ", **key_metric** = ", key_metric_name, 
-                                            ", **ascending** = ", ascending,
-                                            ", **seed_value** = ", seed_value,
-                                            ", **top** = ", top))) %>%
+    gt::tab_source_note(gt::md(paste0("**Options**: ",
+                                      "**cuts** = ", cuts,
+                                      ", **TN_cost** = ", TN_cost,
+                                      ", **FP_cost** = ", FP_cost,
+                                      ", **FN_cost** = ", FN_cost,
+                                      ", **TP_cost** = ", TP_cost,
+                                      ", **key_metric** = ", key_metric_name, 
+                                      ", **ascending** = ", ascending,
+                                      ", **seed_value** = ", seed_value,
+                                      ", **top** = ", top))) %>%
     gt::tab_source_note(gt::md("More information available at: **https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR**.")) %>%
     gt::opt_table_lines() -> gt_table
   
   if (save == TRUE){
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"),
+               filename = stringr::str_replace_all(paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"),
                vwidth = 1600,
                vheight = 900,
                expand = 5)
     
     df %>%
       dplyr::mutate(Calculation = NULL) %>%
-      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.csv", sep = "_"), ":", "-"))
+      readr::write_csv2(stringr::str_replace_all(paste(sys_time, type_info, "binary_model_cutoff_value_optimization.csv", sep = "_"), ":", "-"))
     
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(paste(sys_time, type_info, "binary_model_cutoff_value_optimization.png", sep = "_"), ":", "-"))
     }
   }
   
   gt_table %>%
-    base::print(.)
+    print(.)
   
-  base::cat("Total time in seconds:", base::Sys.time() - sys_time)
+  cat("Total time in seconds:", Sys.time() - sys_time)
   
-  base::invisible(base::list(top_cutoffs = df_2,
-                             all_cutoffs = df))}
+  invisible(list(top_cutoffs = df_2,
+                 all_cutoffs = df))}
 
 # ------------------------------------------------------------------------------
 # Categorical model evaluation:
@@ -1150,21 +1150,21 @@ Categorical_Classifier_Verification <- function(actual,
                                                 save = TRUE,
                                                 open = FALSE){
   
-  sys_time <- base::Sys.time()
-
-  predicted <- base::max.col(probabilities)
+  sys_time <- Sys.time()
   
-  base::table(base::factor(actual, levels = 1:base::length(labels), labels = labels), 
-              base::factor(predicted, levels = 1:base::length(labels), labels = labels)) %>%
-    base::as.data.frame() %>%
+  predicted <- max.col(probabilities)
+  
+  table(factor(actual, levels = 1:length(labels), labels = labels), 
+        factor(predicted, levels = 1:length(labels), labels = labels)) %>%
+    as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::rename(actual = Var1,
                   predicted = Var2,
                   count = Freq) %>%
-    tidyr::complete(actual, predicted, fill = base::list(count = 0)) %>%
+    tidyr::complete(actual, predicted, fill = list(count = 0)) %>%
     dplyr::arrange(actual, predicted) %>%
     dplyr::group_by(actual) %>%
-    dplyr::mutate(records = base::sum(count),
+    dplyr::mutate(records = sum(count),
                   freq = count/records) %>%
     dplyr::filter(actual == predicted) %>%
     dplyr::mutate(predicted = NULL) %>%
@@ -1175,31 +1175,31 @@ Categorical_Classifier_Verification <- function(actual,
                   inaccuracy = 1 - accuracy) %>%
     dplyr::select(actual, records, correct, incorrect, accuracy, inaccuracy) -> stats; stats
   
-  base::table(base::factor(actual, levels = 1:base::length(labels), labels = labels), 
-              base::factor(predicted, levels = 1:base::length(labels), labels = labels)) %>%
-    base::as.data.frame() %>%
+  table(factor(actual, levels = 1:length(labels), labels = labels), 
+        factor(predicted, levels = 1:length(labels), labels = labels)) %>%
+    as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::rename(actual = Var1,
                   predicted = Var2,
                   count = Freq) %>%
-    tidyr::complete(actual, predicted, fill = base::list(count = 0)) %>%
+    tidyr::complete(actual, predicted, fill = list(count = 0)) %>%
     dplyr::group_by(predicted) %>%
-    dplyr::mutate(records = base::sum(count),
+    dplyr::mutate(records = sum(count),
                   precision = count/records) %>%
     dplyr::filter(actual == predicted) %>%
     dplyr::ungroup() %>%
     dplyr::select(actual, precision) -> precision; precision
   
-  base::table(base::factor(actual, levels = 1:base::length(labels), labels = labels), 
-              base::factor(predicted, levels = 1:base::length(labels), labels = labels)) %>%
-    base::as.data.frame() %>%
+  table(factor(actual, levels = 1:length(labels), labels = labels), 
+        factor(predicted, levels = 1:length(labels), labels = labels)) %>%
+    as.data.frame() %>%
     tibble::as_tibble() %>%
     dplyr::rename(actual = Var1,
                   predicted = Var2,
                   count = Freq) %>%
-    tidyr::complete(actual, predicted, fill = base::list(count = 0)) %>%
+    tidyr::complete(actual, predicted, fill = list(count = 0)) %>%
     dplyr::group_by(actual) %>%
-    dplyr::mutate(records = base::sum(count),
+    dplyr::mutate(records = sum(count),
                   recall = count/records) %>%
     dplyr::filter(actual == predicted) %>%
     dplyr::ungroup() %>%
@@ -1209,22 +1209,22 @@ Categorical_Classifier_Verification <- function(actual,
     dplyr::left_join(precision, by = "actual") %>%
     dplyr::left_join(recall, by = "actual") %>%
     dplyr::mutate(f1 = (2 * precision * recall)/(precision + recall)) %>%
-    tidyr::replace_na(base::list(f1 = 0)) %>%
+    tidyr::replace_na(list(f1 = 0)) %>%
     dplyr::mutate(type = "Split into categories",
-                  actual = base::as.character(actual)) %>%
+                  actual = as.character(actual)) %>%
     dplyr::rename(class = actual) -> stats_2; stats_2
   
   stats_2 %>%
     dplyr::mutate(class = "Overall") %>%
     dplyr::group_by(class) %>%
-    dplyr::summarise(records = base::sum(records),
-                     correct = base::sum(correct),
+    dplyr::summarise(records = sum(records),
+                     correct = sum(correct),
                      incorrect = records - correct,
                      accuracy = correct/records,
                      inaccuracy = incorrect/records,
-                     precision = base::mean(precision),
-                     recall = base::mean(recall),
-                     f1 = base::mean(f1),
+                     precision = mean(precision),
+                     recall = mean(recall),
+                     f1 = mean(f1),
                      type = "All categories") -> stats_3; stats_3
   
   dplyr::bind_rows(stats_2, stats_3) %>%
@@ -1254,7 +1254,7 @@ Categorical_Classifier_Verification <- function(actual,
   stats_4 %>%
     dplyr::ungroup() %>%
     gt::gt(rowname_col = "Class", groupname_col = "Type") %>%
-    gt::tab_header(title = gt::md(base::paste("Model's evaluation metrics", sys_time)),
+    gt::tab_header(title = gt::md(paste("Model's evaluation metrics", sys_time)),
                    subtitle = gt::md("Categorical classification model")) %>%
     gt::tab_source_note(gt::md("More information available at: **https://github.com/ForesightAdamNowacki/DeepNeuralNetworksRepoR**.")) %>%
     gt::fmt_number(columns = dplyr::vars(Accuracy, Inaccuracy, Precision, Recall, F1),
@@ -1288,25 +1288,25 @@ Categorical_Classifier_Verification <- function(actual,
   
   if (save == TRUE){
     
-    base::print(gt_table)
+    print(gt_table)
     gt::gtsave(data = gt_table,
-               filename = stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
+               filename = stringr::str_replace_all(paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"),
                vwidth = 900,
                vheight = 600,
                expand = 5)
     
     stats_4 %>%
       dplyr::mutate(Calculation = NULL) %>%
-      readr::write_csv2(stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
+      readr::write_csv2(stringr::str_replace_all(paste(sys_time, type_info, "categorical_model_evaluation_metrics.csv", sep = "_"), ":", "-"))
     
     if (open == TRUE){
-      rstudioapi::viewer(stringr::str_replace_all(base::paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
+      rstudioapi::viewer(stringr::str_replace_all(paste(sys_time, type_info, "categorical_model_evaluation_metrics.png", sep = "_"), ":", "-"))
     }
   }
   
-  base::return(base::list(stats_2,
-                          stats_3,
-                          stats_4))
+  return(list(stats_2,
+              stats_3,
+              stats_4))
 }
 
 # ------------------------------------------------------------------------------
@@ -1316,110 +1316,110 @@ Create_KFolds_Directories <- function(data_dir,
                                       folds = 5,
                                       seed = 42){
   
-  base::set.seed(seed = seed)
-  sys_time <- stringr::str_replace_all(base::Sys.time(), ":", "-")
-  class_dirs <- base::list.dirs(data_dir)[2:base::length(base::list.dirs(data_dir))]
-  classes <- base::basename(class_dirs)
-  folders <- base::paste("Fold", 1:folds, sep = "_")
+  set.seed(seed = seed)
+  sys_time <- stringr::str_replace_all(Sys.time(), ":", "-")
+  class_dirs <- list.dirs(data_dir)[2:length(list.dirs(data_dir))]
+  classes <- basename(class_dirs)
+  folders <- paste("Fold", 1:folds, sep = "_")
   
-  files <- base::list()
-  for (i in base::seq_along(class_dirs)){
-    files[[i]] <- base::list.files(class_dirs[i])}
-  names(files) <- base::basename(class_dirs)
+  files <- list()
+  for (i in seq_along(class_dirs)){
+    files[[i]] <- list.files(class_dirs[i])}
+  names(files) <- basename(class_dirs)
   
-  files <- tibble::tibble(file = base::do.call(c, files),
-                          class = base::rep(names(base::sapply(files, length)), times = base::sapply(files, length))) %>%
-    dplyr::mutate(original_file_path = base::paste(data_dir, class, file, sep = "/"),
+  files <- tibble::tibble(file = do.call(c, files),
+                          class = rep(names(sapply(files, length)), times = sapply(files, length))) %>%
+    dplyr::mutate(original_file_path = paste(data_dir, class, file, sep = "/"),
                   fold = caret::createFolds(class, k = folds, list = FALSE))
   
-  # base::unlink(target_dir, recursive = TRUE, force = TRUE)
-  base::dir.create(path = target_dir, showWarnings = FALSE, recursive = TRUE)
+  # unlink(target_dir, recursive = TRUE, force = TRUE)
+  dir.create(path = target_dir, showWarnings = FALSE, recursive = TRUE)
   
   for (i in 1:folds){
     
     files_2 <- files %>%
       dplyr::filter(fold == i)
-    fold <- base::paste("fold", i, sep = "_")
-    fold_dir <- base::paste(target_dir, fold, sep = "/")
-    base::dir.create(path = fold_dir, showWarnings = FALSE, recursive = TRUE)
+    fold <- paste("fold", i, sep = "_")
+    fold_dir <- paste(target_dir, fold, sep = "/")
+    dir.create(path = fold_dir, showWarnings = FALSE, recursive = TRUE)
     
-    for (j in base::seq_along(classes)){
+    for (j in seq_along(classes)){
       
-      class_dir <- base::paste(target_dir, fold, classes[j], sep = "/")
-      base::dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
+      class_dir <- paste(target_dir, fold, classes[j], sep = "/")
+      dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
       files_3 <- files_2 %>%
         dplyr::filter(class == classes[j])
-      base::file.copy(from = files_3$original_file_path,
-                      to = base::paste(class_dir, files_3$file, sep = "/"))
+      file.copy(from = files_3$original_file_path,
+                to = paste(class_dir, files_3$file, sep = "/"))
     }
   }
   
-  folds <- base::list.files(target_dir)[base::grepl("fold_", list.files(target_dir))]
-  steps <- base::paste("step", 1:base::length(folds), sep = "_")
+  folds <- list.files(target_dir)[grepl("fold_", list.files(target_dir))]
+  steps <- paste("step", 1:length(folds), sep = "_")
   
   '%!in%' <- Negate('%in%')
   
-  for (i in base::seq_along(steps)){
+  for (i in seq_along(steps)){
     
-    step_dir <- base::paste(target_dir, steps[i], sep = "/")
-    train_dir <- base::paste(step_dir, "train", sep = "/")
-    validation_dir <- base::paste(step_dir, "validation", sep = "/")
-    set_dirs <- base::c(train_dir, validation_dir)
+    step_dir <- paste(target_dir, steps[i], sep = "/")
+    train_dir <- paste(step_dir, "train", sep = "/")
+    validation_dir <- paste(step_dir, "validation", sep = "/")
+    set_dirs <- c(train_dir, validation_dir)
     
-    base::dir.create(path = step_dir, showWarnings = FALSE, recursive = TRUE)
-    base::dir.create(path = train_dir, showWarnings = FALSE, recursive = TRUE)
-    base::dir.create(path = validation_dir, showWarnings = FALSE, recursive = TRUE)
+    dir.create(path = step_dir, showWarnings = FALSE, recursive = TRUE)
+    dir.create(path = train_dir, showWarnings = FALSE, recursive = TRUE)
+    dir.create(path = validation_dir, showWarnings = FALSE, recursive = TRUE)
     
-    for (j in base::seq_along(set_dirs)){
+    for (j in seq_along(set_dirs)){
       
-      base::setwd(set_dirs[j])
+      setwd(set_dirs[j])
       
-      for (k in base::seq_along(classes)){
+      for (k in seq_along(classes)){
         
         if (j == 1){
           
-          class_dir <- base::paste(base::getwd(), classes[k], sep = "/")
-          base::dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
+          class_dir <- paste(getwd(), classes[k], sep = "/")
+          dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
           train_files_from <- files %>%
             dplyr::filter(fold %!in% i) %>%
             dplyr::filter(class == classes[k]) 
           
-          base::file.copy(from = train_files_from$original_file_path,
-                          to = base::paste(class_dir, train_files_from$file, sep = "/"))}
+          file.copy(from = train_files_from$original_file_path,
+                    to = paste(class_dir, train_files_from$file, sep = "/"))}
         
         if (j == 2){
           
-          class_dir <- base::paste(base::getwd(), classes[k], sep = "/")
-          base::dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
+          class_dir <- paste(getwd(), classes[k], sep = "/")
+          dir.create(path = class_dir, showWarnings = FALSE, recursive = TRUE)
           validation_files_from <- files %>%
             dplyr::filter(fold %in% i) %>%
             dplyr::filter(class == classes[k]) 
-          base::file.copy(from = validation_files_from$original_file_path,
-                          to = base::paste(class_dir, validation_files_from$file, sep = "/"))}
+          file.copy(from = validation_files_from$original_file_path,
+                    to = paste(class_dir, validation_files_from$file, sep = "/"))}
       }
     }
   }
   
-  base::setwd(target_dir)
+  setwd(target_dir)
   
-  for (i in base::seq_along(steps)){
+  for (i in seq_along(steps)){
     
     col_name <- steps[i]
     files <- files %>%
-      dplyr::mutate(!!rlang::sym(col_name) := base::ifelse(fold == i, "Validation", "Train"))}
+      dplyr::mutate(!!rlang::sym(col_name) := ifelse(fold == i, "Validation", "Train"))}
   
-  readr::write_csv(files, base::paste(sys_time, "Cross_Validation_Splits.csv"))
+  readr::write_csv(files, paste(sys_time, "Cross_Validation_Splits.csv"))
 }
 
 # ------------------------------------------------------------------------------
 # Display list structure:
 Display_List_Structure <- function(list, n = 1){
-  for(i in 1:base::length(list)){
-    for(j in 1:base::length(list[[i]])){
+  for(i in 1:length(list)){
+    for(j in 1:length(list[[i]])){
       list[[i]][[j]] %>%
-        utils::head(n = n) %>%
+        head(n = n) %>%
         knitr::kable() %>%
-        base::print()}}}
+        print()}}}
 
 # ------------------------------------------------------------------------------
 # Build Ensemble model for binary classification problem:
@@ -1442,14 +1442,14 @@ Binary_Ensemble_Model <- function(models_vector,
   validation_pattern <- "validation_binary_probabilities"
   test_dir <- "test_binary_probabilities"
   
-  dataset_types <- base::c("train_dataset", "validation_dataset", "test_dataset")
+  dataset_types <- c("train_dataset", "validation_dataset", "test_dataset")
   
-  all_predictions <- base::list()
-  for (i in base::seq_along(models_vector)){
-    model <- base::list()
-    model[[1]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
-    model[[2]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
-    model[[3]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
+  all_predictions <- list()
+  for (i in seq_along(models_vector)){
+    model <- list()
+    model[[1]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
+    model[[2]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
+    model[[3]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
     all_predictions[[i]] <- model}
   
   Display_List_Structure(all_predictions, n = n)
@@ -1457,22 +1457,22 @@ Binary_Ensemble_Model <- function(models_vector,
   # ------------------------------------------------------------------------------
   # Predictions:
   # Train:
-  train_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]]$V2}
-  train_predictions <- base::do.call(base::cbind, train_predictions)
-  base::colnames(train_predictions) <- models_vector
+  train_predictions <- list()
+  for (i in 1:length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]]$V2}
+  train_predictions <- do.call(cbind, train_predictions)
+  colnames(train_predictions) <- models_vector
   
   # Validation:
-  validation_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]]$V2}
-  validation_predictions <- base::do.call(base::cbind, validation_predictions)
-  base::colnames(validation_predictions) <- models_vector
+  validation_predictions <- list()
+  for (i in 1:length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]]$V2}
+  validation_predictions <- do.call(cbind, validation_predictions)
+  colnames(validation_predictions) <- models_vector
   
   # Test:
-  test_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]]$V2}
-  test_predictions <- base::do.call(base::cbind, test_predictions)
-  base::colnames(test_predictions) <- models_vector
+  test_predictions <- list()
+  for (i in 1:length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]]$V2}
+  test_predictions <- do.call(cbind, test_predictions)
+  colnames(test_predictions) <- models_vector
   
   # ------------------------------------------------------------------------------
   # Actual:
@@ -1482,55 +1482,55 @@ Binary_Ensemble_Model <- function(models_vector,
   
   # ------------------------------------------------------------------------------
   # Change working directory to save all files in Ensemble_Model Binary Folder:
-  base::setwd(cwd)
+  setwd(cwd)
   
   # ------------------------------------------------------------------------------
   # Train results for single component models:
-  train_default <- base::list()
-  for (i in 1:base::length(models_vector)){
+  train_default <- list()
+  for (i in 1:length(models_vector)){
     Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = train_actual,
                                                                              predicted = train_predictions[,i],
                                                                              cutoff = default_cutoff,
-                                                                             type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[1], sep = "_"),
+                                                                             type_info = paste(models_vector[i], "default_cutoff", dataset_types[1], sep = "_"),
                                                                              save = save_option,
                                                                              open = FALSE)[[3]]
     train_default[[i]] <- Assessment_of_Classifier_Effectiveness}
   
   train_default_summary <- tibble::tibble(Metric = train_default[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){train_default_summary <- dplyr::bind_cols(train_default_summary, train_default[[i]][5])}
-  base::colnames(train_default_summary) <- base::c("Metric", models_vector)
+  for (i in 1:length(models_vector)){train_default_summary <- dplyr::bind_cols(train_default_summary, train_default[[i]][5])}
+  colnames(train_default_summary) <- c("Metric", models_vector)
   
   # ------------------------------------------------------------------------------
   # Validation results for single component models:
-  validation_default <- base::list()
-  for (i in 1:base::length(models_vector)){
+  validation_default <- list()
+  for (i in 1:length(models_vector)){
     Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = validation_actual,
                                                                              predicted = validation_predictions[,i],
                                                                              cutoff = default_cutoff,
-                                                                             type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[2], sep = "_"),
+                                                                             type_info = paste(models_vector[i], "default_cutoff", dataset_types[2], sep = "_"),
                                                                              save = save_option,
                                                                              open = FALSE)[[3]]
     validation_default[[i]] <- Assessment_of_Classifier_Effectiveness}
   
   validation_default_summary <- tibble::tibble(Metric = validation_default[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){validation_default_summary <- dplyr::bind_cols(validation_default_summary, validation_default[[i]][5])}
-  base::colnames(validation_default_summary) <- base::c("Metric", models_vector)
+  for (i in 1:length(models_vector)){validation_default_summary <- dplyr::bind_cols(validation_default_summary, validation_default[[i]][5])}
+  colnames(validation_default_summary) <- c("Metric", models_vector)
   
   # ------------------------------------------------------------------------------
   # Test results for single component models:
-  test_default <- base::list()
-  for (i in 1:base::length(models_vector)){
+  test_default <- list()
+  for (i in 1:length(models_vector)){
     Assessment_of_Classifier_Effectiveness <- Binary_Classifier_Verification(actual = test_actual,
                                                                              predicted = test_predictions[,i],
                                                                              cutoff = default_cutoff,
-                                                                             type_info = base::paste(models_vector[i], "default_cutoff", dataset_types[3], sep = "_"),
+                                                                             type_info = paste(models_vector[i], "default_cutoff", dataset_types[3], sep = "_"),
                                                                              save = save_option,
                                                                              open = FALSE)[[3]]
     test_default[[i]] <- Assessment_of_Classifier_Effectiveness}
   
   test_default_summary <- tibble::tibble(Metric = test_default[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){test_default_summary <- dplyr::bind_cols(test_default_summary, test_default[[i]][5])}
-  base::colnames(test_default_summary) <- base::c("Metric", models_vector)
+  for (i in 1:length(models_vector)){test_default_summary <- dplyr::bind_cols(test_default_summary, test_default[[i]][5])}
+  colnames(test_default_summary) <- c("Metric", models_vector)
   
   # ------------------------------------------------------------------------------
   # Optimization dataset:
@@ -1543,8 +1543,8 @@ Binary_Ensemble_Model <- function(models_vector,
     predictions_optimization = validation_predictions}
   
   if (optimization_dataset == "train+validation"){
-    actual_optimization = base::c(train_actual, validation_actual)
-    predictions_optimization = base::rbind(train_predictions, validation_predictions)}
+    actual_optimization = c(train_actual, validation_actual)
+    predictions_optimization = rbind(train_predictions, validation_predictions)}
   
   # ------------------------------------------------------------------------------
   # Optimize cutoff and weights in binary ensemble model on selected data using simulation approach:
@@ -1568,41 +1568,41 @@ Binary_Ensemble_Model <- function(models_vector,
   
   # ------------------------------------------------------------------------------
   # Ensemble model predictions:
-  train_result <- mapply("*", base::as.data.frame(train_predictions), ensemble_optimization_weights) %>%
+  train_result <- mapply("*", as.data.frame(train_predictions), ensemble_optimization_weights) %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(prediction = base::rowSums(.)) %>%
+    dplyr::mutate(prediction = rowSums(.)) %>%
     dplyr::select(prediction) %>%
     dplyr::pull()
   
-  validation_result <- mapply("*", base::as.data.frame(validation_predictions), ensemble_optimization_weights) %>%
+  validation_result <- mapply("*", as.data.frame(validation_predictions), ensemble_optimization_weights) %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(prediction = base::rowSums(.)) %>%
+    dplyr::mutate(prediction = rowSums(.)) %>%
     dplyr::select(prediction) %>%
     dplyr::pull()
   
-  test_result <- mapply("*", base::as.data.frame(test_predictions), ensemble_optimization_weights) %>%
+  test_result <- mapply("*", as.data.frame(test_predictions), ensemble_optimization_weights) %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(prediction = base::rowSums(.)) %>%
+    dplyr::mutate(prediction = rowSums(.)) %>%
     dplyr::select(prediction) %>%
     dplyr::pull()
   
-  ensemble_model_predictions <- base::list(train_result,
-                                           validation_result,
-                                           test_result)
+  ensemble_model_predictions <- list(train_result,
+                                     validation_result,
+                                     test_result)
   
-  all_ensemble_model_predictions <- base::list(tibble::as_tibble(train_predictions) %>%
-                                                 dplyr::mutate(Ensemble_Model = train_result),
-                                               tibble::as_tibble(validation_predictions) %>%
-                                                 dplyr::mutate(Ensemble_Model = validation_result),
-                                               tibble::as_tibble(test_predictions) %>%
-                                                 dplyr::mutate(Ensemble_Model = test_result))
+  all_ensemble_model_predictions <- list(tibble::as_tibble(train_predictions) %>%
+                                           dplyr::mutate(Ensemble_Model = train_result),
+                                         tibble::as_tibble(validation_predictions) %>%
+                                           dplyr::mutate(Ensemble_Model = validation_result),
+                                         tibble::as_tibble(test_predictions) %>%
+                                           dplyr::mutate(Ensemble_Model = test_result))
   
   # ------------------------------------------------------------------------------
   # Ensemble model results on train data:
   train_dataset_ensemble_model_results <- Binary_Classifier_Verification(actual = train_actual,
                                                                          predicted = ensemble_model_predictions[[1]],
                                                                          cutoff = ensemble_optimization_cutoff,
-                                                                         type_info = base::paste("Ensemble_Model", dataset_types[1], sep = "_"),
+                                                                         type_info = paste("Ensemble_Model", dataset_types[1], sep = "_"),
                                                                          save = save_option,
                                                                          open = FALSE)[[3]]
   
@@ -1611,18 +1611,18 @@ Binary_Ensemble_Model <- function(models_vector,
     dplyr::rename(Ensemble_Model = Score)
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     train_default_summary %>%
       dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_train_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
-    base::Sys.sleep(time = 1)}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_train_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    Sys.sleep(time = 1)}
   
   # ------------------------------------------------------------------------------
   # Ensemble model results on validation data:
   validation_dataset_ensemble_model_results <- Binary_Classifier_Verification(actual = validation_actual,
                                                                               predicted = ensemble_model_predictions[[2]],
                                                                               cutoff = ensemble_optimization_cutoff,
-                                                                              type_info = base::paste("Ensemble_Model", dataset_types[2], sep = "_"),
+                                                                              type_info = paste("Ensemble_Model", dataset_types[2], sep = "_"),
                                                                               save = save_option,
                                                                               open = FALSE)[[3]]
   
@@ -1631,18 +1631,18 @@ Binary_Ensemble_Model <- function(models_vector,
     dplyr::rename(Ensemble_Model = Score)
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     validation_default_summary %>%
       dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_validation_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
-    base::Sys.sleep(time = 1)}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_validation_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    Sys.sleep(time = 1)}
   
   # ------------------------------------------------------------------------------
   # Ensemble model results on test data:
   test_dataset_ensemble_model_results <- Binary_Classifier_Verification(actual = test_actual,
                                                                         predicted = ensemble_model_predictions[[3]],
                                                                         cutoff = ensemble_optimization_cutoff,
-                                                                        type_info = base::paste("Ensemble_Model", dataset_types[3], sep = "_"),
+                                                                        type_info = paste("Ensemble_Model", dataset_types[3], sep = "_"),
                                                                         save = save_option,
                                                                         open = FALSE)[[3]]
   
@@ -1651,51 +1651,51 @@ Binary_Ensemble_Model <- function(models_vector,
     dplyr::rename(Ensemble_Model = Score)
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     test_default_summary %>%
       dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_test_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_test_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))}
   
   # ------------------------------------------------------------------------------
   # Set the initial working directory:
-  base::setwd(".."); base::setwd("..")
+  setwd(".."); setwd("..")
   
   # ------------------------------------------------------------------------------
   # Final summary of ensemble model results:
-  ensemble_model_summary <- base::list(train_dataset_results = train_default_summary %>%
-                                         dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric"),
-                                       validation_dataset_results = validation_default_summary %>%
-                                         dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric"),
-                                       test_dataset_results = test_default_summary %>%
-                                         dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"))
+  ensemble_model_summary <- list(train_dataset_results = train_default_summary %>%
+                                   dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric"),
+                                 validation_dataset_results = validation_default_summary %>%
+                                   dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric"),
+                                 test_dataset_results = test_default_summary %>%
+                                   dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"))
   
   ensemble_model_summary %>%
-    base::lapply(., knitr::kable)
+    lapply(., knitr::kable)
   
-  base::return(base::list(all_optimization_combinations = ensemble_optimization[[1]],
-                          top_optimization_combinations = ensemble_optimization[[2]],
-                          optimal_cutoff = ensemble_optimization_cutoff,
-                          optimal_weights = ensemble_optimization_weights,
-                          train_dataset_results = train_default_summary %>%
-                            dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric"),
-                          validation_dataset_results = validation_default_summary %>%
-                            dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric"),
-                          test_dataset_results = test_default_summary %>%
-                            dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"),
-                          train_models_predictions = all_ensemble_model_predictions[[1]],
-                          train_actual_class = train_actual,
-                          validation_models_predictions = all_ensemble_model_predictions[[2]],
-                          validation_actual_class = validation_actual,
-                          test_models_predictions = all_ensemble_model_predictions[[3]],
-                          test_actual_class = test_actual))
+  return(list(all_optimization_combinations = ensemble_optimization[[1]],
+              top_optimization_combinations = ensemble_optimization[[2]],
+              optimal_cutoff = ensemble_optimization_cutoff,
+              optimal_weights = ensemble_optimization_weights,
+              train_dataset_results = train_default_summary %>%
+                dplyr::left_join(train_dataset_ensemble_model_results, by = "Metric"),
+              validation_dataset_results = validation_default_summary %>%
+                dplyr::left_join(validation_dataset_ensemble_model_results, by = "Metric"),
+              test_dataset_results = test_default_summary %>%
+                dplyr::left_join(test_dataset_ensemble_model_results, by = "Metric"),
+              train_models_predictions = all_ensemble_model_predictions[[1]],
+              train_actual_class = train_actual,
+              validation_models_predictions = all_ensemble_model_predictions[[2]],
+              validation_actual_class = validation_actual,
+              test_models_predictions = all_ensemble_model_predictions[[3]],
+              test_actual_class = test_actual))
 }
 
 # ------------------------------------------------------------------------------
 # Calculate final predictions for several categorical models with indicated partial weights:
 Multiply_List_Values <- function(list, weights_vector){
-  for(i in 1:base::length(list)){
+  for(i in 1:length(list)){
     list[[i]] <- list[[i]] * weights_vector[i]}
-  base::return(list)}
+  return(list)}
 
 # ------------------------------------------------------------------------------
 # Optimize Categorical Ensemble Model:
@@ -1721,20 +1721,20 @@ Optimize_Categorical_Ensemble_Cutoff_Model <- function(actual_class,
     key_metric_name <- dplyr::quo_name(key_metric)}
   
   # Generate waights:
-  base::set.seed(seed = seed)
-  weights_ <- base::matrix(data = stats::runif(base::length(predictions) * weights, min = 0, max = 1),
-                           nrow = weights,
-                           ncol = base::length(predictions))
+  set.seed(seed = seed)
+  weights_ <- matrix(data = runif(length(predictions) * weights, min = 0, max = 1),
+                     nrow = weights,
+                     ncol = length(predictions))
   
-  results_list <- base::list()
-  weights_list <- base::list()
-  base::cat("\n", "Ensemble model optimization:", "\n")
+  results_list <- list()
+  weights_list <- list()
+  cat("\n", "Ensemble model optimization:", "\n")
   pb = txtProgressBar(min = 0, max = weights, initial = 0, style = 3) 
   
   for (j in 1:weights){
-    weights_vector <- weights_[j,]/base::sum(weights_[j,])
+    weights_vector <- weights_[j,]/sum(weights_[j,])
     predictions_table <- Multiply_List_Values(predictions, weights_vector) %>%
-      base::Reduce("+", .)
+      Reduce("+", .)
     
     results_list[[j]] <- Categorical_Classifier_Verification(actual = actual_class,
                                                              probabilities = predictions_table,
@@ -1743,18 +1743,18 @@ Optimize_Categorical_Ensemble_Cutoff_Model <- function(actual_class,
                                                              open = FALSE,
                                                              type_info = "")[[2]]
     weights_list[[j]] <- weights_vector
-    utils::setTxtProgressBar(pb, j)}
+    setTxtProgressBar(pb, j)}
   
-  base::cat("\n")
+  cat("\n")
   
-  results_list <- base::do.call(base::rbind, results_list) %>%
+  results_list <- do.call(rbind, results_list) %>%
     dplyr::mutate(class = NULL,
                   type = NULL) %>%
     dplyr::rename_all(funs(stringr::str_to_title(.)))
   
-  weights_table <- base::do.call(base::rbind, weights_list) %>%
+  weights_table <- do.call(rbind, weights_list) %>%
     tibble::as_tibble() %>%
-    magrittr::set_colnames(base::paste("Model", models_vector, sep = "_"))
+    magrittr::set_colnames(paste("Model", models_vector, sep = "_"))
   
   # Arrange according to selected metric:
   if(ascending == TRUE){
@@ -1767,20 +1767,20 @@ Optimize_Categorical_Ensemble_Cutoff_Model <- function(actual_class,
   
   # Return results:
   if (summary_type == "mean"){
-    base::return(base::list(all_results = final_results,
-                            top_results = final_results %>% utils::head(top),
-                            optimized_weights = final_results %>%
-                              dplyr::select(dplyr::starts_with("Model")) %>%
-                              utils::head(top) %>%
-                              dplyr::summarise_all(base::mean)))}
+    return(list(all_results = final_results,
+                top_results = final_results %>% head(top),
+                optimized_weights = final_results %>%
+                  dplyr::select(dplyr::starts_with("Model")) %>%
+                  head(top) %>%
+                  dplyr::summarise_all(mean)))}
   
   if (summary_type == "median"){
-    base::return(base::list(all_results = final_results,
-                            top_results = final_results %>% utils::head(top),
-                            optimized_weights = final_results %>%
-                              dplyr::select(dplyr::starts_with("Model")) %>%
-                              utils::head(top) %>%
-                              dplyr::summarise_all(stats::median)))}
+    return(list(all_results = final_results,
+                top_results = final_results %>% head(top),
+                optimized_weights = final_results %>%
+                  dplyr::select(dplyr::starts_with("Model")) %>%
+                  head(top) %>%
+                  dplyr::summarise_all(median)))}
 }
 
 # ------------------------------------------------------------------------------
@@ -1803,14 +1803,14 @@ Categorical_Ensemble_Model <- function(models_vector,
   validation_pattern <- "validation_categorical_probabilities"
   test_dir <- "test_categorical_probabilities"
   
-  dataset_types <- base::c("train_dataset", "validation_dataset", "test_dataset")
+  dataset_types <- c("train_dataset", "validation_dataset", "test_dataset")
   
-  all_predictions <- base::list()
-  for (i in base::seq_along(models_vector)){
-    model <- base::list()
-    model[[1]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
-    model[[2]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
-    model[[3]] <- readr::read_csv2(base::list.files(base::paste(base::getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
+  all_predictions <- list()
+  for (i in seq_along(models_vector)){
+    model <- list()
+    model[[1]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = train_pattern, full.names = TRUE))
+    model[[2]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = validation_pattern, full.names = TRUE))
+    model[[3]] <- readr::read_csv2(list.files(paste(getwd(), models_vector[i], model_type, sep = "/"), pattern = test_dir, full.names = TRUE))
     all_predictions[[i]] <- model}
   
   Display_List_Structure(all_predictions, n = n)
@@ -1818,18 +1818,18 @@ Categorical_Ensemble_Model <- function(models_vector,
   # ------------------------------------------------------------------------------
   # Predictions:
   # Train:
-  train_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]] %>%
+  train_predictions <- list()
+  for (i in 1:length(all_predictions)){train_predictions[[i]] <- all_predictions[[i]][[1]] %>%
     dplyr::select(dplyr::starts_with("V"))}
   
   # Validation:
-  validation_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]] %>%
+  validation_predictions <- list()
+  for (i in 1:length(all_predictions)){validation_predictions[[i]] <- all_predictions[[i]][[2]] %>%
     dplyr::select(dplyr::starts_with("V"))}
   
   # Test:
-  test_predictions <- base::list()
-  for (i in 1:base::length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]] %>%
+  test_predictions <- list()
+  for (i in 1:length(all_predictions)){test_predictions[[i]] <- all_predictions[[i]][[3]] %>%
     dplyr::select(dplyr::starts_with("V"))}
   
   # ------------------------------------------------------------------------------
@@ -1840,85 +1840,85 @@ Categorical_Ensemble_Model <- function(models_vector,
   
   # ------------------------------------------------------------------------------
   # Change working directory to save all files in Ensemble_Model Categorical Folder:
-  base::setwd(cwd)
+  setwd(cwd)
   
   # ------------------------------------------------------------------------------
   # Train results for single component models:
-  train_component_results <- base::list()
-  for (i in 1:base::length(models_vector)){
+  train_component_results <- list()
+  for (i in 1:length(models_vector)){
     train_component_results[[i]] <- Categorical_Classifier_Verification(actual = train_actual,
                                                                         probabilities = train_predictions[[i]],
                                                                         labels = labels,
                                                                         save = save_option,
                                                                         open = FALSE,
-                                                                        type_info = base::paste(models_vector[i], dataset_types[1], sep = "_"))[[3]] %>%
+                                                                        type_info = paste(models_vector[i], dataset_types[1], sep = "_"))[[3]] %>%
       dplyr::mutate(Model = models_vector[i])}
   
-  train_component_overall_results <- base::list()
-  for (i in 1:base::length(train_component_results)){
+  train_component_overall_results <- list()
+  for (i in 1:length(train_component_results)){
     train_component_overall_results[[i]] <- train_component_results[[i]] %>%
       dplyr::filter(Class == "Overall") %>%
       dplyr::mutate(Type = NULL,
                     Class = NULL) %>%
-      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+      tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                           names_to = "Metric",
-                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+                          values_to = paste(models_vector[i], "Score", sep = "_")) %>%
       dplyr::mutate(Model = NULL)}
   
   train_component_overall_results_2 <- tibble::tibble(Metric = train_component_overall_results[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){train_component_overall_results_2 <- dplyr::bind_cols(train_component_overall_results_2, train_component_overall_results[[i]][2])}
+  for (i in 1:length(models_vector)){train_component_overall_results_2 <- dplyr::bind_cols(train_component_overall_results_2, train_component_overall_results[[i]][2])}
   
   # ------------------------------------------------------------------------------
   # Validation results for single component models:
-  validation_component_results <- base::list()
-  for (i in 1:base::length(models_vector)){
+  validation_component_results <- list()
+  for (i in 1:length(models_vector)){
     validation_component_results[[i]] <- Categorical_Classifier_Verification(actual = validation_actual,
                                                                              probabilities = validation_predictions[[i]],
                                                                              labels = labels,
                                                                              save = save_option,
                                                                              open = FALSE,
-                                                                             type_info = base::paste(models_vector[i], dataset_types[2], sep = "_"))[[3]] %>%
+                                                                             type_info = paste(models_vector[i], dataset_types[2], sep = "_"))[[3]] %>%
       dplyr::mutate(Model = models_vector[i])}
   
-  validation_component_overall_results <- base::list()
-  for (i in 1:base::length(validation_component_results)){
+  validation_component_overall_results <- list()
+  for (i in 1:length(validation_component_results)){
     validation_component_overall_results[[i]] <- validation_component_results[[i]] %>%
       dplyr::filter(Class == "Overall") %>%
       dplyr::mutate(Type = NULL,
                     Class = NULL) %>%
-      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+      tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                           names_to = "Metric",
-                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+                          values_to = paste(models_vector[i], "Score", sep = "_")) %>%
       dplyr::mutate(Model = NULL)}
   
   validation_component_overall_results_2 <- tibble::tibble(Metric = validation_component_overall_results[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){validation_component_overall_results_2 <- dplyr::bind_cols(validation_component_overall_results_2, validation_component_overall_results[[i]][2])}
+  for (i in 1:length(models_vector)){validation_component_overall_results_2 <- dplyr::bind_cols(validation_component_overall_results_2, validation_component_overall_results[[i]][2])}
   
   # ------------------------------------------------------------------------------
   # Test results for single component models:
-  test_component_results <- base::list()
-  for (i in 1:base::length(models_vector)){
+  test_component_results <- list()
+  for (i in 1:length(models_vector)){
     test_component_results[[i]] <- Categorical_Classifier_Verification(actual = test_actual,
                                                                        probabilities = test_predictions[[i]],
                                                                        labels = labels,
                                                                        save = save_option,
                                                                        open = FALSE,
-                                                                       type_info = base::paste(models_vector[i], dataset_types[3], sep = "_"))[[3]] %>%
+                                                                       type_info = paste(models_vector[i], dataset_types[3], sep = "_"))[[3]] %>%
       dplyr::mutate(Model = models_vector[i])}
   
-  test_component_overall_results <- base::list()
-  for (i in 1:base::length(test_component_results)){
+  test_component_overall_results <- list()
+  for (i in 1:length(test_component_results)){
     test_component_overall_results[[i]] <- test_component_results[[i]] %>%
       dplyr::filter(Class == "Overall") %>%
       dplyr::mutate(Type = NULL,
                     Class = NULL) %>%
-      tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+      tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                           names_to = "Metric",
-                          values_to = base::paste(models_vector[i], "Score", sep = "_")) %>%
+                          values_to = paste(models_vector[i], "Score", sep = "_")) %>%
       dplyr::mutate(Model = NULL)}
   
   test_component_overall_results_2 <- tibble::tibble(Metric = test_component_overall_results[[1]]$Metric)
-  for (i in 1:base::length(models_vector)){test_component_overall_results_2 <- dplyr::bind_cols(test_component_overall_results_2, test_component_overall_results[[i]][2])}
+  for (i in 1:length(models_vector)){test_component_overall_results_2 <- dplyr::bind_cols(test_component_overall_results_2, test_component_overall_results[[i]][2])}
   
   # ------------------------------------------------------------------------------
   # Optimization dataset:
@@ -1931,9 +1931,9 @@ Categorical_Ensemble_Model <- function(models_vector,
     predictions_optimization = validation_predictions}
   
   if (optimization_dataset == "train+validation"){
-    actual_optimization = base::c(train_actual, validation_actual)
-    predictions_optimization = base::list()
-    for(i in 1:base::length(models_vector)){
+    actual_optimization = c(train_actual, validation_actual)
+    predictions_optimization = list()
+    for(i in 1:length(models_vector)){
       predictions_optimization[[i]] <- dplyr::bind_rows(train_predictions[[i]], validation_predictions[[i]])
     }}
   
@@ -1958,24 +1958,24 @@ Categorical_Ensemble_Model <- function(models_vector,
   # ------------------------------------------------------------------------------
   # Ensemble model predictions:
   train_result <- Multiply_List_Values(list = train_predictions, weights_vector = ensemble_optimization_weights) %>%
-    base::Reduce("+", .)
+    Reduce("+", .)
   
   validation_result <- Multiply_List_Values(list = validation_predictions, weights_vector = ensemble_optimization_weights) %>%
-    base::Reduce("+", .)
+    Reduce("+", .)
   
   test_result <- Multiply_List_Values(list = test_predictions, weights_vector = ensemble_optimization_weights) %>%
-    base::Reduce("+", .)
+    Reduce("+", .)
   
-  ensemble_model_predictions <- base::list(train_result,
-                                           validation_result,
-                                           test_result)
+  ensemble_model_predictions <- list(train_result,
+                                     validation_result,
+                                     test_result)
   
   # ------------------------------------------------------------------------------
   # Train results for single component models:
   train_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = train_actual,
                                                                               probabilities = ensemble_model_predictions[[1]],
                                                                               labels = labels,
-                                                                              type_info = base::paste("Ensemble_Model", dataset_types[1], sep = "_"),
+                                                                              type_info = paste("Ensemble_Model", dataset_types[1], sep = "_"),
                                                                               save = save_option,
                                                                               open = FALSE)
   
@@ -1983,23 +1983,23 @@ Categorical_Ensemble_Model <- function(models_vector,
     dplyr::filter(Class == "Overall") %>%
     dplyr::mutate(Type = NULL,
                   Class = NULL) %>%
-    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+    tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                         names_to = "Metric",
-                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+                        values_to = paste("Ensemble_Model", "Score", sep = "_"))
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     train_component_overall_results_2 %>%
       dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_train_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
-    base::Sys.sleep(time = 1)}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_train_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    Sys.sleep(time = 1)}
   
   # ------------------------------------------------------------------------------
   # Validation results for single component models:
   validation_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = validation_actual,
                                                                                    probabilities = ensemble_model_predictions[[2]],
                                                                                    labels = labels,
-                                                                                   type_info = base::paste("Ensemble_Model", dataset_types[2], sep = "_"),
+                                                                                   type_info = paste("Ensemble_Model", dataset_types[2], sep = "_"),
                                                                                    save = save_option,
                                                                                    open = FALSE)
   
@@ -2007,23 +2007,23 @@ Categorical_Ensemble_Model <- function(models_vector,
     dplyr::filter(Class == "Overall") %>%
     dplyr::mutate(Type = NULL,
                   Class = NULL) %>%
-    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+    tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                         names_to = "Metric",
-                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+                        values_to = paste("Ensemble_Model", "Score", sep = "_"))
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     validation_component_overall_results_2 %>%
       dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_validation_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
-    base::Sys.sleep(time = 1)}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_validation_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    Sys.sleep(time = 1)}
   
   # ------------------------------------------------------------------------------
   # Test results for single component models:
   test_dataset_ensemble_model_results <- Categorical_Classifier_Verification(actual = test_actual,
                                                                              probabilities = ensemble_model_predictions[[3]],
                                                                              labels = labels,
-                                                                             type_info = base::paste("Ensemble_Model", dataset_types[3], sep = "_"),
+                                                                             type_info = paste("Ensemble_Model", dataset_types[3], sep = "_"),
                                                                              save = save_option,
                                                                              open = FALSE)
   
@@ -2031,54 +2031,54 @@ Categorical_Ensemble_Model <- function(models_vector,
     dplyr::filter(Class == "Overall") %>%
     dplyr::mutate(Type = NULL,
                   Class = NULL) %>%
-    tidyr::pivot_longer(cols = base::c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
+    tidyr::pivot_longer(cols = c("Records", "Correct", "Incorrect", "Accuracy", "Inaccuracy", "Precision", "Recall", "F1"),
                         names_to = "Metric",
-                        values_to = base::paste("Ensemble_Model", "Score", sep = "_"))
+                        values_to = paste("Ensemble_Model", "Score", sep = "_"))
   
   if (save_option == TRUE){
-    datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+    datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
     test_component_overall_results_2 %>%
       dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric") %>%
-      readr::write_csv2(path = base::paste(models_store_dir, base::paste(datetime, "Ensemble_Model_test_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
-    base::Sys.sleep(time = 1)}
+      readr::write_csv2(path = paste(models_store_dir, paste(datetime, "Ensemble_Model_test_dataset_results_summary_comparison.csv", sep = "_"), sep = "/"))
+    Sys.sleep(time = 1)}
   
   # ------------------------------------------------------------------------------
   # Set the initial working directory:
-  base::setwd(".."); base::setwd("..")
+  setwd(".."); setwd("..")
   
   # ------------------------------------------------------------------------------
   # Final summary of ensemble model results:
-  ensemble_model_summary <- base::list(train_dataset_results = train_component_overall_results_2 %>%
-                                         dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
-                                       validation_dataset_results = validation_component_overall_results_2 %>%
-                                         dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
-                                       test_dataset_results = test_component_overall_results_2 %>%
-                                         dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"))
+  ensemble_model_summary <- list(train_dataset_results = train_component_overall_results_2 %>%
+                                   dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
+                                 validation_dataset_results = validation_component_overall_results_2 %>%
+                                   dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
+                                 test_dataset_results = test_component_overall_results_2 %>%
+                                   dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"))
   
   ensemble_model_summary %>%
-    base::lapply(., knitr::kable)
+    lapply(., knitr::kable)
   
-  base::return(base::list(all_optimization_combinations = ensemble_optimization[[1]],
-                          top_optimization_combinations = ensemble_optimization[[2]],
-                          optimal_weights = ensemble_optimization_weights,
-                          train_dataset_results = train_component_overall_results_2 %>%
-                            dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
-                          validation_dataset_results = validation_component_overall_results_2 %>%
-                            dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
-                          test_dataset_results = test_component_overall_results_2 %>%
-                            dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"),
-                          train_models_predictions = train_predictions,
-                          train_ensemble_model_prediction = train_result %>%
-                            tibble::as_tibble(),
-                          train_actual_class = train_actual,
-                          validation_models_predictions = validation_predictions,
-                          validation_ensemble_model_prediction = validation_result %>%
-                            tibble::as_tibble(),
-                          validation_actual_class = validation_actual,
-                          test_models_predictions = test_predictions,
-                          test_ensemble_model_prediction = test_result %>%
-                            tibble::as_tibble(),
-                          test_actual_class = test_actual))
+  return(list(all_optimization_combinations = ensemble_optimization[[1]],
+              top_optimization_combinations = ensemble_optimization[[2]],
+              optimal_weights = ensemble_optimization_weights,
+              train_dataset_results = train_component_overall_results_2 %>%
+                dplyr::left_join(train_dataset_ensemble_model_results_2, by = "Metric"),
+              validation_dataset_results = validation_component_overall_results_2 %>%
+                dplyr::left_join(validation_dataset_ensemble_model_results_2, by = "Metric"),
+              test_dataset_results = test_component_overall_results_2 %>%
+                dplyr::left_join(test_dataset_ensemble_model_results_2, by = "Metric"),
+              train_models_predictions = train_predictions,
+              train_ensemble_model_prediction = train_result %>%
+                tibble::as_tibble(),
+              train_actual_class = train_actual,
+              validation_models_predictions = validation_predictions,
+              validation_ensemble_model_prediction = validation_result %>%
+                tibble::as_tibble(),
+              validation_actual_class = validation_actual,
+              test_models_predictions = test_predictions,
+              test_ensemble_model_prediction = test_result %>%
+                tibble::as_tibble(),
+              test_actual_class = test_actual))
 }
 
 # ------------------------------------------------------------------------------
@@ -2089,58 +2089,58 @@ Hyperparametrization_Optimization <- function(hyperparameters_list,
   
   # ------------------------------------------------------------------------------
   # Initialize empty lists to store results:
-  history <- base::list()
+  history <- list()
   history_ <<- history
-  final_results <- base::list()
+  final_results <- list()
   
   hyperparameters_df <- hyperparameters_list %>%
-    base::expand.grid() %>%
+    expand.grid() %>%
     dplyr::sample_frac(size = sample)
   
   # ------------------------------------------------------------------------------
   # Models optimization
-  for (i in 1:base::nrow(hyperparameters_df)){
+  for (i in 1:nrow(hyperparameters_df)){
     i <<- i
-    base::cat("\n", base::paste(i, nrow(hyperparameters_df), sep = "/"), "hyperparameters combination optimization:", "\n")
-    hyperparameter_vector <<- base::paste(base::colnames(hyperparameters_df), hyperparameters_df[i,], collapse = "_", sep = "_") 
+    cat("\n", paste(i, nrow(hyperparameters_df), sep = "/"), "hyperparameters combination optimization:", "\n")
+    hyperparameter_vector <<- paste(colnames(hyperparameters_df), hyperparameters_df[i,], collapse = "_", sep = "_") 
     
-    for (j in 1:base::ncol(hyperparameters_df)){
+    for (j in 1:ncol(hyperparameters_df)){
       j <<- j
-      hyperparameter <- base::colnames(hyperparameters_df)[j]
+      hyperparameter <- colnames(hyperparameters_df)[j]
       value <- hyperparameters_df[i,j]
-      base::assign(x = hyperparameter, value = value, inherits = TRUE)
-      base::cat("Hyperparameter:", hyperparameter, "=", value, "\n")}
-
+      assign(x = hyperparameter, value = value, inherits = TRUE)
+      cat("Hyperparameter:", hyperparameter, "=", value, "\n")}
+    
     # ------------------------------------------------------------------------------    
     # Run optimization:
-    base::source(script_directory)
+    source(script_directory)
     
     # ------------------------------------------------------------------------------
     # Remove not optimal models:
-    saved_models <- base::sort(base::list.files(path = models_store_dir, pattern = ".hdf5", full.names = TRUE))
-    saved_models <- saved_models[base::grepl(pattern = base::paste("logs", i,  "keras_model.weights", sep = "_"), saved_models)]
+    saved_models <- sort(list.files(path = models_store_dir, pattern = ".hdf5", full.names = TRUE))
+    saved_models <- saved_models[grepl(pattern = paste("logs", i,  "keras_model.weights", sep = "_"), saved_models)]
     if (length(saved_models) > 1){
-      for (j in 1:(base::length(saved_models) - 1)){
-        base::cat("Remove .hdf5 file:", saved_models[j], "\n")
-        base::unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
+      for (j in 1:(length(saved_models) - 1)){
+        cat("Remove .hdf5 file:", saved_models[j], "\n")
+        unlink(saved_models[j], recursive = TRUE, force = TRUE)}}
     
     # ------------------------------------------------------------------------------
     # Save metrics and hyperparameters:
     final_metrics <- as_tibble(history_[[i]]$metrics)
-    generator_metrics <- base::list(batch_size = train_generator$batch_size,
-                                    train_images = train_generator$n,
-                                    train_batches = base::ceiling(train_generator$n/batch_size),
-                                    validation_images = validation_generator$n,
-                                    validation_batches = base::ceiling(validation_generator$n/batch_size),
-                                    class_mode = train_generator$class_mode,
-                                    classes = train_generator$num_classes,
-                                    color_mode = train_generator$color_mode,
-                                    image_shape = base::Reduce(base::paste, train_generator$image_shape),
-                                    loss_function = loss,
-                                    optimizer = stringr::str_sub(base::as.character(optimizer),
-                                                                 start = stringr::str_locate_all(base::as.character(optimizer), "\\.")[[1]] %>% tail(1) %>% .[1,1] + 1,
-                                                                 end = -2),
-                                    monitor = monitor) %>%
+    generator_metrics <- list(batch_size = train_generator$batch_size,
+                              train_images = train_generator$n,
+                              train_batches = ceiling(train_generator$n/batch_size),
+                              validation_images = validation_generator$n,
+                              validation_batches = ceiling(validation_generator$n/batch_size),
+                              class_mode = train_generator$class_mode,
+                              classes = train_generator$num_classes,
+                              color_mode = train_generator$color_mode,
+                              image_shape = Reduce(paste, train_generator$image_shape),
+                              loss_function = loss,
+                              optimizer = stringr::str_sub(as.character(optimizer),
+                                                           start = stringr::str_locate_all(as.character(optimizer), "\\.")[[1]] %>% tail(1) %>% .[1,1] + 1,
+                                                           end = -2),
+                              monitor = monitor) %>%
       tibble::as_tibble() %>% 
       dplyr::slice(rep(1, each = history_[[i]]$params$epochs))
     hyperparameters <- hyperparameters_df[i,]%>% 
@@ -2158,9 +2158,9 @@ Hyperparametrization_Optimization <- function(hyperparameters_list,
   # ------------------------------------------------------------------------------
   # Return results:
   final_results <- final_results %>%
-    base::do.call(dplyr::bind_rows, .)
+    do.call(dplyr::bind_rows, .)
   
-  base::return(final_results)}
+  return(final_results)}
 
 # ------------------------------------------------------------------------------
 # T-SNE dimensionality reduction:
@@ -2173,29 +2173,29 @@ T_SNE_Dimensionality_Reduction_Visualisation <- function(data_dir,
                                                          save_plot = FALSE,
                                                          plot_size = 20){
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
   
   data_generator <- keras::image_data_generator(rescale = 1/255)
   generator_from_directory <- keras::flow_images_from_directory(directory = data_dir,
                                                                 generator = data_generator, 
-                                                                target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]),
+                                                                target_size = c(model$input_shape[[2]], model$input_shape[[2]]),
                                                                 batch_size = batch_size,
                                                                 class_mode = "categorical",
-                                                                classes = base::list.files(data_dir),
+                                                                classes = list.files(data_dir),
                                                                 shuffle = FALSE)
   
-  layer_output <- base::lapply(model$layers[base::length(model$layers) - 1], function(layer) layer$output)
+  layer_output <- lapply(model$layers[length(model$layers) - 1], function(layer) layer$output)
   embedding_model <- keras::keras_model(inputs = model$input, outputs = layer_output)
   
   results <- keras::predict_generator(embedding_model,
                                       generator_from_directory,
-                                      steps = base::ceiling(length(generator_from_directory$filepaths)/batch_size),
+                                      steps = ceiling(length(generator_from_directory$filepaths)/batch_size),
                                       verbose = 1)
   
   t_sne <- Rtsne::Rtsne(X = results, dims = 2, verbose = TRUE)$Y %>%
     tibble::as_tibble() %>%
     dplyr::mutate(class = generator_from_directory$classes,
-                  class = factor(class, levels = base::unique(generator_from_directory$classes), labels = base::list.files(data_dir)))
+                  class = factor(class, levels = unique(generator_from_directory$classes), labels = list.files(data_dir)))
   plot_1 <- t_sne %>%
     ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = V1, y = V2, color = class)) +
     ggplot2::geom_point() +
@@ -2235,8 +2235,8 @@ T_SNE_Dimensionality_Reduction_Visualisation <- function(data_dir,
                   title = "T-SNE ellipse visualisation") + 
     ggplot2::geom_label(data = t_sne %>% 
                           dplyr::group_by(class) %>%
-                          dplyr::summarise(V1 = stats::median(V1),
-                                           V2 = stats::median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
+                          dplyr::summarise(V1 = median(V1),
+                                           V2 = median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
     ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
                    axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
                    axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
@@ -2264,11 +2264,11 @@ T_SNE_Dimensionality_Reduction_Visualisation <- function(data_dir,
   plot <- gridExtra::grid.arrange(plot_1, plot_2, nrow = 2, ncol = 1)
   
   if (save_plot == TRUE){
-    filename <- base::paste(datetime, type_info, "t-SNE_Dimensionality_Reduction.png", sep = "_")
+    filename <- paste(datetime, type_info, "t-SNE_Dimensionality_Reduction.png", sep = "_")
     ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
-    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
+    cat("Plot saved:", paste(getwd(), filename, sep = "/"), "\n")}
   
-  base::print(plot)
+  print(plot)
 }
 
 # ------------------------------------------------------------------------------
@@ -2282,29 +2282,29 @@ UMAP_Dimensionality_Reduction_Visualisation <- function(data_dir,
                                                         save_plot = FALSE,
                                                         plot_size = 20){
   
-  datetime <- stringr::str_replace_all(base::Sys.time(), ":", "-")
+  datetime <- stringr::str_replace_all(Sys.time(), ":", "-")
   
   data_generator <- keras::image_data_generator(rescale = 1/255)
   generator_from_directory <- keras::flow_images_from_directory(directory = data_dir,
                                                                 generator = data_generator, 
-                                                                target_size = base::c(model$input_shape[[2]], model$input_shape[[2]]),
+                                                                target_size = c(model$input_shape[[2]], model$input_shape[[2]]),
                                                                 batch_size = batch_size,
                                                                 class_mode = "categorical",
-                                                                classes = base::list.files(data_dir),
+                                                                classes = list.files(data_dir),
                                                                 shuffle = FALSE)
   
-  layer_output <- base::lapply(model$layers[base::length(model$layers) - 1], function(layer) layer$output)
+  layer_output <- lapply(model$layers[length(model$layers) - 1], function(layer) layer$output)
   embedding_model <- keras::keras_model(inputs = model$input, outputs = layer_output)
   
   results <- keras::predict_generator(embedding_model,
                                       generator_from_directory,
-                                      steps = base::ceiling(length(generator_from_directory$filepaths)/batch_size),
+                                      steps = ceiling(length(generator_from_directory$filepaths)/batch_size),
                                       verbose = 1)
   
   umap <- uwot::umap(X = results, n_components = 2, verbose = TRUE) %>%
     tibble::as_tibble() %>%
     dplyr::mutate(class = generator_from_directory$classes,
-                  class = factor(class, levels = base::unique(generator_from_directory$classes), labels = base::list.files(data_dir)))
+                  class = factor(class, levels = unique(generator_from_directory$classes), labels = list.files(data_dir)))
   plot_1 <- umap %>%
     ggplot2::ggplot(data = ., mapping = ggplot2::aes(x = V1, y = V2, color = class)) +
     ggplot2::geom_point() +
@@ -2344,8 +2344,8 @@ UMAP_Dimensionality_Reduction_Visualisation <- function(data_dir,
                   title = "UMAP ellipse visualisation") + 
     ggplot2::geom_label(data = umap %>% 
                           dplyr::group_by(class) %>%
-                          dplyr::summarise(V1 = stats::median(V1),
-                                           V2 = stats::median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
+                          dplyr::summarise(V1 = median(V1),
+                                           V2 = median(V2), .groups = "drop"), mapping = ggplot2::aes(x = V1, y = V2, color = class, label = class)) +
     ggplot2::theme(plot.title = element_text(size = title_size, color = "black", face = "bold", hjust = 0.5, vjust = 0.5),
                    axis.text.y = element_text(size = text_size, color = "black", face = "plain"),
                    axis.text.x = element_text(size = text_size, color = "black", face = "plain"),
@@ -2373,11 +2373,11 @@ UMAP_Dimensionality_Reduction_Visualisation <- function(data_dir,
   plot <- gridExtra::grid.arrange(plot_1, plot_2, nrow = 2, ncol = 1)
   
   if (save_plot == TRUE){
-    filename <- base::paste(datetime, type_info, "UMAP_Dimensionality_Reduction.png", sep = "_")
+    filename <- paste(datetime, type_info, "UMAP_Dimensionality_Reduction.png", sep = "_")
     ggplot2::ggsave(filename = filename, plot = plot, units = "cm", width = plot_size, height = plot_size)
-    base::cat("Plot saved:", base::paste(base::getwd(), filename, sep = "/"), "\n")}
+    cat("Plot saved:", paste(getwd(), filename, sep = "/"), "\n")}
   
-  base::print(plot)
+  print(plot)
 }
 
 

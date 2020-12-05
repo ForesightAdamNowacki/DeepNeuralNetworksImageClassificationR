@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Data
 # https://www.kaggle.com/c/dogs-vs-cats
-# utils::browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
+# browseURL(url = "https://www.kaggle.com/c/dogs-vs-cats")
 
 # ------------------------------------------------------------------------------
 # Model:
@@ -14,19 +14,19 @@ folder_name <- "T-SNE_Dimensionality_Reduction"
 # ------------------------------------------------------------------------------
 # Intro:
 # 1. Set currect working directory:
-base::setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
+setwd("D:/GitHub/DeepNeuralNetworksImageClassificationR")
 # 2. Create 'VGG16' folder in cwd
-if (base::dir.exists(base::paste(base::getwd(), folder_name, sep = "/")) == FALSE){base::dir.create(path = base::paste(base::getwd(), folder_name, sep = "/"))}
+if (dir.exists(paste(getwd(), folder_name, sep = "/")) == FALSE){dir.create(path = paste(getwd(), folder_name, sep = "/"))}
 
 # ------------------------------------------------------------------------------
 # Environment:
 reticulate::use_condaenv("GPU_ML_2", required = TRUE)
-base::library(tensorflow)
-base::library(keras)
-base::library(tidyverse)
-base::library(deepviz)
-base::library(Rtsne)
-base::source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
+library(tensorflow)
+library(keras)
+library(tidyverse)
+library(deepviz)
+library(Rtsne)
+source("D:/GitHub/DeepNeuralNetworksImageClassificationR/Useful_Functions.R")
 
 # Directories:
 train_dir <- "D:/GitHub/Datasets/Cats_And_Dogs/train"
@@ -37,39 +37,39 @@ models_repo_store_dir <- "D:/GitHub/DeepNeuralNetworksRepoR_Models_Store"
 # ------------------------------------------------------------------------------
 # Clear session and import the best trained model:
 keras::k_clear_session()
-optimal_model_repo_dir <- base::paste(models_repo_store_dir, base::paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
+optimal_model_repo_dir <- paste(models_repo_store_dir, paste(model_type, model_name, "Model.hdf5", sep = "_"), sep = "/")
 model <- keras::load_model_hdf5(filepath = optimal_model_repo_dir, compile = FALSE)
 
 # ------------------------------------------------------------------------------
 # Visualize model:
 model %>% deepviz::plot_model()
-model %>% base::summary()
+model %>% summary()
 
 # ------------------------------------------------------------------------------
 # Model compilation:
 loss <- "categorical_crossentropy"
 optimizer <- keras::optimizer_adam()
-metrics <- base::c("acc")
+metrics <- c("acc")
 model %>% keras::compile(loss = loss,
                          optimizer = optimizer, 
                          metrics = metrics)
 
 # ------------------------------------------------------------------------------
 # T-SNE dimensionality reduction:
-base::setwd(base::paste(base::getwd(), folder_name, sep = "/"))
+setwd(paste(getwd(), folder_name, sep = "/"))
 save_plot <- TRUE
 
 T_SNE_Dimensionality_Reduction_Visualisation(data_dir = train_dir,
                                              model = model, 
-                                             type_info = base::paste(model_name, model_type, "train", sep = "_"),
+                                             type_info = paste(model_name, model_type, "train", sep = "_"),
                                              save_plot = save_plot)
 T_SNE_Dimensionality_Reduction_Visualisation(data_dir = validation_dir,
                                              model = model, 
-                                             type_info = base::paste(model_name, model_type, "validation", sep = "_"),
+                                             type_info = paste(model_name, model_type, "validation", sep = "_"),
                                              save_plot = save_plot)
 T_SNE_Dimensionality_Reduction_Visualisation(data_dir = test_dir,
                                              model = model, 
-                                             type_info = base::paste(model_name, model_type, "test", sep = "_"),
+                                             type_info = paste(model_name, model_type, "test", sep = "_"),
                                              save_plot = save_plot)
 
 # ------------------------------------------------------------------------------
